@@ -1,0 +1,85 @@
+.bsod-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #0000aa;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  animation: bsod-flicker 0.1s ease-in-out;
+}
+
+@keyframes bsod-flicker {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  75% { opacity: 0.8; }
+  100% { opacity: 1; }
+}
+
+.bsod-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  color: #aaaaaa;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.bsod-close:hover {
+  opacity: 1;
+  color: #ffffff;
+}
+
+.bsod-content {
+  max-width: 900px;
+  color: #ffffff;
+  font-family: 'Lucida Console', 'Consolas', monospace;
+  font-size: 16px;
+  line-height: 1.6;
+  letter-spacing: 0.5px;
+}
+
+.bsod-content p {
+  margin: 0 0 24px 0;
+}
+
+.bsod-error {
+  margin-top: 32px !important;
+  margin-bottom: 32px !important;
+}
+
+.bsod-technical {
+  margin-bottom: 8px !important;
+}
+
+.bsod-stop {
+  margin-bottom: 0 !important;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .bsod-overlay {
+    padding: 20px;
+  }
+
+  .bsod-content {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .bsod-close {
+    top: 8px;
+    right: 8px;
+    font-size: 20px;
+  }
+}

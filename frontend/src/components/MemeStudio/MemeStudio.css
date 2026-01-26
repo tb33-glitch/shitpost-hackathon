@@ -1,0 +1,28 @@
+/* Meme Studio Window */
+
+.meme-studio-container {
+  width: 100%;
+  height: 100%;
+}
+
+.meme-studio-window {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.meme-studio-window .window-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+/* Override default window styles for full-bleed editor */
+.meme-studio-window .meme-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}

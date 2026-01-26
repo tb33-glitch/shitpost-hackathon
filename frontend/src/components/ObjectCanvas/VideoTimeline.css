@@ -1,0 +1,357 @@
+.video-timeline {
+  background: #1a1a1a;
+  border-top: 1px solid #333;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Playback controls */
+.timeline-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.timeline-btn {
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.timeline-btn:hover {
+  background: #3a3a3a;
+}
+
+.timeline-btn:active {
+  transform: scale(0.95);
+}
+
+.timeline-btn.play-btn {
+  padding: 8px 16px;
+  font-size: 20px;
+}
+
+.timeline-time {
+  margin-left: 12px;
+  font-family: 'SF Mono', Monaco, monospace;
+  font-size: 14px;
+  color: #ccc;
+}
+
+.time-separator {
+  margin: 0 4px;
+  color: #666;
+}
+
+.playback-rate {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
+
+.rate-btn {
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  padding: 4px 8px;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.rate-btn:hover {
+  background: #3a3a3a;
+  color: white;
+}
+
+.rate-btn.active {
+  background: #0066ff;
+  border-color: #0066ff;
+  color: white;
+}
+
+/* Timeline track */
+.timeline-track {
+  position: relative;
+  height: 40px;
+  background: #333;
+  border-radius: 4px;
+  cursor: pointer;
+  overflow: visible;
+}
+
+/* Trimmed regions */
+.trim-region {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+
+.trim-before {
+  left: 0;
+  border-radius: 4px 0 0 4px;
+}
+
+.trim-after {
+  border-radius: 0 4px 4px 0;
+}
+
+/* Active region */
+.active-region {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(to right, #0066ff33, #0066ff22);
+  pointer-events: none;
+}
+
+/* Trim handles */
+.trim-handle {
+  position: absolute;
+  top: -4px;
+  width: 12px;
+  height: calc(100% + 8px);
+  cursor: ew-resize;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.trim-handle.trim-start {
+  transform: translateX(-100%);
+}
+
+.trim-handle.trim-end {
+  transform: translateX(0);
+}
+
+.trim-handle-bar {
+  width: 4px;
+  height: 100%;
+  background: #ffaa00;
+  border-radius: 2px;
+  transition: background 0.2s;
+}
+
+.trim-handle:hover .trim-handle-bar {
+  background: #ffcc00;
+}
+
+/* Scrubber (playhead) */
+.scrubber {
+  position: absolute;
+  top: -6px;
+  transform: translateX(-50%);
+  cursor: grab;
+  z-index: 20;
+}
+
+.scrubber:active {
+  cursor: grabbing;
+}
+
+.scrubber-head {
+  width: 14px;
+  height: 14px;
+  background: #ff3366;
+  border: 2px solid white;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.scrubber-line {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 38px;
+  background: #ff3366;
+  pointer-events: none;
+}
+
+/* Overlay tracks */
+.overlay-tracks {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #333;
+}
+
+.overlay-tracks-label {
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.overlay-track {
+  position: relative;
+  height: 24px;
+  background: #2a2a2a;
+  border-radius: 3px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.overlay-track:hover {
+  background: #333;
+}
+
+.overlay-track.selected {
+  background: #333;
+  outline: 1px solid #0066ff;
+}
+
+.overlay-bar {
+  position: absolute;
+  top: 2px;
+  height: 20px;
+  background: linear-gradient(to right, #9933ff, #6633cc);
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  min-width: 30px;
+  overflow: visible;
+  transition: box-shadow 0.15s ease;
+}
+
+.overlay-bar:hover {
+  box-shadow: 0 0 0 2px rgba(153, 51, 255, 0.4);
+}
+
+.overlay-bar.dragging {
+  box-shadow: 0 0 0 2px rgba(153, 51, 255, 0.8);
+  z-index: 10;
+}
+
+/* Drag handles on edges */
+.overlay-drag-handle {
+  position: absolute;
+  top: 0;
+  width: 8px;
+  height: 100%;
+  cursor: ew-resize;
+  z-index: 5;
+  transition: background 0.15s ease;
+}
+
+.overlay-drag-handle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 1px;
+  transition: background 0.15s ease, height 0.15s ease;
+}
+
+.overlay-drag-handle:hover::after {
+  background: rgba(255, 255, 255, 0.8);
+  height: 14px;
+}
+
+.overlay-drag-left {
+  left: 0;
+  border-radius: 2px 0 0 2px;
+}
+
+.overlay-drag-right {
+  right: 0;
+  border-radius: 0 2px 2px 0;
+}
+
+/* Center draggable area */
+.overlay-bar-center {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  padding: 0 10px;
+  overflow: hidden;
+}
+
+.overlay-bar-center:active {
+  cursor: grabbing;
+}
+
+.overlay-label {
+  font-size: 10px;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .video-timeline {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .timeline-controls {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .timeline-time {
+    margin-left: 8px;
+    font-size: 12px;
+  }
+
+  .playback-rate {
+    margin-left: 0;
+    margin-top: 8px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .timeline-track {
+    height: 50px;
+  }
+
+  .scrubber-head {
+    width: 18px;
+    height: 18px;
+  }
+
+  .scrubber-line {
+    height: 46px;
+  }
+
+  .trim-handle {
+    width: 20px;
+  }
+
+  .trim-handle-bar {
+    width: 6px;
+  }
+
+  /* Larger touch targets for overlay drag handles on mobile */
+  .overlay-drag-handle {
+    width: 14px;
+  }
+
+  .overlay-bar {
+    min-width: 40px;
+  }
+}

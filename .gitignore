@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+contracts/lib/
+contracts/out/
+contracts/cache/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build
+frontend/dist/
+frontend/build/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
