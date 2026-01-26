@@ -2,7 +2,7 @@
 
 **The onchain meme studio. Make memes. Mint NFTs. Solana-native.**
 
-A Windows 98-themed web application for creating and minting NFT memes on Solana.
+A Windows XP-themed web application for creating and minting NFT memes on Solana.
 
 ![shitpost.pro](frontend/public/images/boot-logo.png)
 
