@@ -1,10 +1,9 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { Window } from '../Windows98'
-import { useUnifiedWallet } from '../../providers/WalletProvider'
+import { useWallet, useConnection } from '@solana/wallet-adapter-react'
 import { ConnectButton } from '../Wallet'
 import usePumpCoins from '../../hooks/usePumpCoins'
 import useJupiterSwap, { SOL_MINT, formatTokenAmount, parseTokenAmount } from '../../hooks/useJupiterSwap'
-import useEvmSwap, { ETH_ADDRESS, formatTokenAmount as formatEvmAmount, parseTokenAmount as parseEvmAmount } from '../../hooks/useEvmSwap'
 import './SwapWindow.css'
 
 // SOL token info
@@ -18,35 +17,18 @@ const SOL_TOKEN = {
   chain: 'solana',
 }
 
-// ETH token info
-const ETH_TOKEN = {
-  mint: ETH_ADDRESS,
-  symbol: 'ETH',
-  name: 'Ethereum',
-  decimals: 18,
-  image_uri: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/info/logo.png',
-  price: 3000,
-  chain: 'eth',
-}
-
-// Check if token is EVM
-const isEvmToken = (token) => {
-  return token?.chain === 'eth' || token?.mint?.startsWith('0x')
-}
-
-/**
- * SwapWindow - Two panel layout with token list and swap form
- */
 // Get high-res image URL for meme making
 const getHighResImageUrl = (imageUri) => {
   if (!imageUri) return null
-  // DexScreener images support size parameter
   if (imageUri.includes('dd.dexscreener.com')) {
     return imageUri.includes('?') ? `${imageUri}&size=xl` : `${imageUri}?size=xl`
   }
   return imageUri
 }
 
+/**
+ * SwapWindow - Jupiter Swap interface (Solana-only)
+ */
 export default function SwapWindow({
   onClose,
   onMinimize,
@@ -55,14 +37,12 @@ export default function SwapWindow({
   initialOutputMint = null,
   onMakeMeme = null,
 }) {
-  const { solana, evm } = useUnifiedWallet()
+  const { publicKey, connected: isWalletConnected, signTransaction, signAllTransactions } = useWallet()
+  const { connection } = useConnection()
   const { coins: trendingCoins, isLoading: coinsLoading } = usePumpCoins('marketCap')
 
-  // Jupiter (Solana) swap hook
-  const jupiterSwap = useJupiterSwap()
-
-  // EVM swap hook (uses Kyberswap aggregator)
-  const evmSwap = useEvmSwap()
+  // Jupiter swap hook
+  const { quote, isLoadingQuote, isSwapping, error, getQuote, executeSwap, reset } = useJupiterSwap()
 
   const [inputToken, setInputToken] = useState(SOL_TOKEN)
   const [outputToken, setOutputToken] = useState(null)
@@ -70,24 +50,6 @@ export default function SwapWindow({
   const [swapSuccess, setSwapSuccess] = useState(null)
   const [slippage, setSlippage] = useState(1)
   const [searchQuery, setSearchQuery] = useState('')
-
-  // Determine which swap to use based on output token
-  const isEvm = isEvmToken(outputToken)
-  const activeSwap = isEvm ? evmSwap : jupiterSwap
-  const { quote, isLoadingQuote, isSwapping, error, getQuote, executeSwap, reset } = activeSwap
-
-  // Update input token when chain changes
-  useEffect(() => {
-    if (outputToken) {
-      const newInputToken = isEvmToken(outputToken) ? ETH_TOKEN : SOL_TOKEN
-      if (inputToken.chain !== newInputToken.chain) {
-        setInputToken(newInputToken)
-        setInputAmount('')
-        jupiterSwap.reset()
-        evmSwap.reset()
-      }
-    }
-  }, [outputToken])
 
   // Filter tokens based on search
   const displayedTokens = useMemo(() => {
@@ -116,58 +78,42 @@ export default function SwapWindow({
     }
 
     const timeoutId = setTimeout(() => {
-      if (isEvm) {
-        // EVM swap via Kyberswap
-        const amountInWei = parseEvmAmount(inputAmount, inputToken.decimals || 18)
-        getQuote({
-          inputToken: inputToken.mint,
-          outputToken: outputToken.mint,
-          amount: amountInWei,
-          slippageBps: Math.round(slippage * 100),
-        })
-      } else {
-        // Solana swap via Jupiter
-        const amountInSmallestUnits = parseTokenAmount(inputAmount, inputToken.decimals || 9)
-        getQuote({
-          inputMint: inputToken.mint,
-          outputMint: outputToken.mint,
-          amount: amountInSmallestUnits,
-          slippageBps: Math.round(slippage * 100),
-        })
-      }
+      const amountInSmallestUnits = parseTokenAmount(inputAmount, inputToken.decimals || 9)
+      getQuote({
+        inputMint: inputToken.mint,
+        outputMint: outputToken.mint,
+        amount: amountInSmallestUnits,
+        slippageBps: Math.round(slippage * 100),
+      })
     }, 500)
 
     return () => clearTimeout(timeoutId)
-  }, [inputToken, outputToken, inputAmount, slippage, getQuote, reset, isEvm])
+  }, [inputToken, outputToken, inputAmount, slippage, getQuote, reset])
 
   // Handle swap
   const handleSwap = useCallback(async () => {
-    if (!quote) return
+    if (!quote || !publicKey || !connection) return
 
     setSwapSuccess(null)
 
-    let txid
-    if (isEvm) {
-      // EVM swap
-      txid = await executeSwap({
-        quoteResponse: quote,
-      })
-    } else {
-      // Solana swap
-      if (!solana.wallet || !solana.connection) return
-      txid = await executeSwap({
-        wallet: solana.wallet,
-        connection: solana.connection,
-        quoteResponse: quote,
-      })
+    const wallet = {
+      publicKey,
+      signTransaction,
+      signAllTransactions,
     }
+
+    const txid = await executeSwap({
+      wallet,
+      connection,
+      quoteResponse: quote,
+    })
 
     if (txid) {
       setSwapSuccess(txid)
       setInputAmount('')
       reset()
     }
-  }, [quote, solana.wallet, solana.connection, executeSwap, reset, isEvm])
+  }, [quote, publicKey, connection, signTransaction, signAllTransactions, executeSwap, reset])
 
   // Swap input/output tokens
   const handleSwapTokens = () => {
@@ -214,25 +160,18 @@ export default function SwapWindow({
 
   // Calculate output
   const outputAmount = quote
-    ? isEvm
-      ? formatEvmAmount(quote.outputAmount, outputToken?.decimals || 18)
-      : formatTokenAmount(quote.outAmount, outputToken?.decimals || 6)
+    ? formatTokenAmount(quote.outAmount, outputToken?.decimals || 6)
     : ''
 
-  const priceImpact = isEvm
-    ? quote?.priceImpact
-    : quote?.priceImpactPct
-      ? (parseFloat(quote.priceImpactPct) * 100).toFixed(2)
-      : null
-
-  // Check if correct wallet is connected
-  const isWalletConnected = isEvm ? evm.isConnected : solana.isConnected
+  const priceImpact = quote?.priceImpactPct
+    ? (parseFloat(quote.priceImpactPct) * 100).toFixed(2)
+    : null
 
   // Button state
   const getButtonState = () => {
     if (!isWalletConnected) {
       return {
-        text: isEvm ? 'Connect EVM Wallet' : 'Connect Solana Wallet',
+        text: 'Connect Wallet',
         disabled: false,
         action: 'connect'
       }
@@ -248,13 +187,10 @@ export default function SwapWindow({
 
   const buttonState = getButtonState()
 
-  // Window title based on chain
-  const windowTitle = isEvm ? 'Uniswap Swap' : 'Jupiter Swap'
-
   return (
     <div className="swap-window">
       <Window
-        title={windowTitle}
+        title="Jupiter Swap"
         className="swap-window-frame"
         onClose={onClose}
         onMinimize={onMinimize}
@@ -356,25 +292,12 @@ export default function SwapWindow({
                   </div>
                 </div>
                 <div className="selected-token-links">
-                  {isEvmToken(outputToken) ? (
-                    <>
-                      <a href={`https://www.geckoterminal.com/eth/pools/${outputToken.pairAddress}`} target="_blank" rel="noopener noreferrer">
-                        Chart
-                      </a>
-                      <a href={`https://etherscan.io/token/${outputToken.mint}`} target="_blank" rel="noopener noreferrer">
-                        Explorer
-                      </a>
-                    </>
-                  ) : (
-                    <>
-                      <a href={`https://dexscreener.com/solana/${outputToken.mint}`} target="_blank" rel="noopener noreferrer">
-                        Chart
-                      </a>
-                      <a href={`https://solscan.io/token/${outputToken.mint}`} target="_blank" rel="noopener noreferrer">
-                        Explorer
-                      </a>
-                    </>
-                  )}
+                  <a href={`https://dexscreener.com/solana/${outputToken.mint}`} target="_blank" rel="noopener noreferrer">
+                    Chart
+                  </a>
+                  <a href={`https://solscan.io/token/${outputToken.mint}`} target="_blank" rel="noopener noreferrer">
+                    Explorer
+                  </a>
                   <button onClick={() => navigator.clipboard.writeText(outputToken.mint)}>
                     Copy CA
                   </button>
@@ -469,18 +392,10 @@ export default function SwapWindow({
                       <span>{priceImpact}%</span>
                     </div>
                   )}
-                  {!isEvm && (
-                    <div className="quote-row">
-                      <span>Route</span>
-                      <span>{quote.routePlan?.length || 1} hop(s)</span>
-                    </div>
-                  )}
-                  {isEvm && quote.gasUsd && (
-                    <div className="quote-row">
-                      <span>Est. Gas</span>
-                      <span>${parseFloat(quote.gasUsd).toFixed(2)}</span>
-                    </div>
-                  )}
+                  <div className="quote-row">
+                    <span>Route</span>
+                    <span>{quote.routePlan?.length || 1} hop(s)</span>
+                  </div>
                 </div>
               )}
 
@@ -508,10 +423,7 @@ export default function SwapWindow({
                 <div className="swap-success">
                   Swap successful!{' '}
                   <a
-                    href={isEvm
-                      ? `https://etherscan.io/tx/${swapSuccess}`
-                      : `https://solscan.io/tx/${swapSuccess}`
-                    }
+                    href={`https://solscan.io/tx/${swapSuccess}`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -536,7 +448,7 @@ export default function SwapWindow({
               )}
 
               <div className="powered-by">
-                Powered by {isEvm ? 'Kyberswap' : 'Jupiter'}
+                Powered by Jupiter
               </div>
             </div>
           </div>

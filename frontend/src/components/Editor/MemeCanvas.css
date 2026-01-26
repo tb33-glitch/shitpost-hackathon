@@ -1,0 +1,118 @@
+/* Meme Canvas Styles */
+
+.meme-canvas-container {
+  position: relative;
+  background: #C0C0C0;
+  border: 2px solid;
+  border-color: #808080 #FFFFFF #FFFFFF #808080;
+  box-shadow: inset 1px 1px 0 #404040;
+}
+
+.meme-canvas {
+  display: block;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* Zone Overlays */
+.zone-overlay {
+  position: absolute;
+  border: 2px dashed transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: all;
+}
+
+.zone-overlay:hover {
+  border-color: rgba(49, 106, 197, 0.5);
+  background: rgba(49, 106, 197, 0.1);
+}
+
+.zone-overlay.selected {
+  border-color: #316AC5;
+  background: rgba(49, 106, 197, 0.15);
+  border-style: solid;
+}
+
+.zone-hint {
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.7);
+  padding: 4px 8px;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.zone-overlay:hover .zone-hint {
+  color: rgba(0, 0, 0, 0.6);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+/* Loading State */
+.meme-canvas-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(236, 233, 216, 0.9);
+}
+
+.meme-canvas-loading::after {
+  content: 'Loading...';
+  font-family: 'Tahoma', sans-serif;
+  font-size: 12px;
+  color: #404040;
+}
+
+/* Error State */
+.meme-canvas-error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #FFF0F0;
+  border: 1px solid #CC0000;
+  padding: 12px 16px;
+  border-radius: 3px;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+  color: #CC0000;
+  text-align: center;
+}
+
+/* Canvas Size Selector */
+.canvas-size-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  background: #ECE9D8;
+}
+
+.canvas-size-selector label {
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+  color: #000;
+}
+
+.canvas-size-selector select {
+  padding: 2px 4px;
+  border: 1px solid #7F9DB9;
+  border-radius: 2px;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+  background: white;
+}
+
+.canvas-size-selector select:focus {
+  outline: none;
+  border-color: #316AC5;
+}

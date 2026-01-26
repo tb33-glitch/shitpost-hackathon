@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useUnifiedWallet } from '../../providers/WalletProvider'
+import { useWallet, useConnection } from '@solana/wallet-adapter-react'
 import { ConnectButton } from '../Wallet'
 import useJupiterSwap, { SOL_MINT, formatTokenAmount, parseTokenAmount } from '../../hooks/useJupiterSwap'
-import useEvmSwap, { ETH_ADDRESS, formatTokenAmount as formatEvmAmount, parseTokenAmount as parseEvmAmount } from '../../hooks/useEvmSwap'
 import './CoinExplorer.css'
 
 // Get high-res image URL for meme making
@@ -23,17 +22,9 @@ const SOL_TOKEN = {
   image_uri: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png',
 }
 
-// ETH token info
-const ETH_TOKEN = {
-  mint: ETH_ADDRESS,
-  symbol: 'ETH',
-  name: 'Ethereum',
-  decimals: 18,
-  image_uri: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/info/logo.png',
-}
-
 /**
  * CoinDetail - Pump.fun style coin detail view with integrated swap
+ * Solana-only version for hackathon
  */
 export default function CoinDetail({ coin, onBack, onMakeMeme }) {
   const [imageError, setImageError] = useState(false)
@@ -41,23 +32,13 @@ export default function CoinDetail({ coin, onBack, onMakeMeme }) {
   const [swapSuccess, setSwapSuccess] = useState(null)
   const [slippage, setSlippage] = useState(1)
 
-  const { solana, evm } = useUnifiedWallet()
+  const { publicKey, connected: isWalletConnected, signTransaction, signAllTransactions } = useWallet()
+  const { connection } = useConnection()
 
-  // Determine chain
-  const isEVM = coin.chain === 'eth' || coin.mint?.startsWith('0x')
-  const chainName = isEVM ? 'ethereum' : 'solana'
+  const inputToken = SOL_TOKEN
 
-  const quoteSymbol = isEVM ? 'ETH' : 'SOL'
-  const inputToken = isEVM ? ETH_TOKEN : SOL_TOKEN
-
-  // Swap hooks
-  const jupiterSwap = useJupiterSwap()
-  const evmSwap = useEvmSwap()
-  const activeSwap = isEVM ? evmSwap : jupiterSwap
-  const { quote, isLoadingQuote, isSwapping, error, getQuote, executeSwap, reset } = activeSwap
-
-  // Check wallet connection
-  const isWalletConnected = isEVM ? evm.isConnected : solana.isConnected
+  // Jupiter swap hook
+  const { quote, isLoadingQuote, isSwapping, error, getQuote, executeSwap, reset } = useJupiterSwap()
 
   // Fetch quote when input changes
   useEffect(() => {
@@ -67,61 +48,43 @@ export default function CoinDetail({ coin, onBack, onMakeMeme }) {
     }
 
     const timeoutId = setTimeout(() => {
-      if (isEVM) {
-        const amountInWei = parseEvmAmount(inputAmount, 18)
-        console.log('[Swap Debug] EVM quote request:', {
-          inputToken: ETH_ADDRESS,
-          outputToken: coin.mint,
-          amount: amountInWei,
-          slippageBps: Math.round(slippage * 100),
-          chainId: evmSwap.chainId,
-          isConnected: evm.isConnected,
-        })
-        getQuote({
-          inputToken: ETH_ADDRESS,
-          outputToken: coin.mint,
-          amount: amountInWei,
-          slippageBps: Math.round(slippage * 100),
-        })
-      } else {
-        const amountInLamports = parseTokenAmount(inputAmount, 9)
-        console.log('[Swap Debug] Solana quote request:', {
-          inputMint: SOL_MINT,
-          outputMint: coin.mint,
-          amount: amountInLamports,
-          slippageBps: Math.round(slippage * 100),
-          isConnected: solana.isConnected,
-        })
-        getQuote({
-          inputMint: SOL_MINT,
-          outputMint: coin.mint,
-          amount: amountInLamports,
-          slippageBps: Math.round(slippage * 100),
-        })
-      }
+      const amountInLamports = parseTokenAmount(inputAmount, 9)
+      console.log('[Swap Debug] Solana quote request:', {
+        inputMint: SOL_MINT,
+        outputMint: coin.mint,
+        amount: amountInLamports,
+        slippageBps: Math.round(slippage * 100),
+        isConnected: isWalletConnected,
+      })
+      getQuote({
+        inputMint: SOL_MINT,
+        outputMint: coin.mint,
+        amount: amountInLamports,
+        slippageBps: Math.round(slippage * 100),
+      })
     }, 500)
 
     return () => clearTimeout(timeoutId)
-  }, [inputAmount, slippage, coin.mint, isEVM, getQuote, reset, evmSwap.chainId, evm.isConnected, solana.isConnected])
+  }, [inputAmount, slippage, coin.mint, getQuote, reset, isWalletConnected])
 
   // Handle swap
   const handleSwap = useCallback(async () => {
-    if (!quote) return
+    if (!quote || !publicKey || !connection) return
 
     setSwapSuccess(null)
     console.log('[Swap] Starting swap...')
 
-    let txid
-    if (isEVM) {
-      txid = await executeSwap({ quoteResponse: quote })
-    } else {
-      if (!solana.wallet || !solana.connection) return
-      txid = await executeSwap({
-        wallet: solana.wallet,
-        connection: solana.connection,
-        quoteResponse: quote,
-      })
+    const wallet = {
+      publicKey,
+      signTransaction,
+      signAllTransactions,
     }
+
+    const txid = await executeSwap({
+      wallet,
+      connection,
+      quoteResponse: quote,
+    })
 
     console.log('[Swap] Result txid:', txid)
 
@@ -133,7 +96,7 @@ export default function CoinDetail({ coin, onBack, onMakeMeme }) {
     } else {
       console.log('[Swap] No txid returned - check for errors')
     }
-  }, [quote, isEVM, solana.wallet, solana.connection, executeSwap, reset])
+  }, [quote, publicKey, connection, signTransaction, signAllTransactions, executeSwap, reset])
 
   // Debug: Log quote and error changes
   useEffect(() => {
@@ -147,9 +110,7 @@ export default function CoinDetail({ coin, onBack, onMakeMeme }) {
 
   // Calculate output amount
   const outputAmount = quote
-    ? isEVM
-      ? formatEvmAmount(quote.outputAmount, coin.decimals || 18)
-      : formatTokenAmount(quote.outAmount, coin.decimals || 6)
+    ? formatTokenAmount(quote.outAmount, coin.decimals || 6)
     : ''
 
   // Format helpers
@@ -177,7 +138,7 @@ export default function CoinDetail({ coin, onBack, onMakeMeme }) {
 
   // Button state
   const getButtonState = () => {
-    if (!isWalletConnected) return { text: `Connect ${isEVM ? 'EVM' : 'Solana'} Wallet`, action: 'connect' }
+    if (!isWalletConnected) return { text: 'Connect Wallet', action: 'connect' }
     if (!inputAmount || parseFloat(inputAmount) <= 0) return { text: 'Enter Amount', disabled: true }
     if (isLoadingQuote) return { text: 'Getting Quote...', disabled: true }
     if (isSwapping) return { text: 'Swapping...', disabled: true }
@@ -215,7 +176,7 @@ export default function CoinDetail({ coin, onBack, onMakeMeme }) {
             <h2 className="detail-name">{coin.name}</h2>
             <div className="detail-meta">
               <span className="detail-symbol">${coin.symbol}</span>
-              <span className="detail-chain-badge">{isEVM ? 'ETH' : 'SOL'}</span>
+              <span className="detail-chain-badge">SOL</span>
               <button className="copy-btn" onClick={copyAddress} title="Copy address">
                 📋 {coin.mint?.slice(0, 6)}...{coin.mint?.slice(-4)}
               </button>
@@ -280,35 +241,23 @@ export default function CoinDetail({ coin, onBack, onMakeMeme }) {
         {/* Chart */}
         <div className="detail-chart">
           <div className="chart-header">
-            <span className="chart-title">{coin.symbol}/{quoteSymbol}</span>
+            <span className="chart-title">{coin.symbol}/SOL</span>
             <a
-              href={isEVM
-                ? `https://www.geckoterminal.com/eth/pools/${coin.pairAddress}`
-                : `https://dexscreener.com/${chainName}/${coin.mint}`
-              }
+              href={`https://dexscreener.com/solana/${coin.mint}`}
               target="_blank"
               rel="noopener noreferrer"
               className="chart-external-link"
             >
-              {isEVM ? 'GeckoTerminal ↗' : 'DexScreener ↗'}
+              DexScreener ↗
             </a>
           </div>
           <div className="chart-container">
-            {isEVM ? (
-              <iframe
-                src={`https://www.geckoterminal.com/eth/pools/${coin.pairAddress}?embed=1&info=0&swaps=0&grayscale=0&light_chart=1`}
-                title={`${coin.symbol} Chart`}
-                className="chart-iframe"
-                allow="clipboard-write"
-              />
-            ) : (
-              <iframe
-                src={`https://dexscreener.com/${chainName}/${coin.mint}?embed=1&loadChartSettings=0&trades=0&info=0&chartLeftToolbar=0&chartTheme=light&theme=light&chartStyle=0&chartType=usd&interval=15`}
-                title={`${coin.symbol} Chart`}
-                className="chart-iframe"
-                allow="clipboard-write"
-              />
-            )}
+            <iframe
+              src={`https://dexscreener.com/solana/${coin.mint}?embed=1&loadChartSettings=0&trades=0&info=0&chartLeftToolbar=0&chartTheme=light&theme=light&chartStyle=0&chartType=usd&interval=15`}
+              title={`${coin.symbol} Chart`}
+              className="chart-iframe"
+              allow="clipboard-write"
+            />
           </div>
         </div>
 
@@ -378,7 +327,7 @@ export default function CoinDetail({ coin, onBack, onMakeMeme }) {
               <div className="swap-success">
                 ✓ Swap successful!{' '}
                 <a
-                  href={isEVM ? `https://etherscan.io/tx/${swapSuccess}` : `https://solscan.io/tx/${swapSuccess}`}
+                  href={`https://solscan.io/tx/${swapSuccess}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -403,7 +352,7 @@ export default function CoinDetail({ coin, onBack, onMakeMeme }) {
             )}
 
             <div className="swap-powered-by">
-              Powered by {isEVM ? 'Kyberswap' : 'Jupiter'}
+              Powered by Jupiter
             </div>
           </div>
         </div>
@@ -422,35 +371,14 @@ export default function CoinDetail({ coin, onBack, onMakeMeme }) {
             🌀 Sacred Waste
           </a>
         )}
-        {isEVM ? (
-          <>
-            <a
-              href={`https://app.uniswap.org/swap?outputCurrency=${coin.mint}&chain=mainnet`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-btn"
-            >
-              🦄 Uniswap
-            </a>
-            <a
-              href={`https://etherscan.io/token/${coin.mint}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-btn"
-            >
-              📜 Etherscan
-            </a>
-          </>
-        ) : (
-          <a
-            href={`https://pump.fun/${coin.mint}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="link-btn"
-          >
-            🚀 pump.fun
-          </a>
-        )}
+        <a
+          href={`https://pump.fun/${coin.mint}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="link-btn"
+        >
+          🚀 pump.fun
+        </a>
         {coin.twitter && (
           <a href={coin.twitter} target="_blank" rel="noopener noreferrer" className="link-btn">
             🐦 Twitter
