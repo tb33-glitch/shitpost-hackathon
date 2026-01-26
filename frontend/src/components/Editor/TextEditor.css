@@ -1,0 +1,205 @@
+/* Text Editor Styles - Windows XP */
+
+.text-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+}
+
+.text-editor-section {
+  margin: 0;
+  padding: 8px;
+  border: 1px solid #ACA899;
+  background: #F5F4EA;
+}
+
+.text-editor-section legend {
+  font-weight: bold;
+  padding: 0 4px;
+}
+
+/* Zone List */
+.zone-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.zone-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #ECE9D8 100%);
+  border: 1px solid #ACA899;
+  border-radius: 2px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.zone-button:hover {
+  background: linear-gradient(180deg, #E3F0FF 0%, #C4DCFB 100%);
+  border-color: #316AC5;
+}
+
+.zone-button.selected {
+  background: linear-gradient(180deg, #316AC5 0%, #1E4E8C 100%);
+  border-color: #0C246A;
+  color: white;
+}
+
+.zone-label {
+  font-weight: bold;
+  text-transform: capitalize;
+}
+
+.zone-preview {
+  color: #808080;
+  font-style: italic;
+  font-size: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100px;
+}
+
+.zone-button.selected .zone-preview {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.no-zones {
+  padding: 12px;
+  text-align: center;
+  color: #808080;
+  font-style: italic;
+}
+
+/* Text Input */
+.text-input-wrapper {
+  margin-bottom: 8px;
+}
+
+.text-input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #7F9DB9;
+  border-radius: 2px;
+  font-family: 'Impact', 'Arial Black', sans-serif;
+  font-size: 14px;
+  resize: vertical;
+  min-height: 60px;
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: #316AC5;
+  box-shadow: 0 0 0 1px #316AC5;
+}
+
+.text-input::placeholder {
+  font-family: 'Tahoma', sans-serif;
+  font-style: italic;
+  color: #999;
+}
+
+/* Style Rows */
+.style-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.style-row label {
+  min-width: 50px;
+  font-weight: bold;
+}
+
+.style-row select {
+  flex: 1;
+  padding: 3px 6px;
+  border: 1px solid #7F9DB9;
+  border-radius: 2px;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+  background: white;
+}
+
+.style-row select:focus {
+  outline: none;
+  border-color: #316AC5;
+}
+
+/* Color Buttons */
+.color-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.color-button {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #808080;
+  border-radius: 2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  color: #000;
+  text-shadow:
+    1px 1px 0 #FFF,
+    -1px -1px 0 #FFF,
+    1px -1px 0 #FFF,
+    -1px 1px 0 #FFF;
+}
+
+.color-button:hover {
+  border-color: #316AC5;
+  transform: scale(1.1);
+}
+
+.color-button.selected {
+  border-color: #316AC5;
+  box-shadow: 0 0 0 2px #316AC5;
+}
+
+/* Tips */
+.text-editor-tips {
+  padding: 4px 8px;
+  background: #FFFFCC;
+  border: 1px solid #E5C100;
+  border-radius: 2px;
+  font-size: 10px;
+  color: #666;
+}
+
+/* Scrollbar styling */
+.zone-list::-webkit-scrollbar {
+  width: 16px;
+}
+
+.zone-list::-webkit-scrollbar-track {
+  background: #ECE9D8;
+  border: 1px solid #ACA899;
+}
+
+.zone-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #DFDFDF 0%, #C0C0C0 100%);
+  border: 1px solid #808080;
+}
+
+.zone-list::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #E8E8E8 0%, #D0D0D0 100%);
+}
+
+.zone-list::-webkit-scrollbar-button {
+  background: #ECE9D8;
+  border: 1px solid #808080;
+  height: 16px;
+}

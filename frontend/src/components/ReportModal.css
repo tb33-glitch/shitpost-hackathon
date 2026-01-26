@@ -1,0 +1,233 @@
+/* Report Modal - Windows XP Style */
+
+.report-modal {
+  width: 400px;
+  max-width: 95vw;
+}
+
+.report-modal-content {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Template Info */
+.report-template-info {
+  background: #F5F4EA;
+  border: 1px solid #ACA899;
+  border-radius: 4px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.template-label {
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+  color: #808080;
+}
+
+.template-name {
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+  font-weight: bold;
+  color: #000;
+}
+
+/* Form Fields */
+.report-modal-content .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.report-modal-content .form-group label {
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+  font-weight: bold;
+  color: #000;
+}
+
+/* Reason Options */
+.reason-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.reason-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: #FAFAF8;
+  border: 1px solid #E8E6DA;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+}
+
+.reason-option:hover {
+  background: #E3F0FF;
+  border-color: #7F9DB9;
+}
+
+.reason-option input[type="radio"] {
+  margin: 0;
+}
+
+.reason-label {
+  color: #000;
+}
+
+/* Textarea */
+.report-modal-content textarea {
+  padding: 8px;
+  border: 1px solid #7F9DB9;
+  border-radius: 2px;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+  resize: vertical;
+  min-height: 60px;
+}
+
+.report-modal-content textarea:focus {
+  outline: none;
+  border-color: #316AC5;
+}
+
+/* Warning */
+.report-warning {
+  background: #FFF3CD;
+  border: 1px solid #FFE083;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 10px;
+  color: #856404;
+  text-align: center;
+}
+
+/* Error Message */
+.report-modal-content .error-message {
+  background: #F8D7DA;
+  border: 1px solid #F5C6CB;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+  color: #721C24;
+  text-align: center;
+}
+
+/* Buttons */
+.report-modal-content .modal-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.report-modal-content .submit-btn {
+  background: linear-gradient(180deg, #E87165 0%, #C94035 100%);
+  border: 1px solid #6B2A24;
+  border-radius: 3px;
+  padding: 6px 16px;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+}
+
+.report-modal-content .submit-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #FF8175 0%, #D95045 100%);
+}
+
+.report-modal-content .submit-btn:disabled {
+  background: #ACA899;
+  border-color: #8E8E7E;
+  cursor: not-allowed;
+}
+
+.report-modal-content .cancel-btn {
+  background: linear-gradient(180deg, #F5F4EA 0%, #E8E6DA 100%);
+  border: 1px solid #ACA899;
+  border-radius: 3px;
+  padding: 6px 16px;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.report-modal-content .cancel-btn:hover {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F5F4EA 100%);
+}
+
+/* Status Container */
+.report-modal-content .status-container {
+  padding: 30px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.report-modal-content .status-icon {
+  font-size: 32px;
+  font-weight: bold;
+}
+
+.report-modal-content .status-container.success .status-icon {
+  color: #4E9A06;
+  background: #D4EDDA;
+  padding: 8px 16px;
+  border-radius: 8px;
+}
+
+.report-modal-content .status-container.error .status-icon {
+  color: #C94035;
+}
+
+.report-modal-content .status-title {
+  font-family: 'Tahoma', sans-serif;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.report-modal-content .status-subtitle {
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+  color: #808080;
+  line-height: 1.4;
+}
+
+/* Spinning Animation */
+.report-modal-content .spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 420px) {
+  .report-modal {
+    width: 100%;
+  }
+
+  .report-modal-content .modal-buttons {
+    flex-direction: column;
+  }
+
+  .report-modal-content .submit-btn,
+  .report-modal-content .cancel-btn {
+    width: 100%;
+  }
+}
