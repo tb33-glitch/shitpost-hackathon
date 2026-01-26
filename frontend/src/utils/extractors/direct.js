@@ -1,6 +1,7 @@
 /**
  * Handle direct image/video URLs
  */
+import { validateUrl, isImageUrl as isImageExtension, isVideoUrl } from '../urlValidation'
 
 /**
  * Check if URL is a known image hosting domain
@@ -29,6 +30,13 @@ function isKnownImageHost(url) {
  * @returns {Promise<Array>}
  */
 export async function extractDirectMedia(url) {
+  // SECURITY: Validate URL before fetching
+  // Allow any HTTPS for direct image URLs (they're explicitly user-provided)
+  const validation = validateUrl(url, { allowAnyHttps: true })
+  if (!validation.valid) {
+    throw new Error(`Invalid URL: ${validation.error}`)
+  }
+
   // For known image hosts, skip HEAD check and trust the URL
   if (isKnownImageHost(url)) {
     return [{
