@@ -1,0 +1,805 @@
+/* Main app styles */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  /* Scale everything up proportionally */
+  zoom: 1.10;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Tahoma, 'Segoe UI', 'MS Sans Serif', Arial, sans-serif;
+  font-size: 12px;
+  background: #3A6EA5;
+  min-height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* App container when inside desktop shell */
+.app-container {
+  /* Inherits from desktop shell */
+}
+
+/* Paint window layout */
+.paint-window {
+  width: fit-content;
+  min-width: auto;
+}
+
+/* New integrated layout */
+.paint-layout {
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+}
+
+.paint-left {
+  flex: 0 0 auto;
+}
+
+.paint-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.paint-main {
+  display: flex;
+}
+
+.paint-canvas-area {
+  flex: 1;
+  padding: 4px;
+  background: #7A96DF;
+}
+
+/* Right panel for NFTs and Burns */
+.paint-right-panel {
+  width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px;
+  background: #ECE9D8;
+  border-left: 1px solid #ACA899;
+}
+
+.nft-panel-section {
+  margin: 0 !important;
+  padding: 6px !important;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.nft-panel-section legend {
+  font-size: 10px !important;
+  padding: 0 4px !important;
+}
+
+.nft-panel-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 180px;
+}
+
+.nft-panel-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+  color: #808080;
+  font-size: 10px;
+  text-align: center;
+}
+
+/* Embedded NFT grid */
+.embedded-nft-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+}
+
+.embedded-nft-item {
+  cursor: pointer;
+  padding: 2px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.embedded-nft-item:hover {
+  border-color: #ff6b6b;
+  background: #fff5f5;
+}
+
+.embedded-nft-image {
+  width: 48px;
+  height: 48px;
+  image-rendering: pixelated;
+  border: 1px solid #808080;
+}
+
+.embedded-nft-id {
+  font-size: 9px;
+  color: #000;
+  margin-top: 2px;
+}
+
+.embedded-burn-hint {
+  font-size: 8px;
+  color: #ff6b6b;
+}
+
+/* Embedded burn gallery */
+.embedded-burn-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+}
+
+.embedded-burn-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2px;
+}
+
+.embedded-burn-image {
+  width: 48px;
+  height: 48px;
+  image-rendering: pixelated;
+  border: 1px solid #808080;
+  filter: sepia(0.3) brightness(0.9);
+}
+
+.embedded-burn-info {
+  font-size: 8px;
+  color: #808080;
+  text-align: center;
+  margin-top: 2px;
+}
+
+.embedded-empty {
+  text-align: center;
+  padding: 12px 4px;
+  color: #808080;
+  font-size: 10px;
+}
+
+/* Menu bar - XP style */
+.menu-bar {
+  display: flex;
+  gap: 0;
+  padding: 2px 4px;
+  background: #ECE9D8;
+  border-bottom: 1px solid #ACA899;
+}
+
+.menu-item {
+  padding: 3px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-radius: 2px;
+  font-family: Tahoma, sans-serif;
+}
+
+.menu-item:hover {
+  background: #316AC5;
+  color: white;
+}
+
+/* Gallery section */
+.gallery-window {
+  width: fit-content;
+  min-width: auto;
+  max-width: 280px;
+}
+
+.gallery-content {
+  padding: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.gallery-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.gallery-image {
+  width: 64px;
+  height: 64px;
+  image-rendering: pixelated;
+  border: 1px solid #ACA899;
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5);
+}
+
+.gallery-image.empty {
+  background: #ECE9D8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #808080;
+  font-size: 10px;
+}
+
+.gallery-info {
+  font-size: 9px;
+  text-align: center;
+  max-width: 64px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Modal styles */
+.modal-window {
+  max-width: 400px;
+}
+
+/* Help window */
+.help-window {
+  max-width: 520px;
+}
+
+.help-window fieldset {
+  background: #FFFFFF;
+  border: 1px solid #ACA899;
+}
+
+.help-window table tr:nth-child(even) {
+  background: #F5F4ED;
+}
+
+.modal-content {
+  padding: 16px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.modal-preview {
+  display: flex;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.modal-preview img {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+  border: 2px solid #ACA899;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  background: #f5f5f5;
+}
+
+/* Fee notice */
+.fee-notice {
+  background: #ffffcc;
+  border: 1px solid #808000;
+  padding: 8px;
+  margin: 8px 0;
+  font-size: 11px;
+}
+
+.fee-notice.premium {
+  background: #fff0d0;
+  border-color: #ffd700;
+}
+
+/* Transaction status */
+.tx-status {
+  text-align: center;
+  padding: 24px 16px;
+}
+
+.tx-status .status-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.tx-status .status-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.tx-status .status-subtitle {
+  font-size: 13px;
+  color: #666;
+}
+
+.tx-status.pending .status-title {
+  color: #666;
+}
+
+.tx-status.success .status-title {
+  color: #008000;
+}
+
+.tx-status.error .status-title {
+  color: #cc0000;
+}
+
+.tx-status .error-message {
+  font-size: 12px;
+  color: #666;
+  background: #f5f5f5;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin: 12px 0;
+  word-break: break-word;
+}
+
+.tx-status .error-hint {
+  font-size: 11px;
+  color: #999;
+  margin-top: 8px;
+}
+
+/* Modal actions */
+.modal-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.explorer-link {
+  display: inline-block;
+  font-size: 14px;
+  color: #0066cc;
+  text-decoration: none;
+  padding: 8px 16px;
+  border: 1px solid #0066cc;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.explorer-link:hover {
+  background: #0066cc;
+  color: white;
+}
+
+.primary-btn {
+  font-size: 14px;
+  padding: 10px 24px;
+  background: linear-gradient(180deg, #4CAF50 0%, #388E3C 100%);
+  color: white;
+  border: 1px solid #2E7D32;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.primary-btn:hover {
+  background: linear-gradient(180deg, #5CB85C 0%, #449D44 100%);
+}
+
+.secondary-btn {
+  font-size: 13px;
+  padding: 8px 20px;
+  background: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.secondary-btn:hover {
+  background: #e0e0e0;
+}
+
+/* Burn success specific */
+.burn-success .status-title {
+  color: #cc0000 !important;
+}
+
+.burn-rip {
+  font-size: 14px;
+  color: #666;
+  font-style: italic;
+  margin-top: 8px;
+}
+
+/* Wallet connect area */
+.wallet-area {
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wallet-address {
+  font-size: 11px;
+  font-family: 'Courier New', monospace;
+  padding: 2px 6px;
+  background: #ffffff;
+  border: 1px solid #ACA899;
+  border-radius: 2px;
+}
+
+.wallet-area button {
+  background: #3a6ea5;
+  color: white;
+  border: 1px solid #2a5a8a;
+  padding: 4px 12px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.wallet-area button:hover {
+  background: #4a7eb5;
+}
+
+.wallet-area button:active {
+  background: #2a5a8a;
+}
+
+/* My NFTs Window */
+.my-nfts-window {
+  width: fit-content;
+  min-width: auto;
+  max-width: 280px;
+}
+
+.my-nfts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding: 8px;
+  min-height: 80px;
+}
+
+.my-nfts-empty {
+  grid-column: span 2;
+  text-align: center;
+  padding: 16px;
+  color: #808080;
+}
+
+.my-nft-item {
+  cursor: pointer;
+  padding: 4px;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.my-nft-item:hover {
+  border-color: #ff6b6b;
+  background: #fff0f0;
+}
+
+.my-nft-image {
+  width: 64px;
+  height: 64px;
+  image-rendering: pixelated;
+  border: 2px solid;
+  border-color: #808080 #ffffff #ffffff #808080;
+}
+
+.my-nft-image.placeholder {
+  background: #c0c0c0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #808080;
+}
+
+.my-nft-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 10px;
+  margin-top: 4px;
+}
+
+.my-nft-id {
+  font-weight: bold;
+}
+
+.my-nft-burn-hint {
+  color: #ff6b6b;
+  font-size: 9px;
+}
+
+/* Burn Modal Styles */
+.burn-modal {
+  min-width: 420px;
+  max-width: 480px;
+}
+
+.burn-preview {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.burn-image {
+  width: 180px;
+  height: 180px;
+  image-rendering: pixelated;
+  border: 3px solid;
+  border-color: #808080 #ffffff #ffffff #808080;
+}
+
+.burn-image.placeholder {
+  background: #c0c0c0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: #808080;
+}
+
+.burn-warning {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: linear-gradient(135deg, #ffcccc, #ff9999);
+  border: 2px solid #ff0000;
+  padding: 12px;
+  margin: 16px 0;
+  font-size: 13px;
+}
+
+.warning-icon {
+  font-size: 20px;
+}
+
+.burn-button {
+  background: linear-gradient(180deg, #ff6b6b, #cc0000) !important;
+  color: white !important;
+  font-weight: bold;
+  padding: 8px 16px !important;
+  border: 2px outset #ff9999 !important;
+}
+
+.burn-button:hover {
+  background: linear-gradient(180deg, #ff8888, #ff0000) !important;
+}
+
+.burn-button:active {
+  border-style: inset !important;
+}
+
+.burn-status {
+  text-align: center;
+  padding: 16px;
+}
+
+.burn-subtext {
+  font-size: 10px;
+  color: #808080;
+  margin-top: 8px;
+}
+
+.burn-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 8px 0;
+}
+
+.burn-subtitle {
+  font-size: 12px;
+  margin: 4px 0;
+}
+
+.burn-small {
+  font-size: 10px;
+  color: #808080;
+  margin: 8px 0;
+}
+
+.burn-link {
+  margin-top: 12px;
+}
+
+.burn-link a {
+  color: #0000ff;
+  font-size: 10px;
+}
+
+.burn-text-dramatic {
+  font-size: 18px;
+  font-weight: bold;
+  color: #ff0000;
+  animation: pulse 0.5s infinite;
+}
+
+.ashes {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+
+/* Shake animation */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px) rotate(-2deg); }
+  75% { transform: translateX(5px) rotate(2deg); }
+}
+
+.shaking {
+  animation: shake 0.3s infinite;
+}
+
+/* Burning away animation */
+@keyframes burnAway {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  30% {
+    filter: brightness(1.5) sepia(0.5);
+  }
+  60% {
+    filter: brightness(2) sepia(1) saturate(2);
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.3);
+    filter: brightness(3) sepia(1) saturate(3);
+  }
+}
+
+.burning-away {
+  animation: burnAway 3s ease-out forwards;
+}
+
+/* Flames container */
+.flames-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.flames {
+  position: absolute;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.flame {
+  font-size: 30px;
+  animation: flicker 0.3s infinite alternate;
+}
+
+@keyframes flicker {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-10px) scale(1.2); opacity: 0.8; }
+}
+
+.flame1 { animation-delay: 0s; }
+.flame2 { animation-delay: 0.1s; }
+.flame3 { animation-delay: 0.05s; }
+.flame4 { animation-delay: 0.15s; }
+.flame5 { animation-delay: 0.08s; }
+.flame6 { animation-delay: 0.12s; }
+.flame7 { animation-delay: 0.03s; }
+
+/* Smoke */
+.smoke {
+  position: absolute;
+  top: -20px;
+  display: flex;
+  gap: 10px;
+}
+
+.smoke-particle {
+  font-size: 20px;
+  animation: rise 2s infinite;
+  opacity: 0.6;
+}
+
+@keyframes rise {
+  0% { transform: translateY(0); opacity: 0.6; }
+  100% { transform: translateY(-50px); opacity: 0; }
+}
+
+.smoke-particle:nth-child(1) { animation-delay: 0s; }
+.smoke-particle:nth-child(2) { animation-delay: 0.5s; }
+.smoke-particle:nth-child(3) { animation-delay: 1s; }
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Old burn animation (keeping for compatibility) */
+@keyframes burn {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 0.8;
+    filter: brightness(1.5) sepia(1) saturate(3);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8);
+    filter: brightness(2) sepia(1);
+  }
+}
+
+.burning {
+  animation: burn 1.5s ease-out forwards;
+}
+
+/* Meme Studio Window - Fixed size */
+.meme-studio-window {
+  width: auto !important;
+  min-width: auto !important;
+}
+
+.meme-studio-window .window-body {
+  padding: 0 !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .desktop {
+    padding: 0;
+  }
+
+  .paint-window {
+    min-width: auto;
+    width: 100%;
+    height: 100%;
+  }
+
+  .paint-window .window-body {
+    height: 100%;
+  }
+
+  .gallery-content {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* Hide status bar on mobile */
+  .status-bar {
+    display: none !important;
+  }
+
+  /* Make meme studio window fill space */
+  .meme-studio-window {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .meme-studio-window .window-body {
+    height: 100% !important;
+    display: flex;
+    flex-direction: column;
+  }
+}

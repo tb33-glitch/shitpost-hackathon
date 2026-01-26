@@ -1,0 +1,89 @@
+.boot-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  transition: opacity 0.5s ease-out;
+}
+
+.boot-screen.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.boot-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.boot-logo-image {
+  max-width: 400px;
+  width: 80vw;
+  height: auto;
+  animation: wave 2s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+@keyframes wave {
+  0%, 100% {
+    transform: rotate(-0.5deg);
+  }
+  50% {
+    transform: rotate(0.5deg);
+  }
+}
+
+/* XP-style progress bar */
+.boot-progress-container {
+  margin-top: -80px;
+}
+
+.boot-progress-bar {
+  width: 200px;
+  height: 24px;
+  background: #000;
+  border: 2px solid #5b7ebd;
+  border-radius: 3px;
+  padding: 3px;
+  overflow: hidden;
+  box-shadow: 0 0 0 2px #000, 0 0 0 4px #5b7ebd;
+}
+
+.boot-progress-blocks {
+  display: flex;
+  gap: 3px;
+  animation: xp-loading 1.5s ease-in-out infinite;
+  width: fit-content;
+}
+
+.boot-block {
+  width: 20px;
+  height: 16px;
+  background: linear-gradient(180deg, #8cb0f0 0%, #5b8ede 50%, #4a7fd4 100%);
+  border-radius: 2px;
+}
+
+@keyframes xp-loading {
+  0% {
+    transform: translateX(-100px);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(200px);
+    opacity: 0;
+  }
+}

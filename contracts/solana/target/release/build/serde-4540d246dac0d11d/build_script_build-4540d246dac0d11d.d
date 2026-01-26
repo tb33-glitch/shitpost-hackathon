@@ -1,0 +1,5 @@
+/Users/tylerbeattie/Desktop/shitpost.pro-main/contracts/solana/target/release/build/serde-4540d246dac0d11d/build_script_build-4540d246dac0d11d: /Users/tylerbeattie/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.228/build.rs
+
+/Users/tylerbeattie/Desktop/shitpost.pro-main/contracts/solana/target/release/build/serde-4540d246dac0d11d/build_script_build-4540d246dac0d11d.d: /Users/tylerbeattie/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.228/build.rs
+
+/Users/tylerbeattie/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.228/build.rs:

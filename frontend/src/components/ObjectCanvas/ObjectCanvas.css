@@ -1,0 +1,240 @@
+.object-canvas-container {
+  position: relative;
+  background: #c0c0c0;
+  border: 1px solid #808080;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25), 0 2px 4px rgba(0, 0, 0, 0.15);
+  user-select: none;
+  overflow: visible; /* Allow selection handles to appear outside canvas bounds */
+  touch-action: none; /* Prevent browser touch behaviors for canvas interaction */
+}
+
+.object-canvas-main {
+  display: block;
+  image-rendering: pixelated;
+}
+
+.drawing-canvas-layer {
+  display: block;
+  image-rendering: pixelated;
+}
+
+/* Selection overlay */
+.selection-overlay {
+  position: absolute;
+  pointer-events: none;
+}
+
+.selection-border {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px solid #0078d7;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+}
+
+/* Corner resize handles */
+.selection-handle {
+  position: absolute;
+  background: #ffffff;
+  border: 2px solid #0078d7;
+  pointer-events: auto;
+  z-index: 10;
+}
+
+.selection-handle.nw {
+  top: -5px;
+  left: -5px;
+  cursor: nwse-resize;
+}
+
+.selection-handle.ne {
+  top: -5px;
+  right: -5px;
+  cursor: nesw-resize;
+}
+
+.selection-handle.sw {
+  bottom: -5px;
+  left: -5px;
+  cursor: nesw-resize;
+}
+
+.selection-handle.se {
+  bottom: -5px;
+  right: -5px;
+  cursor: nwse-resize;
+}
+
+.selection-handle:hover {
+  background: #e3f0ff;
+  border-color: #005a9e;
+}
+
+/* Rotation handle */
+.rotation-handle-line {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  width: 2px;
+  height: 20px;
+  background: #0078d7;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.rotation-handle {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  background: #ffffff;
+  border: 2px solid #0078d7;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  pointer-events: auto;
+  cursor: grab;
+}
+
+.rotation-handle:hover {
+  background: #e3f0ff;
+  border-color: #005a9e;
+}
+
+.rotation-handle:active {
+  cursor: grabbing;
+}
+
+
+/* Empty state prompt */
+.canvas-empty-prompt {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  color: #808080;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: 14px;
+  font-family: 'Tahoma', 'MS Sans Serif', sans-serif;
+  max-width: 200px;
+}
+
+/* Crop handles - pill shaped */
+.crop-handle {
+  position: absolute;
+  background: #ffffff;
+  border: 2px solid #0078d7;
+  border-radius: 4px;
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 20;
+}
+
+.crop-handle-top,
+.crop-handle-bottom {
+  width: 40px;
+  height: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+}
+
+.crop-handle-top {
+  top: -4px;
+}
+
+.crop-handle-bottom {
+  bottom: -4px;
+}
+
+.crop-handle-left,
+.crop-handle-right {
+  width: 8px;
+  height: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+}
+
+.crop-handle-left {
+  left: -4px;
+}
+
+.crop-handle-right {
+  right: -4px;
+}
+
+.crop-handle:hover {
+  background: #e3f0ff;
+  border-color: #005a9e;
+}
+
+/* Mobile touch targets - larger handles */
+@media (max-width: 768px) {
+  .object-canvas-container {
+    border: none;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .selection-handle {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .selection-handle.nw {
+    top: -10px;
+    left: -10px;
+  }
+
+  .selection-handle.ne {
+    top: -10px;
+    right: -10px;
+  }
+
+  .selection-handle.sw {
+    bottom: -10px;
+    left: -10px;
+  }
+
+  .selection-handle.se {
+    bottom: -10px;
+    right: -10px;
+  }
+
+  .rotation-handle {
+    width: 24px;
+    height: 24px;
+    top: -50px;
+  }
+
+  .rotation-handle-line {
+    top: -38px;
+    height: 28px;
+  }
+
+  .crop-handle-top,
+  .crop-handle-bottom {
+    width: 60px;
+    height: 14px;
+  }
+
+  .crop-handle-left,
+  .crop-handle-right {
+    width: 14px;
+    height: 60px;
+  }
+}

@@ -1,0 +1,228 @@
+.canvas-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  align-content: flex-start;
+  gap: 4px;
+  padding: 8px;
+  background: linear-gradient(180deg, #f5f5f5 0%, #e0e0e0 100%);
+  border-bottom: 1px solid #808080;
+  min-height: 80px;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 28px;
+  background: #808080;
+  margin: 0 4px;
+}
+
+.toolbar-spacer {
+  flex: 1;
+}
+
+.toolbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-family: 'Tahoma', 'MS Sans Serif', sans-serif;
+  background: linear-gradient(180deg, #ffffff 0%, #e8e8e8 100%);
+  border: 1px solid #808080;
+  border-radius: 2px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.toolbar-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #f0f8ff 0%, #d0e8ff 100%);
+  border-color: #0078d7;
+}
+
+.toolbar-btn:active:not(:disabled) {
+  background: linear-gradient(180deg, #d0e8ff 0%, #b0d0f0 100%);
+}
+
+.toolbar-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toolbar-btn.active {
+  background: linear-gradient(180deg, #cce4f7 0%, #9ecbeb 100%);
+  border-color: #0078d7;
+}
+
+.toolbar-btn.primary {
+  background: linear-gradient(180deg, #0078d7 0%, #0056a0 100%);
+  color: white;
+  border-color: #004080;
+}
+
+.toolbar-btn.primary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #1a8ae6 0%, #0066b3 100%);
+}
+
+.toolbar-btn.danger {
+  color: #c00;
+}
+
+.toolbar-btn.danger:hover:not(:disabled) {
+  background: linear-gradient(180deg, #fff0f0 0%, #ffe0e0 100%);
+  border-color: #c00;
+}
+
+.toolbar-btn.small {
+  padding: 2px 6px;
+  font-size: 10px;
+}
+
+.toolbar-btn.export-btn {
+  background: linear-gradient(180deg, #4caf50 0%, #388e3c 100%);
+  color: white;
+  border-color: #2e7d32;
+}
+
+.toolbar-btn.export-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #5cb85c 0%, #449d44 100%);
+}
+
+/* Dropdown */
+.toolbar-dropdown {
+  position: relative;
+}
+
+.toolbar-dropdown-content {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  margin-top: 4px;
+}
+
+/* Override MemeTemplatePicker positioning when used in toolbar dropdown */
+.toolbar-dropdown-content .meme-template-picker {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+  width: 500px;
+  max-height: 400px;
+}
+
+/* Override StickerPicker positioning when used in toolbar dropdown */
+.toolbar-dropdown-content .picker-panel {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+  min-width: 200px;
+}
+
+/* Color picker inline */
+.color-picker-inline {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: #e0e0e0;
+  border: 1px solid #808080;
+  border-radius: 2px;
+}
+
+.color-swatch {
+  width: 18px;
+  height: 18px;
+  border: 1px solid #404040;
+  cursor: pointer;
+  padding: 0;
+}
+
+.color-swatch:hover {
+  transform: scale(1.1);
+}
+
+.color-swatch.active {
+  border: 2px solid #0078d7;
+  box-shadow: 0 0 2px #0078d7;
+}
+
+/* Background color picker */
+.bg-color-preview {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #404040;
+  vertical-align: middle;
+}
+
+.background-picker {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 8px;
+  background: #f0f0f0;
+  border: 1px solid #808080;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  margin-top: 4px;
+}
+
+.bg-color-option {
+  width: 24px;
+  height: 24px;
+  border: 1px solid #404040;
+  cursor: pointer;
+  padding: 0;
+}
+
+.bg-color-option:hover {
+  border-color: #0078d7;
+  transform: scale(1.1);
+}
+
+.bg-color-option.active {
+  border: 2px solid #0078d7;
+  box-shadow: 0 0 4px #0078d7;
+}
+
+/* Text editing */
+.text-edit-group {
+  gap: 8px;
+}
+
+.text-input {
+  width: 150px;
+  padding: 4px 6px;
+  font-size: 11px;
+  font-family: 'Tahoma', 'MS Sans Serif', sans-serif;
+  border: 1px solid #808080;
+  background: white;
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: #0078d7;
+}
+
+.font-size-select {
+  padding: 3px 4px;
+  font-size: 11px;
+  font-family: 'Tahoma', 'MS Sans Serif', sans-serif;
+  border: 1px solid #808080;
+  background: white;
+}
+
+.font-size-select:focus {
+  outline: none;
+  border-color: #0078d7;
+}

@@ -1,0 +1,2484 @@
+/* Windows XP Desktop */
+.xp-desktop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+}
+
+.desktop-wallpaper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* Windows XP Bliss wallpaper */
+  background-image: url('/images/xp-wallpaper.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+}
+
+/* Desktop Icons - XP style grid (top-to-bottom, then left-to-right) */
+.desktop-icons {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  bottom: 40px; /* Leave space for taskbar */
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 10px 20px;
+  z-index: 1;
+}
+
+.desktop-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 70px;
+  cursor: pointer;
+  padding: 4px;
+  border: 1px dotted transparent;
+}
+
+.desktop-icon:focus {
+  outline: none;
+}
+
+.desktop-icon.selected,
+.desktop-icon:focus {
+  border-color: #ffffff;
+  background: rgba(0, 0, 128, 0.5);
+}
+
+.desktop-icon-image {
+  font-size: 32px;
+  margin-bottom: 4px;
+  filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.3));
+}
+
+.desktop-icon-label {
+  font-size: 11px;
+  color: #ffffff;
+  text-align: center;
+  text-shadow: 1px 1px 1px #000000;
+  word-wrap: break-word;
+  max-width: 70px;
+}
+
+.desktop-icon.selected .desktop-icon-label,
+.desktop-icon:focus .desktop-icon-label {
+  background: #000080;
+  color: #ffffff;
+}
+
+/* Desktop Window */
+.desktop-window {
+  position: absolute;
+  animation: windowOpen 0.2s ease-out;
+  min-width: 300px;
+  min-height: 200px;
+}
+
+.desktop-window.dragging {
+  user-select: none;
+  cursor: grabbing;
+}
+
+.desktop-window.resized {
+  overflow: visible;
+}
+
+/* Drag handle overlay on title bar */
+.window-drag-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 90px; /* Leave space for title bar controls (min, max, close buttons) */
+  height: 28px;
+  cursor: grab;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.window-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Ensure title bar controls are above drag handle */
+.desktop-window .title-bar-controls {
+  position: relative;
+  z-index: 20;
+}
+
+/* Resize handles - positioned inside window bounds to avoid clipping */
+.resize-handle {
+  position: absolute;
+  z-index: 100;
+  /* Debug: uncomment to see handles */
+  /* background: rgba(255, 0, 0, 0.2); */
+}
+
+.resize-n {
+  top: 0;
+  left: 15px;
+  right: 15px;
+  height: 6px;
+  cursor: n-resize;
+}
+
+.resize-s {
+  bottom: 0;
+  left: 15px;
+  right: 15px;
+  height: 6px;
+  cursor: s-resize;
+}
+
+.resize-e {
+  right: 0;
+  top: 30px;
+  bottom: 6px;
+  width: 6px;
+  cursor: e-resize;
+}
+
+.resize-w {
+  left: 0;
+  top: 30px;
+  bottom: 6px;
+  width: 6px;
+  cursor: w-resize;
+}
+
+.resize-ne {
+  top: 0;
+  right: 0;
+  width: 15px;
+  height: 15px;
+  cursor: ne-resize;
+}
+
+.resize-nw {
+  top: 0;
+  left: 0;
+  width: 15px;
+  height: 15px;
+  cursor: nw-resize;
+}
+
+.resize-se {
+  bottom: 0;
+  right: 0;
+  width: 15px;
+  height: 15px;
+  cursor: se-resize;
+}
+
+.resize-sw {
+  bottom: 0;
+  left: 0;
+  width: 15px;
+  height: 15px;
+  cursor: sw-resize;
+}
+
+@keyframes windowOpen {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.desktop-window.active {
+  z-index: 100;
+}
+
+/* Windows XP Taskbar */
+.xp-taskbar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30px;
+  background: linear-gradient(180deg, #3168d5 0%, #4993E6 3%, #2157D7 5%, #2663E0 90%, #1941A5 100%);
+  border-top: 1px solid #0C3B9A;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  z-index: 9999;
+  gap: 0;
+}
+
+.start-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  background: linear-gradient(180deg, #3C8F3C 0%, #379137 20%, #2D8F2D 40%, #21892B 60%, #1A8726 80%, #158320 100%);
+  border: none;
+  border-radius: 0 8px 8px 0;
+  font-family: 'Franklin Gothic Medium', 'Trebuchet MS', Tahoma, sans-serif;
+  font-size: 13px;
+  font-weight: bold;
+  font-style: italic;
+  color: white;
+  text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+  cursor: pointer;
+  height: 30px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 1px 0 3px rgba(0,0,0,0.2);
+}
+
+.start-button:hover {
+  background: linear-gradient(180deg, #4CA04C 0%, #47A147 20%, #3D9F3D 40%, #31992B 60%, #2A9726 80%, #259320 100%);
+}
+
+.start-button:active,
+.start-button.active {
+  background: linear-gradient(180deg, #2C7F2C 0%, #278127 20%, #1D7F1D 40%, #11791B 60%, #0A7716 80%, #057310 100%);
+}
+
+.start-logo {
+  font-size: 18px;
+  filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.3));
+}
+
+.start-text {
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+/* Windows XP Start Menu */
+.start-menu {
+  position: absolute;
+  bottom: 30px;
+  left: 0;
+  width: 380px;
+  background: #D6DFF7;
+  border: 2px solid;
+  border-color: #4A7BD4 #1B4BA3 #1B4BA3 #4A7BD4;
+  border-radius: 6px 6px 0 0;
+  box-shadow: 3px 3px 15px rgba(0, 0, 0, 0.4);
+  z-index: 10000;
+  overflow: hidden;
+}
+
+.start-menu-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: linear-gradient(180deg, #1E5BBF 0%, #2968C8 50%, #236AC4 100%);
+  border-bottom: 1px solid #0D3A8C;
+}
+
+.start-menu-avatar {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(180deg, #4A8CD4 0%, #2E6EB8 100%);
+  border: 2px solid #FFFFFF;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.start-menu-username {
+  color: white;
+  font-family: 'Franklin Gothic Medium', Tahoma, sans-serif;
+  font-size: 14px;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.start-menu-content {
+  display: flex;
+  min-height: 300px;
+}
+
+.start-menu-left {
+  flex: 1;
+  background: white;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.start-menu-right {
+  width: 150px;
+  background: #D6DFF7;
+  padding: 8px 0;
+  border-left: 1px solid #A4B6D9;
+}
+
+.start-menu-pinned,
+.start-menu-programs {
+  padding: 0 4px;
+}
+
+.start-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 3px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.start-menu-item:hover {
+  background: #316AC5 !important;
+}
+
+.start-menu-item:hover .start-menu-item-name,
+.start-menu-item:hover .start-menu-item-desc {
+  color: white;
+}
+
+.start-menu-icon {
+  font-size: 32px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.start-menu-item-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.start-menu-item-name {
+  font-family: Tahoma, sans-serif;
+  font-size: 11px;
+  font-weight: bold;
+  color: #000;
+}
+
+.start-menu-item-desc {
+  font-family: Tahoma, sans-serif;
+  font-size: 10px;
+  color: #808080;
+}
+
+.start-menu-separator {
+  height: 1px;
+  background: #C5D4F0;
+  margin: 6px 8px;
+}
+
+.start-menu-separator-right {
+  height: 1px;
+  background: #A4B6D9;
+  margin: 6px 8px;
+}
+
+.start-menu-all-programs {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  margin-top: auto;
+  border-top: 1px solid #C5D4F0;
+  font-family: Tahoma, sans-serif;
+  font-size: 11px;
+  font-weight: bold;
+  color: #000;
+  cursor: pointer;
+}
+
+.start-menu-all-programs:hover {
+  background: #316AC5;
+  color: white;
+}
+
+.start-menu-all-programs .arrow {
+  font-size: 8px;
+}
+
+.start-menu-item-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 5px 10px;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer;
+  font-family: Tahoma, sans-serif;
+  font-size: 11px;
+  font-weight: bold;
+  color: #000;
+  text-align: left;
+}
+
+.start-menu-item-right:hover {
+  background: #316AC5 !important;
+  color: white;
+}
+
+.start-menu-icon-small {
+  font-size: 18px;
+  width: 20px;
+}
+
+.start-menu-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 10px;
+  background: linear-gradient(180deg, #4178BE 0%, #3168B0 50%, #2157A0 100%);
+  border-top: 1px solid #5088D0;
+}
+
+.start-menu-footer-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: transparent !important;
+  border: none !important;
+  color: white;
+  font-family: Tahoma, sans-serif;
+  font-size: 11px;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.start-menu-footer-btn:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+.start-menu-footer-btn .footer-icon {
+  font-size: 14px;
+}
+
+.start-menu-footer-btn.shutdown {
+  color: #FFCCCC;
+}
+
+.quick-launch {
+  display: flex;
+  gap: 2px;
+  padding: 0 8px;
+  margin-left: 4px;
+  border-left: 1px solid rgba(255,255,255,0.2);
+  border-right: 1px solid rgba(0,0,0,0.2);
+  height: 100%;
+  align-items: center;
+}
+
+.quick-launch-btn {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 3px;
+}
+
+.quick-launch-btn:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+.taskbar-divider {
+  width: 2px;
+  height: 22px;
+  background: linear-gradient(to right, rgba(0,0,0,0.2), rgba(255,255,255,0.2));
+  margin: 0 4px;
+}
+
+.taskbar-windows {
+  flex: 1;
+  display: flex;
+  gap: 3px;
+  overflow: hidden;
+  padding: 2px 4px;
+}
+
+.taskbar-window-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 140px;
+  max-width: 180px;
+  padding: 3px 10px;
+  background: linear-gradient(180deg, #3C89D0 0%, #2E6EBA 50%, #2360A5 100%);
+  border: 1px solid;
+  border-color: rgba(255,255,255,0.3) rgba(0,0,0,0.2) rgba(0,0,0,0.3) rgba(255,255,255,0.2);
+  border-radius: 3px;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+  color: white;
+  text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.taskbar-window-btn:hover {
+  background: linear-gradient(180deg, #4C99E0 0%, #3E7ECA 50%, #3370B5 100%);
+}
+
+.taskbar-window-btn.active {
+  background: linear-gradient(180deg, #1E5AA8 0%, #1A4E95 50%, #154285 100%);
+  border-color: rgba(0,0,0,0.3) rgba(255,255,255,0.2) rgba(255,255,255,0.2) rgba(0,0,0,0.2);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.taskbar-window-icon {
+  font-size: 14px;
+}
+
+.taskbar-window-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.system-tray {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  background: linear-gradient(180deg, #1290E9 0%, #1085D7 50%, #0E73C1 100%);
+  border-left: 1px solid rgba(255,255,255,0.2);
+  height: 100%;
+}
+
+.tray-icon {
+  font-size: 14px;
+  cursor: pointer;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+}
+
+.taskbar-clock {
+  font-size: 11px;
+  font-family: 'Tahoma', sans-serif;
+  color: white;
+  text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+  padding-left: 8px;
+}
+
+/* Dookie - shitpost.pro mascot */
+/* Stapley - Cartoon Stapler Assistant */
+.stapley-container {
+  position: fixed;
+  z-index: 500;
+  cursor: move;
+  user-select: none;
+  transition: left 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.stapley-container.entering {
+  cursor: default;
+}
+
+.stapley-container.wiggling {
+  cursor: default;
+}
+
+.stapley-container.wiggling .stapley-body {
+  animation: stapleyWiggleDance 0.9s ease-in-out !important;
+}
+
+@keyframes stapleyWiggleDance {
+  0% { transform: rotate(0deg) scale(1); }
+  10% { transform: rotate(-10deg) scale(1.05); }
+  20% { transform: rotate(10deg) scale(1.05); }
+  30% { transform: rotate(-8deg) scale(1.03); }
+  40% { transform: rotate(8deg) scale(1.03); }
+  50% { transform: rotate(-5deg) scale(1.05); }
+  60% { transform: rotate(5deg) scale(1.05); }
+  70% { transform: rotate(-3deg) scale(1.02); }
+  80% { transform: rotate(3deg) scale(1.02); }
+  90% { transform: rotate(-1deg) scale(1); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+.stapley-container.minimized {
+  cursor: pointer;
+}
+
+.stapley-speech-bubble {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fefefe;
+  border: 1px solid #999;
+  border-radius: 12px;
+  padding: 16px 20px;
+  min-width: 220px;
+  max-width: 280px;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  text-align: center;
+}
+
+.stapley-speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 10px 10px 0;
+  border-style: solid;
+  border-color: #999 transparent transparent;
+}
+
+.stapley-speech-bubble::before {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 9px 9px 0;
+  border-style: solid;
+  border-color: #fefefe transparent transparent;
+  z-index: 1;
+}
+
+.stapley-speech-bubble p {
+  margin: 0 0 14px;
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  white-space: pre-line;
+  color: #333;
+  text-wrap: balance;
+}
+
+.stapley-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.stapley-buttons button {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.stapley-buttons button:hover {
+  background: #eee;
+  border-color: #ccc;
+}
+
+.stapley-buttons button:active {
+  background: #e5e5e5;
+  transform: translateY(1px);
+}
+
+.stapley-character {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: stapleyIdleBounce 4s ease-in-out infinite;
+}
+
+@keyframes stapleyIdleBounce {
+  0%, 90%, 100% { transform: translateY(0); }
+  93% { transform: translateY(-10px) rotate(-2deg); }
+  95% { transform: translateY(-15px) rotate(0deg); }
+  97% { transform: translateY(-10px) rotate(2deg); }
+  99% { transform: translateY(0) scaleY(0.95) scaleX(1.05); }
+}
+
+/* CSS-based Stapley - A cute cartoon stapler */
+.stapley-body {
+  position: relative;
+  width: 90px;
+  height: 55px;
+  transition: transform 0.2s ease;
+}
+
+/* Stapler base (bottom part) */
+.stapley-base {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 90px;
+  height: 22px;
+  background: linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 50%, #1a1a1a 100%);
+  border-radius: 5px 5px 8px 8px;
+  box-shadow:
+    0 3px 6px rgba(0,0,0,0.4),
+    inset 0 2px 4px rgba(255,255,255,0.1),
+    inset 0 -2px 4px rgba(0,0,0,0.3);
+}
+
+/* Front metal plate */
+.stapley-front {
+  position: absolute;
+  bottom: 4px;
+  left: 8px;
+  width: 12px;
+  height: 14px;
+  background: linear-gradient(180deg, #e0e0e0 0%, #a0a0a0 100%);
+  border-radius: 2px;
+  border: 1px solid #666;
+}
+
+/* Stapler top (lid) - the "mouth" that opens */
+.stapley-top {
+  position: absolute;
+  bottom: 18px;
+  left: 0;
+  width: 85px;
+  height: 28px;
+  background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 50%, #2a2a2a 100%);
+  border-radius: 8px 20px 4px 4px;
+  transform-origin: left bottom;
+  box-shadow:
+    0 -2px 4px rgba(0,0,0,0.2),
+    inset 0 2px 6px rgba(255,255,255,0.15),
+    inset 0 -2px 4px rgba(0,0,0,0.2);
+  transition: transform 0.1s ease;
+}
+
+/* Talking animation - mouth opens */
+.stapley-container.talking .stapley-top {
+  animation: stapleyTalk 0.15s ease-in-out infinite alternate;
+}
+
+@keyframes stapleyTalk {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-12deg); }
+}
+
+/* Eyes on the top part */
+.stapley-eyes {
+  position: absolute;
+  top: 6px;
+  left: 35px;
+  display: flex;
+  gap: 10px;
+}
+
+.stapley-eye {
+  width: 14px;
+  height: 14px;
+  background: white;
+  border-radius: 50%;
+  position: relative;
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,0.1),
+    0 1px 2px rgba(0,0,0,0.2);
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+.stapley-pupil {
+  width: 8px;
+  height: 8px;
+  background: #1a1a1a;
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: stapleyLook 5s ease-in-out infinite;
+}
+
+.stapley-pupil::after {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 3px;
+  height: 3px;
+  background: white;
+  border-radius: 50%;
+}
+
+@keyframes stapleyLook {
+  0%, 100% { transform: translate(-50%, -50%); }
+  20% { transform: translate(-30%, -50%); }
+  40% { transform: translate(-50%, -30%); }
+  60% { transform: translate(-70%, -50%); }
+  80% { transform: translate(-50%, -60%); }
+}
+
+/* Hover effect */
+.stapley-character:hover .stapley-body {
+  transform: scale(1.05);
+}
+
+.stapley-character:hover .stapley-top {
+  animation: stapleyHoverWiggle 0.3s ease-in-out;
+}
+
+@keyframes stapleyHoverWiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-8deg); }
+  75% { transform: rotate(3deg); }
+}
+
+/* Stapley idle animation */
+.stapley-container .stapley-body {
+  animation: stapleyIdle 3s ease-in-out infinite;
+}
+
+@keyframes stapleyIdle {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-2px) rotate(1deg); }
+}
+
+/* Mini stapler for restore button */
+.stapley-restore-btn {
+  position: fixed;
+  bottom: 40px;
+  left: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 9000;
+  opacity: 0.9;
+  transition: opacity 0.2s, transform 0.3s ease;
+  animation: stapleyRestoreIdle 3s ease-in-out infinite;
+  padding: 4px;
+  width: 50px;
+  height: 35px;
+}
+
+.stapley-mini {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.stapley-mini-base {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 45px;
+  height: 12px;
+  background: linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 50%, #1a1a1a 100%);
+  border-radius: 3px 3px 5px 5px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
+
+.stapley-mini-top {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  width: 42px;
+  height: 16px;
+  background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 50%, #2a2a2a 100%);
+  border-radius: 5px 12px 2px 2px;
+  transform-origin: left bottom;
+  box-shadow: 0 -1px 3px rgba(0,0,0,0.2);
+}
+
+/* Mini eyes */
+.stapley-mini-top::before {
+  content: '👀';
+  position: absolute;
+  top: 2px;
+  left: 15px;
+  font-size: 8px;
+}
+
+@keyframes stapleyRestoreIdle {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-2px) rotate(-3deg); }
+  75% { transform: translateY(-2px) rotate(3deg); }
+}
+
+.stapley-restore-btn:hover {
+  opacity: 1;
+  transform: scale(1.15);
+  animation: stapleyRestoreWiggle 0.2s ease-in-out infinite;
+}
+
+.stapley-restore-btn:hover .stapley-mini-top {
+  animation: stapleyMiniTalk 0.15s ease-in-out infinite alternate;
+}
+
+@keyframes stapleyMiniTalk {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-10deg); }
+}
+
+@keyframes stapleyRestoreWiggle {
+  0%, 100% { transform: scale(1.15) rotate(-3deg); }
+  50% { transform: scale(1.15) rotate(3deg); }
+}
+
+/* Speech bubble on hover */
+.stapley-restore-btn::after {
+  content: '';
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.stapley-restore-btn:hover::after {
+  content: 'need a staple?';
+  background: linear-gradient(180deg, #fff 0%, #f5f5f5 100%);
+  border: 2px solid #333;
+  border-radius: 10px 10px 10px 2px;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-family: 'Comic Sans MS', cursive;
+  color: #1a1a1a;
+  font-weight: bold;
+  white-space: nowrap;
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+  opacity: 1;
+  animation: stapleyBubblePop 0.2s ease-out forwards;
+}
+
+@keyframes stapleyBubblePop {
+  0% { transform: translateX(-50%) scale(0); opacity: 0; }
+  60% { transform: translateX(-50%) scale(1.1); opacity: 1; }
+  100% { transform: translateX(-50%) scale(1); opacity: 1; }
+}
+
+/* ========== Generic Assistant Container ========== */
+.assistant-container {
+  position: fixed;
+  z-index: 500;
+  cursor: move;
+  user-select: none;
+  transition: left 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.assistant-container.entering {
+  cursor: default;
+}
+
+.assistant-container.wiggling {
+  cursor: default;
+}
+
+.assistant-container.minimized {
+  cursor: pointer;
+}
+
+.assistant-speech-bubble {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fefefe;
+  border: 1px solid #999;
+  border-radius: 12px;
+  padding: 16px 20px;
+  min-width: 220px;
+  max-width: 280px;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  text-align: center;
+}
+
+.assistant-speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 10px 10px 0;
+  border-style: solid;
+  border-color: #999 transparent transparent;
+}
+
+.assistant-speech-bubble::before {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 9px 9px 0;
+  border-style: solid;
+  border-color: #fefefe transparent transparent;
+  z-index: 1;
+}
+
+.assistant-name-tag {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 10px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.assistant-speech-bubble p {
+  margin: 0 0 14px;
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  white-space: pre-line;
+  color: #333;
+  text-wrap: balance;
+}
+
+.assistant-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.assistant-buttons button {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.assistant-buttons button:hover {
+  background: #eee;
+  border-color: #ccc;
+}
+
+.assistant-buttons button.primary {
+  background: #2563eb;
+  color: white;
+  border-color: #1d4ed8;
+}
+
+.assistant-buttons button.primary:hover {
+  background: #1d4ed8;
+}
+
+.assistant-character {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: assistantIdleBounce 4s ease-in-out infinite;
+}
+
+@keyframes assistantIdleBounce {
+  0%, 90%, 100% { transform: translateY(0); }
+  93% { transform: translateY(-10px) rotate(-2deg); }
+  95% { transform: translateY(-15px) rotate(0deg); }
+  97% { transform: translateY(-10px) rotate(2deg); }
+  99% { transform: translateY(0) scaleY(0.95) scaleX(1.05); }
+}
+
+.assistant-progress {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin: 10px 0 12px 0;
+}
+
+.assistant-restore-btn {
+  position: fixed;
+  bottom: 40px;
+  left: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 9000;
+  opacity: 0.9;
+  transition: opacity 0.2s, transform 0.3s ease;
+  padding: 4px;
+}
+
+.assistant-restore-btn:hover {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+.assistant-restore-btn::after {
+  content: attr(data-restore-text);
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 2px solid #333;
+  border-radius: 10px 10px 10px 2px;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-family: 'Comic Sans MS', cursive;
+  color: #333;
+  font-weight: bold;
+  white-space: nowrap;
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.assistant-restore-btn:hover::after {
+  opacity: 1;
+}
+
+/* ========== Bin Diesel Character ========== */
+.bin-diesel-body {
+  position: relative;
+  width: 70px;
+  height: 85px;
+}
+
+.bin-diesel-lid {
+  position: absolute;
+  top: 0;
+  left: 5px;
+  width: 60px;
+  height: 15px;
+  background: linear-gradient(180deg, #5a5a5a 0%, #3a3a3a 50%, #2a2a2a 100%);
+  border-radius: 4px 4px 0 0;
+  border: 2px solid #222;
+  border-bottom: none;
+  box-shadow: inset 0 2px 4px rgba(255,255,255,0.1);
+}
+
+.bin-diesel-can {
+  position: absolute;
+  top: 12px;
+  left: 5px;
+  width: 60px;
+  height: 55px;
+  background: linear-gradient(180deg, #4a4a4a 0%, #333 30%, #222 100%);
+  border-radius: 3px 3px 8px 8px;
+  border: 2px solid #1a1a1a;
+  box-shadow:
+    0 4px 8px rgba(0,0,0,0.4),
+    inset 0 2px 8px rgba(255,255,255,0.05),
+    inset 0 -4px 8px rgba(0,0,0,0.3);
+}
+
+.bin-diesel-eyes {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+}
+
+.bin-diesel-eye {
+  width: 12px;
+  height: 12px;
+  background: #ff0000;
+  border-radius: 50%;
+  box-shadow:
+    0 0 8px #ff0000,
+    0 0 16px #ff0000,
+    inset 0 0 4px #ff6666;
+  animation: binDieselGlow 2s ease-in-out infinite;
+}
+
+.bin-diesel-eye.talking {
+  animation: binDieselGlow 0.3s ease-in-out infinite;
+}
+
+@keyframes binDieselGlow {
+  0%, 100% { box-shadow: 0 0 8px #ff0000, 0 0 16px #ff0000, inset 0 0 4px #ff6666; }
+  50% { box-shadow: 0 0 12px #ff3333, 0 0 24px #ff0000, inset 0 0 6px #ff8888; }
+}
+
+.bin-diesel-arms {
+  position: absolute;
+  top: 35px;
+  left: 0;
+  width: 100%;
+}
+
+.bin-diesel-arm {
+  position: absolute;
+  width: 12px;
+  height: 25px;
+  background: linear-gradient(180deg, #4a4a4a 0%, #333 100%);
+  border-radius: 4px;
+  border: 1px solid #222;
+}
+
+.bin-diesel-arm.left {
+  left: -5px;
+  transform: rotate(15deg);
+}
+
+.bin-diesel-arm.right {
+  right: -5px;
+  transform: rotate(-15deg);
+}
+
+.bin-diesel-mini {
+  width: 35px;
+  height: 45px;
+  position: relative;
+}
+
+.bin-diesel-mini-lid {
+  position: absolute;
+  top: 0;
+  left: 3px;
+  width: 29px;
+  height: 8px;
+  background: linear-gradient(180deg, #5a5a5a 0%, #333 100%);
+  border-radius: 3px 3px 0 0;
+  border: 1px solid #222;
+}
+
+.bin-diesel-mini-body {
+  position: absolute;
+  top: 6px;
+  left: 3px;
+  width: 29px;
+  height: 32px;
+  background: linear-gradient(180deg, #4a4a4a 0%, #222 100%);
+  border-radius: 2px 2px 5px 5px;
+  border: 1px solid #1a1a1a;
+}
+
+.bin-diesel-mini-body::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 6px;
+  display: flex;
+  gap: 4px;
+}
+
+.bin-diesel-mini-body::after {
+  content: '👀';
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 8px;
+  filter: hue-rotate(180deg) saturate(3) brightness(1.5);
+}
+
+/* ========== Clicky Character (Mouse) ========== */
+.clicky-body {
+  position: relative;
+  width: 70px;
+  height: 90px;
+}
+
+.clicky-cable {
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  width: 4px;
+  height: 20px;
+  background: linear-gradient(180deg, #555 0%, #333 100%);
+  border-radius: 2px;
+  transform: translateX(-50%);
+}
+
+.clicky-cable::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 8px;
+  background: #444;
+  border-radius: 50%;
+}
+
+.clicky-shell {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 60px;
+  height: 75px;
+  background: linear-gradient(180deg, #e8e8e8 0%, #d0d0d0 30%, #b0b0b0 100%);
+  border-radius: 30px 30px 35px 35px / 20px 20px 40px 40px;
+  border: 2px solid #888;
+  box-shadow:
+    0 4px 8px rgba(0,0,0,0.3),
+    inset 0 2px 8px rgba(255,255,255,0.5),
+    inset 0 -4px 8px rgba(0,0,0,0.1);
+}
+
+.clicky-buttons {
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.clicky-button {
+  width: 18px;
+  height: 22px;
+  background: linear-gradient(180deg, #f5f5f5 0%, #ddd 100%);
+  border-radius: 4px 4px 8px 8px;
+  border: 1px solid #999;
+  box-shadow: inset 0 1px 2px rgba(255,255,255,0.8);
+}
+
+.clicky-button.clicking {
+  background: linear-gradient(180deg, #ddd 0%, #ccc 100%);
+  transform: translateY(2px);
+  box-shadow: inset 0 1px 4px rgba(0,0,0,0.2);
+}
+
+.clicky-wheel {
+  width: 8px;
+  height: 16px;
+  background: linear-gradient(180deg, #666 0%, #444 100%);
+  border-radius: 4px;
+  border: 1px solid #333;
+}
+
+.clicky-face {
+  position: absolute;
+  top: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 45px;
+  height: 35px;
+}
+
+.clicky-eyes {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.clicky-eye {
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+  position: relative;
+  border: 1px solid #666;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.clicky-pupil {
+  width: 6px;
+  height: 6px;
+  background: #1a1a1a;
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: clickyLook 4s ease-in-out infinite;
+}
+
+.clicky-pupil::after {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 50%;
+}
+
+@keyframes clickyLook {
+  0%, 100% { transform: translate(-50%, -50%); }
+  25% { transform: translate(-30%, -50%); }
+  50% { transform: translate(-50%, -30%); }
+  75% { transform: translate(-70%, -50%); }
+}
+
+.clicky-mouth {
+  width: 15px;
+  height: 8px;
+  margin: 0 auto;
+  border: 2px solid #666;
+  border-top: none;
+  border-radius: 0 0 15px 15px;
+}
+
+.clicky-mouth.talking {
+  animation: clickyTalk 0.15s ease-in-out infinite alternate;
+}
+
+@keyframes clickyTalk {
+  0% { height: 8px; }
+  100% { height: 12px; }
+}
+
+.clicky-mini {
+  width: 30px;
+  height: 40px;
+  position: relative;
+}
+
+.clicky-mini-cable {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3px;
+  height: 10px;
+  background: #555;
+  border-radius: 2px;
+}
+
+.clicky-mini-body {
+  position: absolute;
+  top: 8px;
+  left: 3px;
+  width: 24px;
+  height: 30px;
+  background: linear-gradient(180deg, #e8e8e8 0%, #b0b0b0 100%);
+  border-radius: 12px 12px 14px 14px / 8px 8px 16px 16px;
+  border: 1px solid #888;
+}
+
+.clicky-mini-body::after {
+  content: '👀';
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 8px;
+}
+
+/* ========== Mugsy Character (Coffee Mug) ========== */
+.mugsy-body {
+  position: relative;
+  width: 75px;
+  height: 85px;
+}
+
+.mugsy-steam {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 25px;
+}
+
+.steam-wave {
+  position: absolute;
+  width: 8px;
+  height: 15px;
+  background: transparent;
+  border-left: 3px solid rgba(255,255,255,0.4);
+  border-radius: 50%;
+  animation: steamRise 2s ease-in-out infinite;
+}
+
+.steam-wave.s1 {
+  left: 8px;
+  animation-delay: 0s;
+}
+
+.steam-wave.s2 {
+  left: 18px;
+  animation-delay: 0.3s;
+}
+
+.steam-wave.s3 {
+  left: 28px;
+  animation-delay: 0.6s;
+}
+
+.mugsy-steam.talking .steam-wave {
+  animation-duration: 0.5s;
+}
+
+@keyframes steamRise {
+  0% { transform: translateY(0) scaleX(1); opacity: 0.6; }
+  50% { transform: translateY(-8px) scaleX(-1); opacity: 0.4; }
+  100% { transform: translateY(-15px) scaleX(1); opacity: 0; }
+}
+
+.mugsy-cup {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 50px;
+  height: 60px;
+  background: linear-gradient(180deg, #f5f5f5 0%, #e0e0e0 30%, #ccc 100%);
+  border-radius: 5px 5px 12px 12px;
+  border: 3px solid #999;
+  box-shadow:
+    0 4px 8px rgba(0,0,0,0.3),
+    inset 0 -10px 20px rgba(139, 90, 43, 0.3);
+  overflow: hidden;
+}
+
+.mugsy-coffee {
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+  right: 5px;
+  height: 20px;
+  background: linear-gradient(180deg, #8B5A2B 0%, #5D3A1A 100%);
+  border-radius: 0 0 8px 8px;
+}
+
+.mugsy-face {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 30px;
+}
+
+.mugsy-eyes {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.mugsy-eye {
+  width: 10px;
+  height: 10px;
+  background: white;
+  border-radius: 50%;
+  position: relative;
+  border: 1px solid #666;
+}
+
+.mugsy-pupil {
+  width: 5px;
+  height: 5px;
+  background: #1a1a1a;
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: mugsyLook 3s ease-in-out infinite;
+}
+
+@keyframes mugsyLook {
+  0%, 100% { transform: translate(-50%, -50%); }
+  30% { transform: translate(-30%, -60%); }
+  60% { transform: translate(-70%, -40%); }
+}
+
+.mugsy-mouth {
+  width: 12px;
+  height: 6px;
+  margin: 0 auto;
+  border: 2px solid #666;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+}
+
+.mugsy-mouth.talking {
+  animation: mugsyTalk 0.2s ease-in-out infinite alternate;
+}
+
+@keyframes mugsyTalk {
+  0% { width: 12px; height: 6px; }
+  100% { width: 14px; height: 10px; }
+}
+
+.mugsy-handle {
+  position: absolute;
+  top: 20px;
+  right: -12px;
+  width: 18px;
+  height: 30px;
+  border: 5px solid #999;
+  border-left: none;
+  border-radius: 0 15px 15px 0;
+  background: transparent;
+}
+
+.mugsy-mini {
+  width: 35px;
+  height: 40px;
+  position: relative;
+}
+
+.mugsy-mini-steam {
+  position: absolute;
+  top: 0;
+  left: 12px;
+  width: 12px;
+  height: 8px;
+  border-left: 2px solid rgba(255,255,255,0.4);
+  border-radius: 50%;
+  animation: steamRise 1.5s ease-in-out infinite;
+}
+
+.mugsy-mini-cup {
+  position: absolute;
+  top: 8px;
+  left: 3px;
+  width: 22px;
+  height: 28px;
+  background: linear-gradient(180deg, #f5f5f5 0%, #ccc 100%);
+  border-radius: 3px 3px 6px 6px;
+  border: 2px solid #999;
+}
+
+.mugsy-mini-cup::after {
+  content: '👀';
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 7px;
+}
+
+.mugsy-mini-handle {
+  position: absolute;
+  top: 15px;
+  right: 3px;
+  width: 8px;
+  height: 14px;
+  border: 3px solid #999;
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+}
+
+/* Flying Toasters Screensaver */
+.screensaver-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #000000;
+  z-index: 99999;
+  cursor: none;
+  overflow: hidden;
+}
+
+.screensaver-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.flying-toaster {
+  position: absolute;
+  font-size: 40px;
+  transition: none;
+}
+
+.toaster-body {
+  position: relative;
+  width: 50px;
+  height: 35px;
+  background: linear-gradient(180deg, #e0e0e0 0%, #a0a0a0 100%);
+  border: 2px solid #404040;
+  border-radius: 5px;
+}
+
+.toaster-slot {
+  position: absolute;
+  top: 5px;
+  width: 15px;
+  height: 4px;
+  background: #202020;
+  border-radius: 2px;
+}
+
+.toaster-slot:first-child {
+  left: 8px;
+}
+
+.toaster-slot:nth-child(2) {
+  right: 8px;
+}
+
+.toaster-lever {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  width: 8px;
+  height: 12px;
+  background: #404040;
+  border-radius: 2px;
+}
+
+.toaster-wing {
+  position: absolute;
+  top: -15px;
+  width: 20px;
+  height: 25px;
+  background: linear-gradient(180deg, #ffffff 0%, #d0d0d0 100%);
+  border: 1px solid #808080;
+  border-radius: 50% 50% 0 0;
+}
+
+.toaster-wing.left {
+  left: -10px;
+  transform-origin: bottom right;
+}
+
+.toaster-wing.right {
+  right: -10px;
+  transform-origin: bottom left;
+}
+
+.flying-toaster.wing-up .toaster-wing.left { transform: rotate(-30deg); }
+.flying-toaster.wing-up .toaster-wing.right { transform: rotate(30deg); }
+.flying-toaster.wing-mid-up .toaster-wing.left { transform: rotate(-15deg); }
+.flying-toaster.wing-mid-up .toaster-wing.right { transform: rotate(15deg); }
+.flying-toaster.wing-mid-down .toaster-wing.left { transform: rotate(15deg); }
+.flying-toaster.wing-mid-down .toaster-wing.right { transform: rotate(-15deg); }
+.flying-toaster.wing-down .toaster-wing.left { transform: rotate(30deg); }
+.flying-toaster.wing-down .toaster-wing.right { transform: rotate(-30deg); }
+
+.flying-toast {
+  position: absolute;
+  font-size: 30px;
+  animation: toastFloat 2s ease-in-out infinite;
+}
+
+@keyframes toastFloat {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+
+.screensaver-text {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #404040;
+  font-size: 12px;
+  font-family: 'MS Sans Serif', Tahoma, sans-serif;
+}
+
+/* You've Got Mail - XP style */
+.youve-got-mail {
+  position: fixed;
+  bottom: 40px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(180deg, #FFFDE8 0%, #FFF8C6 100%);
+  border: 1px solid #E5C100;
+  border-radius: 4px;
+  padding: 10px 14px;
+  z-index: 10001;
+  animation: mailSlideIn 0.3s ease-out;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes mailSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.mail-icon {
+  font-size: 32px;
+  animation: mailBounce 0.5s ease-in-out infinite;
+}
+
+@keyframes mailBounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.mail-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.mail-title {
+  font-size: 14px;
+  font-weight: bold;
+  font-family: 'MS Sans Serif', Tahoma, sans-serif;
+  color: #000080;
+}
+
+.mail-subtitle {
+  font-size: 11px;
+  font-family: 'MS Sans Serif', Tahoma, sans-serif;
+  color: #404040;
+}
+
+.mail-controls {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.mail-mute,
+.mail-close {
+  background: linear-gradient(180deg, #FFFFFF 0%, #ECE9D8 45%, #D8D4C8 100%);
+  border: 1px solid #ACA899;
+  border-radius: 2px;
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.mail-mute:hover,
+.mail-close:hover {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F5F3ED 45%, #E5E1D5 100%);
+  border-color: #316AC5;
+}
+
+.mail-mute {
+  font-size: 14px;
+}
+
+/* Visitor Counter - XP style */
+.visitor-counter {
+  position: fixed;
+  bottom: 40px;
+  right: 20px;
+  background: linear-gradient(180deg, #1A1A1A 0%, #000000 100%);
+  border: 1px solid #404040;
+  border-radius: 4px;
+  padding: 8px 12px;
+  z-index: 100;
+  text-align: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 2px 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.counter-label {
+  color: #00ff00;
+  font-size: 10px;
+  font-family: 'Courier New', monospace;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.counter-icon {
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.counter-digits {
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+}
+
+.counter-digit {
+  background: #001100;
+  color: #00ff00;
+  font-family: 'Courier New', monospace;
+  font-size: 18px;
+  font-weight: bold;
+  padding: 4px 6px;
+  border: 1px solid #004400;
+  min-width: 20px;
+  text-align: center;
+}
+
+.counter-digits.animating .counter-digit {
+  animation: digitFlicker 0.1s infinite;
+}
+
+@keyframes digitFlicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.counter-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 8px;
+  color: #808080;
+  font-family: 'MS Sans Serif', Tahoma, sans-serif;
+}
+
+.counter-gif {
+  width: 12px;
+  height: 12px;
+}
+
+/* Notification badge in start menu */
+.notification-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  margin-left: 6px;
+  background: #ff4444;
+  color: white;
+  font-size: 9px;
+  font-weight: bold;
+  border-radius: 8px;
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* NFT Desktop Icons */
+.desktop-icon.nft-icon {
+  width: 75px;
+}
+
+.desktop-icon.nft-icon .desktop-icon-image.nft-image {
+  width: 48px;
+  height: 48px;
+  border: 2px solid #ffffff;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+  background: #c0c0c0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.desktop-icon.nft-icon .desktop-icon-image.nft-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.desktop-icon.nft-icon .nft-placeholder {
+  font-size: 24px;
+}
+
+.desktop-icon.loading {
+  opacity: 0.6;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+/* NFT Viewer Window */
+.nft-viewer-window {
+  min-width: 280px;
+}
+
+.nft-viewer-content {
+  padding: 12px;
+  background: #c0c0c0;
+}
+
+.nft-viewer-image {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 2px inset #808080;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.nft-viewer-image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.nft-viewer-image .nft-placeholder {
+  font-size: 64px;
+  opacity: 0.5;
+}
+
+.nft-viewer-info {
+  font-family: 'MS Sans Serif', Tahoma, sans-serif;
+  font-size: 11px;
+}
+
+.nft-viewer-info .nft-description {
+  margin: 0 0 8px 0;
+  color: #000000;
+}
+
+.nft-viewer-info .nft-token-id {
+  margin: 0;
+  color: #808080;
+  font-size: 10px;
+}
+
+/* Draggable NFT Icons */
+.desktop-icon.nft-icon {
+  cursor: grab;
+}
+
+.desktop-icon.nft-icon:active {
+  cursor: grabbing;
+}
+
+.desktop-icon.nft-icon.dragging {
+  opacity: 0.5;
+  cursor: grabbing;
+}
+
+/* Recycle Bin */
+.desktop-icon.recycle-bin {
+  margin-top: auto;
+  cursor: default;
+}
+
+.desktop-icon.recycle-bin .recycle-bin-icon {
+  font-size: 36px;
+  transition: transform 0.2s, filter 0.2s;
+}
+
+.desktop-icon.recycle-bin.drag-over {
+  transform: scale(1.1);
+}
+
+.desktop-icon.recycle-bin.drag-over .recycle-bin-icon {
+  filter: drop-shadow(0 0 8px #ff6600);
+  animation: recycleBinPulse 0.5s ease-in-out infinite;
+}
+
+.desktop-icon.recycle-bin.drag-over .desktop-icon-label {
+  color: #ff6600;
+  text-shadow: 0 0 4px #ff6600, 1px 1px 1px #000000;
+}
+
+@keyframes recycleBinPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+/* Burn Modal */
+.burn-modal {
+  max-width: 320px;
+}
+
+.burn-warning-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.burn-warning-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+.burn-warning-header p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.burn-preview {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 12px;
+  border: 2px inset #808080;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.burn-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.burn-placeholder {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.burn-info {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.burn-nft-name {
+  margin: 0 0 4px 0;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.burn-nft-id {
+  margin: 0;
+  font-size: 10px;
+  color: #808080;
+}
+
+.burn-warning-text {
+  background: #ffffcc;
+  border: 1px solid #e6e600;
+  padding: 8px;
+  margin-bottom: 12px;
+  font-size: 10px;
+}
+
+.burn-warning-text p {
+  margin: 0 0 4px 0;
+}
+
+.burn-warning-text p:last-child {
+  margin-bottom: 0;
+}
+
+.burn-buttons {
+  justify-content: space-between !important;
+}
+
+.burn-cancel {
+  background: linear-gradient(180deg, #FFFFFF 0%, #ECE9D8 45%, #D8D4C8 100%) !important;
+}
+
+.burn-confirm {
+  background: linear-gradient(180deg, #ff6666 0%, #cc0000 100%) !important;
+  color: white !important;
+  border-color: #990000 !important;
+}
+
+.burn-confirm:hover {
+  background: linear-gradient(180deg, #ff8080 0%, #dd2222 100%) !important;
+}
+
+.burn-rip {
+  font-style: italic;
+  color: #808080;
+  font-size: 11px;
+  margin-top: 8px;
+}
+
+/* Mobile window close button - hidden on desktop */
+.mobile-window-close {
+  display: none;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  /* Hide Assistant on mobile */
+  .assistant-container,
+  .assistant-restore-btn,
+  .stapley-container,
+  .stapley-restore-btn {
+    display: none !important;
+  }
+
+  /* Desktop icons - grid layout for mobile */
+  .desktop-icons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 12px;
+    padding-bottom: 60px; /* Space for taskbar */
+  }
+
+  .desktop-icon {
+    width: auto;
+  }
+
+  .desktop-icon-image {
+    font-size: 36px;
+  }
+
+  .desktop-icon-label {
+    font-size: 11px;
+  }
+
+  /* Taskbar - simplified for mobile */
+  .xp-taskbar {
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .start-button {
+    height: 50px;
+    padding: 0 16px;
+    border-radius: 0 12px 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .start-logo {
+    font-size: 26px;
+  }
+
+  .start-text {
+    display: inline;
+    font-size: 16px;
+  }
+
+  .taskbar-windows {
+    display: none;
+  }
+
+  .quick-launch {
+    display: none;
+  }
+
+  .taskbar-divider {
+    display: none;
+  }
+
+  .system-tray {
+    padding: 0 16px;
+    margin-left: auto;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .tray-icon {
+    font-size: 18px;
+  }
+
+  .taskbar-clock {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  /* Make desktop window fullscreen on mobile */
+  .desktop-window {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    border-radius: 0 !important;
+    z-index: 9999 !important;
+    transform: none !important; /* Override centering transform */
+  }
+
+  /* Hide XP taskbar when a window is open (meme studio has its own toolbar) */
+  .xp-desktop:has(.desktop-window) .xp-taskbar {
+    display: none !important;
+  }
+
+  /* Hide resize handles on mobile */
+  .resize-handle {
+    display: none !important;
+  }
+
+  /* Hide drag handle on mobile */
+  .window-drag-handle {
+    display: none !important;
+  }
+
+  /* Hide title bar on mobile for full immersion */
+  .desktop-window .title-bar {
+    display: none !important;
+  }
+
+  /* Mobile close button - XP style in top right */
+  .mobile-window-close {
+    display: flex;
+    position: fixed;
+    top: 8px;
+    right: 8px;
+    z-index: 10001;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, #f1a9a9 0%, #d85050 50%, #c92a2a 100%);
+    color: white;
+    border: 1px solid #8b1a1a;
+    font-size: 16px;
+    font-weight: bold;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.4),
+                inset -1px -1px 0 rgba(0, 0, 0, 0.2),
+                1px 1px 3px rgba(0, 0, 0, 0.3);
+    -webkit-tap-highlight-color: transparent;
+    font-family: 'Tahoma', sans-serif;
+  }
+
+  .mobile-window-close:active {
+    background: linear-gradient(180deg, #c92a2a 0%, #a61c1c 50%, #8b1a1a 100%);
+    box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Window body fills everything */
+  .desktop-window .window,
+  .desktop-window .window-body {
+    height: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Assistant Onboarding Styles */
+.assistant-container.onboarding,
+.stapley-container.onboarding {
+  z-index: 100000;
+  transition: left 0.6s ease-out, bottom 0.6s ease-out;
+}
+
+.assistant-container.onboarding .assistant-speech-bubble,
+.stapley-container.onboarding .stapley-speech-bubble {
+  max-width: 320px;
+  min-width: 280px;
+}
+
+.assistant-progress,
+.stapley-progress {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin: 10px 0 12px 0;
+}
+
+.progress-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #c0c0c0;
+  border: 1px solid #808080;
+  transition: all 0.2s ease;
+}
+
+.progress-dot.active {
+  background: #316AC5;
+  border-color: #003399;
+  transform: scale(1.2);
+}
+
+.progress-dot.completed {
+  background: #00aa00;
+  border-color: #006600;
+}
+
+.stapley-buttons button.primary {
+  background: #2563eb;
+  color: white;
+  border-color: #1d4ed8;
+}
+
+.stapley-buttons button.primary:hover {
+  background: #1d4ed8;
+}
+
+/* Onboarding Highlight Pulse Animation */
+@keyframes onboarding-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6), 0 0 0 0 rgba(255, 204, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6), 0 0 12px 6px rgba(255, 204, 0, 0.6);
+  }
+}
+
+/* Demo NFT Icon for Onboarding */
+.demo-nft-icon {
+  position: fixed;
+  top: 120px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 80px;
+  padding: 8px;
+  cursor: default;
+  z-index: 99998;
+  transition: all 1.5s ease-in-out;
+}
+
+.demo-nft-icon .demo-nft-image {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.demo-nft-icon .demo-nft-label {
+  margin-top: 4px;
+  font-size: 11px;
+  font-family: 'Tahoma', sans-serif;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  text-align: center;
+  max-width: 80px;
+  word-wrap: break-word;
+}
+
+/* Animation to drag NFT to recycle bin */
+.demo-nft-icon.animating {
+  top: calc(100vh - 140px);
+  left: 20px;
+  opacity: 0;
+  transform: scale(0.5);
+}

@@ -1,0 +1,386 @@
+/* Outlook Express Styles */
+
+.outlook-window {
+  width: 600px !important;
+  height: 500px !important;
+  max-width: 95vw;
+  max-height: 90vh;
+}
+
+.outlook-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #ECE9D8;
+}
+
+/* Toolbar */
+.outlook-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: linear-gradient(180deg, #F5F5F5 0%, #E0E0E0 100%);
+  border-bottom: 1px solid #ACA899;
+}
+
+.outlook-toolbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #ECE9D8 45%, #D8D4C8 100%);
+  border: 1px solid #ACA899;
+  border-radius: 3px;
+  font-family: Tahoma, sans-serif;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.outlook-toolbar-btn:hover {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F5F3ED 45%, #E5E1D5 100%);
+  border-color: #316AC5;
+}
+
+.toolbar-icon {
+  font-size: 14px;
+}
+
+.toolbar-spacer {
+  flex: 1;
+}
+
+.outlook-status {
+  font-size: 11px;
+  color: #666;
+  font-family: Tahoma, sans-serif;
+}
+
+/* Main content layout */
+.outlook-main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Folder pane */
+.outlook-folders {
+  width: 140px;
+  background: white;
+  border-right: 1px solid #ACA899;
+  overflow-y: auto;
+}
+
+.folder-header {
+  padding: 6px 8px;
+  font-family: Tahoma, sans-serif;
+  font-size: 11px;
+  font-weight: bold;
+  color: #316AC5;
+  background: #EBF1FB;
+  border-bottom: 1px solid #C1D4F0;
+}
+
+.folder-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+  font-family: Tahoma, sans-serif;
+  font-size: 11px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.folder-item:hover {
+  background: #EBF1FB;
+}
+
+.folder-item.selected {
+  background: #316AC5;
+  color: white;
+}
+
+.folder-icon {
+  font-size: 14px;
+}
+
+.folder-name {
+  flex: 1;
+}
+
+.folder-count {
+  font-weight: bold;
+  color: #0066CC;
+}
+
+.folder-item.selected .folder-count {
+  color: #FFCC00;
+}
+
+/* Content area */
+.outlook-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+/* Message list */
+.outlook-message-list {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+  overflow-y: auto;
+  background: white;
+  border-bottom: 1px solid #ACA899;
+  min-height: 150px;
+}
+
+.message-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-bottom: 1px solid #F0F0F0;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+}
+
+.message-item:hover {
+  background: #EBF1FB;
+}
+
+.message-item.selected {
+  background: #316AC5;
+  color: white;
+}
+
+.message-item.unread {
+  font-weight: bold;
+}
+
+.message-item.unread .message-subject {
+  color: #000080;
+}
+
+.message-item.selected .message-subject {
+  color: white;
+}
+
+.message-icon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+}
+
+.message-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.message-subject {
+  font-family: Tahoma, sans-serif;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.message-preview {
+  font-family: Tahoma, sans-serif;
+  font-size: 10px;
+  color: #808080;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: normal;
+}
+
+.message-item.selected .message-preview {
+  color: #CCCCCC;
+}
+
+.message-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.message-date {
+  font-family: Tahoma, sans-serif;
+  font-size: 10px;
+  color: #808080;
+}
+
+.message-item.selected .message-date {
+  color: #CCCCCC;
+}
+
+.message-delete {
+  background: none;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  color: #999;
+  padding: 0 4px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.message-item:hover .message-delete {
+  opacity: 1;
+}
+
+.message-delete:hover {
+  color: #FF0000;
+}
+
+/* Empty state */
+.outlook-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 40px;
+  color: #808080;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.outlook-empty p {
+  font-family: Tahoma, sans-serif;
+  font-size: 12px;
+  margin: 0;
+}
+
+/* Preview pane */
+.outlook-preview {
+  flex: 1;
+  overflow-y: auto;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  min-height: 150px;
+}
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #F5F5F5;
+  border-bottom: 1px solid #E0E0E0;
+}
+
+.preview-icon {
+  font-size: 32px;
+}
+
+.preview-meta {
+  flex: 1;
+}
+
+.preview-subject {
+  font-family: Tahoma, sans-serif;
+  font-size: 13px;
+  font-weight: bold;
+  color: #000080;
+  margin-bottom: 4px;
+}
+
+.preview-date {
+  font-family: Tahoma, sans-serif;
+  font-size: 10px;
+  color: #808080;
+}
+
+.preview-body {
+  flex: 1;
+  padding: 12px;
+  font-family: Tahoma, sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.preview-image {
+  max-width: 120px;
+  max-height: 120px;
+  float: left;
+  margin-right: 12px;
+  margin-bottom: 8px;
+  border: 2px solid #808080;
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+.preview-waste {
+  font-weight: bold;
+  color: #FF6600;
+  margin-top: 12px;
+}
+
+.preview-actions {
+  padding: 8px 12px;
+  border-top: 1px solid #E0E0E0;
+  background: #F5F5F5;
+}
+
+.preview-btn {
+  padding: 4px 12px;
+  font-family: Tahoma, sans-serif;
+  font-size: 11px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #ECE9D8 45%, #D8D4C8 100%);
+  border: 1px solid #ACA899;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.preview-btn:hover {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F5F3ED 45%, #E5E1D5 100%);
+  border-color: #316AC5;
+}
+
+.preview-btn.delete:hover {
+  background: linear-gradient(180deg, #FFCCCC 0%, #FF9999 100%);
+  border-color: #CC0000;
+}
+
+.preview-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: #808080;
+}
+
+.preview-empty .empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.3;
+}
+
+/* Status bar */
+.outlook-statusbar {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 8px;
+  background: #ECE9D8;
+  border-top: 1px solid #ACA899;
+  font-family: Tahoma, sans-serif;
+  font-size: 10px;
+  color: #666;
+}

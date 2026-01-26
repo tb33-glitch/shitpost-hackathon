@@ -1,0 +1,725 @@
+/* SwapWindow - Two Panel Layout */
+
+.swap-window {
+  width: 100%;
+  height: 100%;
+}
+
+.swap-window-frame {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.swap-window-frame .window-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 0;
+  overflow: hidden;
+  background: #f0f0f0;
+}
+
+/* ==================== LAYOUT ==================== */
+.swap-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ==================== LEFT PANEL: TOKEN LIST ==================== */
+.swap-token-panel {
+  width: 380px;
+  min-width: 380px;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-right: 1px solid #999;
+}
+
+.token-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: linear-gradient(180deg, #4a90d9 0%, #2d6fc2 100%);
+  border-bottom: 1px solid #1e5a9f;
+}
+
+.token-panel-header h3 {
+  margin: 0;
+  color: #fff;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+}
+
+.token-search {
+  width: 150px;
+  padding: 8px 12px;
+  border: 1px solid #1e5a9f;
+  border-radius: 4px;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 13px;
+  background: #fff;
+}
+
+.token-search:focus {
+  outline: none;
+  border-color: #0078d7;
+}
+
+/* Token List Header */
+.token-list-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  background: #e8e8e8;
+  border-bottom: 1px solid #ccc;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #333;
+}
+
+.token-list-header .col-rank { width: 28px; }
+.token-list-header .col-name { flex: 1; }
+.token-list-header .col-price { width: 90px; text-align: right; }
+.token-list-header .col-mcap { width: 70px; text-align: right; }
+.token-list-header .col-change { width: 70px; text-align: right; }
+
+/* Token List */
+.token-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.token-list-loading,
+.token-list-empty {
+  padding: 40px;
+  text-align: center;
+  color: #888;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 13px;
+}
+
+/* Token Row */
+.token-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.token-row:hover {
+  background: #f5f9ff;
+}
+
+.token-row.selected {
+  background: #cce4ff;
+}
+
+.token-row .col-rank {
+  width: 28px;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 12px;
+  color: #888;
+}
+
+.token-row .col-name {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.token-row .token-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid #ddd;
+}
+
+.token-row .token-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.token-row .token-icon span {
+  font-size: 12px;
+  font-weight: bold;
+  color: #666;
+}
+
+.token-row .token-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.token-row .token-symbol {
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111;
+}
+
+.token-row .token-name-text {
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+}
+
+.token-row .col-price {
+  width: 90px;
+  text-align: right;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #222;
+}
+
+.token-row .col-mcap {
+  width: 70px;
+  text-align: right;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #444;
+}
+
+.token-row .col-change {
+  width: 70px;
+  text-align: right;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.token-row .col-change.positive { color: #16a34a; }
+.token-row .col-change.negative { color: #dc2626; }
+
+/* ==================== RIGHT PANEL: SWAP FORM ==================== */
+.swap-form-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  background: #f5f5f5;
+  overflow-y: auto;
+}
+
+/* Selected Token Card */
+.selected-token-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.selected-token-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.selected-token-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px solid #ddd;
+}
+
+.selected-token-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.selected-token-icon span {
+  font-size: 18px;
+  font-weight: bold;
+  color: #666;
+}
+
+.selected-token-info {
+  flex: 1;
+}
+
+.selected-token-symbol {
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #111;
+}
+
+.selected-token-name {
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 14px;
+  color: #555;
+}
+
+.selected-token-change {
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 6px;
+}
+
+.selected-token-change.positive {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.selected-token-change.negative {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* Stats Grid */
+.selected-token-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 10px;
+  background: #f8f8f8;
+  border-radius: 6px;
+}
+
+.stat-label {
+  display: block;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 11px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  display: block;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #222;
+}
+
+/* Token Links */
+.selected-token-links {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.selected-token-links a,
+.selected-token-links button {
+  padding: 10px 18px;
+  background: #e8f4ff;
+  border: 1px solid #b3d4fc;
+  border-radius: 4px;
+  color: #0056b3;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.selected-token-links a:hover,
+.selected-token-links button:hover {
+  background: #cce4ff;
+  border-color: #80b3e6;
+}
+
+.selected-token-links .make-meme-btn {
+  background: linear-gradient(180deg, #a855f7 0%, #7c3aed 100%);
+  border-color: #6d28d9;
+  color: #fff;
+}
+
+.selected-token-links .make-meme-btn:hover {
+  background: linear-gradient(180deg, #c084fc 0%, #a855f7 100%);
+  border-color: #7c3aed;
+}
+
+/* No Token Selected */
+.no-token-selected {
+  background: #fff;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 40px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.no-token-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.no-token-text {
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: #555;
+}
+
+/* ==================== SWAP FORM ==================== */
+.swap-form {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.swap-input-section,
+.swap-output-section {
+  margin-bottom: 8px;
+}
+
+.input-header,
+.output-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+}
+
+.slippage-display {
+  color: #666;
+  font-weight: 500;
+}
+
+.input-row,
+.output-row {
+  display: flex;
+  align-items: center;
+  background: #f8f8f8;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.input-token,
+.output-token {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  min-width: 110px;
+}
+
+.input-token-icon,
+.output-token-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.input-token-icon img,
+.output-token-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.output-token-icon span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: #e8e8e8;
+  font-size: 11px;
+  font-weight: bold;
+  color: #666;
+}
+
+.input-token span,
+.output-token span {
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #222;
+}
+
+.output-token .no-token {
+  color: #888;
+  font-weight: 500;
+}
+
+.input-row input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  text-align: right;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+  color: #111;
+  outline: none;
+  min-width: 0;
+}
+
+.input-row input::placeholder {
+  color: #999;
+}
+
+/* Hide number spinners */
+.input-row input[type="number"]::-webkit-inner-spin-button,
+.input-row input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.input-row input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.output-amount {
+  flex: 1;
+  text-align: right;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+  color: #444;
+}
+
+/* Swap Direction Button */
+.swap-direction-btn {
+  display: block;
+  width: 36px;
+  height: 36px;
+  margin: 4px auto;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  font-size: 16px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.swap-direction-btn:hover:not(:disabled) {
+  background: #f0f0f0;
+  border-color: #bbb;
+  color: #333;
+}
+
+.swap-direction-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Quote Details */
+.quote-details {
+  margin: 12px 0;
+  padding: 12px;
+  background: #f8f8f8;
+  border-radius: 6px;
+}
+
+.quote-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 13px;
+  color: #555;
+}
+
+.quote-row.warning span:last-child {
+  color: #d97706;
+  font-weight: 700;
+}
+
+/* Slippage Row */
+.slippage-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 12px 0;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+}
+
+.slippage-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.slippage-buttons button {
+  padding: 8px 14px;
+  background: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.slippage-buttons button:hover {
+  background: #e8e8e8;
+}
+
+.slippage-buttons button.active {
+  background: #0066cc;
+  border-color: #0066cc;
+  color: #fff;
+}
+
+/* Error/Success */
+.swap-error {
+  margin: 12px 0;
+  padding: 12px 14px;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  color: #b91c1c;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.swap-success {
+  margin: 12px 0;
+  padding: 12px 14px;
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  border-radius: 6px;
+  color: #15803d;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.swap-success a {
+  color: #166534;
+  font-weight: 700;
+}
+
+/* Action Button */
+.connect-btn-wrapper {
+  margin-top: 12px;
+}
+
+.swap-btn {
+  width: 100%;
+  padding: 16px;
+  margin-top: 12px;
+  background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.swap-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #4ade80 0%, #22c55e 100%);
+}
+
+.swap-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.powered-by {
+  margin-top: 16px;
+  text-align: center;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 12px;
+  color: #888;
+}
+
+/* ==================== SCROLLBAR ==================== */
+.token-list::-webkit-scrollbar,
+.swap-form-panel::-webkit-scrollbar {
+  width: 12px;
+}
+
+.token-list::-webkit-scrollbar-track,
+.swap-form-panel::-webkit-scrollbar-track {
+  background: #f0f0f0;
+}
+
+.token-list::-webkit-scrollbar-thumb,
+.swap-form-panel::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border: 2px solid #f0f0f0;
+  border-radius: 6px;
+}
+
+.token-list::-webkit-scrollbar-thumb:hover,
+.swap-form-panel::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 700px) {
+  .swap-layout {
+    flex-direction: column;
+  }
+
+  .swap-token-panel {
+    width: 100%;
+    min-width: unset;
+    max-height: 250px;
+    border-right: none;
+    border-bottom: 1px solid #999;
+  }
+
+  .token-list-header .col-mcap {
+    display: none;
+  }
+
+  .token-row .col-mcap {
+    display: none;
+  }
+}
