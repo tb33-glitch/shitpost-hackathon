@@ -1,4 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { LinkInput } from '../../components/Admin/LinkInput'
 import { ExtractionQueue } from '../../components/Admin/ExtractionQueue'
 import { ApprovedManager } from '../../components/Admin/ApprovedManager'
@@ -6,7 +8,13 @@ import { VideoManager } from '../../components/Admin/VideoManager'
 import { ReportsManager } from '../../components/Admin/ReportsManager'
 import '../../styles/admin.css'
 
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'ty'
+// Admin wallets - ONLY these addresses can access admin panel
+// Add your admin wallet public keys here
+const ADMIN_WALLETS = (import.meta.env.VITE_ADMIN_WALLETS || '')
+  .split(',')
+  .map(w => w.trim().toLowerCase())
+  .filter(Boolean)
+
 const STORAGE_KEY = 'shitpost-admin-pipeline'
 
 // Load persisted state from localStorage
@@ -32,9 +40,11 @@ function persistState(state) {
 }
 
 export function CollectionPipeline() {
+  const { publicKey, connected, signMessage } = useWallet()
+  const { setVisible } = useWalletModal()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [passwordInput, setPasswordInput] = useState('')
   const [authError, setAuthError] = useState('')
+  const [isVerifying, setIsVerifying] = useState(false)
 
   // Load persisted state on mount
   const persistedState = loadPersistedState()
@@ -44,6 +54,10 @@ export function CollectionPipeline() {
   const [extractionQueue, setExtractionQueue] = useState([])
   const [approvedItems, setApprovedItems] = useState(persistedState?.approvedItems || [])
   const [extractionLogs, setExtractionLogs] = useState(persistedState?.logs || [])
+
+  // Check if connected wallet is an admin
+  const walletAddress = publicKey?.toString()
+  const isAdminWallet = walletAddress && ADMIN_WALLETS.includes(walletAddress.toLowerCase())
 
   // Get pending reports count
   const getPendingReportsCount = () => {
@@ -71,15 +85,46 @@ export function CollectionPipeline() {
     })
   }, [approvedItems, extractionLogs])
 
-  const handleLogin = useCallback((e) => {
-    e.preventDefault()
-    if (passwordInput === ADMIN_PASSWORD) {
-      setIsAuthenticated(true)
-      setAuthError('')
-    } else {
-      setAuthError('Invalid password')
+  // Reset auth when wallet disconnects
+  useEffect(() => {
+    if (!connected) {
+      setIsAuthenticated(false)
     }
-  }, [passwordInput])
+  }, [connected])
+
+  // Verify admin access with wallet signature
+  const handleVerifyAdmin = useCallback(async () => {
+    if (!connected || !publicKey || !signMessage) {
+      setAuthError('Please connect your wallet first')
+      return
+    }
+
+    if (!isAdminWallet) {
+      setAuthError('This wallet is not authorized for admin access')
+      return
+    }
+
+    setIsVerifying(true)
+    setAuthError('')
+
+    try {
+      // Create a challenge message with timestamp to prevent replay attacks
+      const timestamp = Date.now()
+      const message = `shitpost.pro admin access\nWallet: ${walletAddress}\nTimestamp: ${timestamp}`
+
+      // Request signature
+      const encodedMessage = new TextEncoder().encode(message)
+      await signMessage(encodedMessage)
+
+      // Signature verified - grant access
+      setIsAuthenticated(true)
+    } catch (err) {
+      console.error('Admin verification failed:', err)
+      setAuthError(err.message || 'Failed to verify wallet signature')
+    } finally {
+      setIsVerifying(false)
+    }
+  }, [connected, publicKey, signMessage, walletAddress, isAdminWallet])
 
   const addToExtractionQueue = useCallback((urls) => {
     const newItems = urls.map((url, index) => ({
@@ -134,23 +179,54 @@ export function CollectionPipeline() {
     }, ...prev].slice(0, 100)) // Keep last 100 logs
   }, [])
 
+  // Show wallet connection / verification screen
   if (!isAuthenticated) {
     return (
       <div className="admin-login">
         <div className="admin-login-box">
           <h1>Admin Access</h1>
           <p>Meme Collection Pipeline</p>
-          <form onSubmit={handleLogin}>
-            <input
-              type="password"
-              value={passwordInput}
-              onChange={(e) => setPasswordInput(e.target.value)}
-              placeholder="Enter admin password"
-              autoFocus
-            />
-            <button type="submit">Login</button>
-            {authError && <p className="auth-error">{authError}</p>}
-          </form>
+
+          {ADMIN_WALLETS.length === 0 ? (
+            <div className="auth-error">
+              No admin wallets configured.<br />
+              Set VITE_ADMIN_WALLETS in your .env file.
+            </div>
+          ) : !connected ? (
+            <>
+              <p>Connect an authorized admin wallet to continue.</p>
+              <button onClick={() => setVisible(true)}>
+                Connect Wallet
+              </button>
+            </>
+          ) : !isAdminWallet ? (
+            <>
+              <p className="wallet-info">
+                Connected: {walletAddress?.slice(0, 4)}...{walletAddress?.slice(-4)}
+              </p>
+              <div className="auth-error">
+                This wallet is not authorized for admin access.
+              </div>
+              <button onClick={() => setVisible(true)}>
+                Switch Wallet
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="wallet-info">
+                Connected: {walletAddress?.slice(0, 4)}...{walletAddress?.slice(-4)}
+              </p>
+              <p>Sign a message to verify admin access.</p>
+              <button
+                onClick={handleVerifyAdmin}
+                disabled={isVerifying}
+              >
+                {isVerifying ? 'Verifying...' : 'Verify Admin Access'}
+              </button>
+              {authError && <p className="auth-error">{authError}</p>}
+            </>
+          )}
+
           <p className="back-link">
             <a href="/">← Back to shitpost.pro</a>
           </p>
@@ -196,6 +272,9 @@ export function CollectionPipeline() {
             Reports {pendingReports > 0 ? `(${pendingReports})` : ''}
           </button>
         </nav>
+        <div className="admin-wallet-info">
+          {walletAddress?.slice(0, 4)}...{walletAddress?.slice(-4)}
+        </div>
         <a href="/" className="admin-back">← Back to App</a>
       </header>
 

@@ -124,6 +124,19 @@ export default function useJupiterSwap() {
       const swapTransactionBuf = Buffer.from(swapTransaction, 'base64')
       const transaction = VersionedTransaction.deserialize(swapTransactionBuf)
 
+      // SECURITY: Simulate transaction before signing to catch errors early
+      console.log('[Jupiter Swap] Simulating transaction...')
+      const simulation = await connection.simulateTransaction(transaction, {
+        commitment: 'confirmed',
+      })
+
+      if (simulation.value.err) {
+        console.error('[Jupiter Swap] Simulation failed:', simulation.value.err)
+        console.error('[Jupiter Swap] Simulation logs:', simulation.value.logs)
+        throw new Error(`Transaction simulation failed: ${JSON.stringify(simulation.value.err)}`)
+      }
+      console.log('[Jupiter Swap] Simulation successful, units consumed:', simulation.value.unitsConsumed)
+
       // Sign the transaction
       const signedTransaction = await wallet.signTransaction(transaction)
 

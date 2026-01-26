@@ -66,26 +66,25 @@ export default function useSolanaMint(network = 'devnet') {
     setIsSuccess(false)
 
     try {
-      console.log('[Solana Mint] Step 1: Creating provider...')
-      console.log('[Solana Mint] Connection endpoint:', connection.rpcEndpoint)
-      console.log('[Solana Mint] Expected network:', network)
-      console.log('[Solana Mint] Wallet publicKey:', wallet.publicKey?.toString())
+      // Only log non-sensitive info in development
+      const isDev = import.meta.env.DEV
+      if (isDev) {
+        console.log('[Solana Mint] Starting mint on', network)
+      }
 
-      // Verify we're on devnet by checking the genesis hash
+      // Verify network by checking genesis hash
       const genesisHash = await connection.getGenesisHash()
-      console.log('[Solana Mint] Genesis hash:', genesisHash)
       // Devnet genesis: EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG
       // Mainnet genesis: 5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d
       const isDevnet = genesisHash === 'EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG'
-      console.log('[Solana Mint] Is Devnet?', isDevnet)
 
       // Create Anchor provider and program
       const provider = new AnchorProvider(connection, wallet, {
         commitment: 'confirmed',
       })
-      console.log('[Solana Mint] Step 2: Provider created')
+      if (isDev) console.log('[Solana Mint] Step 2: Provider created')
 
-      console.log('[Solana Mint] Step 3: Creating program...')
+      if (isDev) console.log('[Solana Mint] Step 3: Creating program...')
       console.log('[Solana Mint] Program ID:', networkConfig.programId?.toString())
       console.log('[Solana Mint] IDL name:', idl?.name)
 
@@ -93,23 +92,23 @@ export default function useSolanaMint(network = 'devnet') {
       const programId = networkConfig.programId instanceof PublicKey
         ? networkConfig.programId
         : new PublicKey(networkConfig.programId.toString())
-      console.log('[Solana Mint] Step 3b: Program ID converted:', programId.toString())
+      if (isDev) console.log('[Solana Mint] Step 3b: Program ID converted:', programId.toString())
 
       // Anchor 0.29 API - pass IDL, program ID, and provider
       const program = new Program(idl, programId, provider)
-      console.log('[Solana Mint] Step 4: Program created')
+      if (isDev) console.log('[Solana Mint] Step 4: Program created')
 
       // Generate new mint keypair
       const mintKeypair = Keypair.generate()
-      console.log('[Solana Mint] Step 5: Mint keypair:', mintKeypair.publicKey.toString())
+      if (isDev) console.log('[Solana Mint] Step 5: Mint keypair:', mintKeypair.publicKey.toString())
 
       // Derive PDAs
       const [collectionConfigPda] = deriveCollectionConfigPda(programId)
-      console.log('[Solana Mint] Step 6: Collection config PDA:', collectionConfigPda.toString())
+      if (isDev) console.log('[Solana Mint] Step 6: Collection config PDA:', collectionConfigPda.toString())
 
       const [metadataPda] = deriveMetadataPda(mintKeypair.publicKey)
       const [masterEditionPda] = deriveMasterEditionPda(mintKeypair.publicKey)
-      console.log('[Solana Mint] Step 7: PDAs derived')
+      if (isDev) console.log('[Solana Mint] Step 7: PDAs derived')
 
       // Get associated token account
       const tokenAccount = getAssociatedTokenAddressSync(
@@ -255,12 +254,26 @@ export default function useSolanaMint(network = 'devnet') {
       // Sign with mint keypair
       transaction.partialSign(mintKeypair)
 
+      // SECURITY: Simulate transaction before signing to catch errors early
+      console.log('[Solana Mint] Simulating transaction...')
+      const simulation = await connection.simulateTransaction(transaction, {
+        sigVerify: false,
+        commitment: 'confirmed',
+      })
+
+      if (simulation.value.err) {
+        console.error('[Solana Mint] Simulation failed:', simulation.value.err)
+        console.error('[Solana Mint] Simulation logs:', simulation.value.logs)
+        throw new Error(`Transaction simulation failed: ${JSON.stringify(simulation.value.err)}`)
+      }
+      console.log('[Solana Mint] Simulation successful')
+
       // Sign with wallet
       const signedTx = await wallet.signTransaction(transaction)
 
       // Send transaction
       const txSig = await connection.sendRawTransaction(signedTx.serialize(), {
-        skipPreflight: false,
+        skipPreflight: false, // Keep preflight as additional check
         preflightCommitment: 'confirmed',
       })
 
