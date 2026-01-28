@@ -146,6 +146,9 @@ export default function Desktop() {
   // Coin context for meme studio integration
   const [coinContextForEditor, setCoinContextForEditor] = useState(null)
 
+  // Sticker context for adding token logos as stickers
+  const [stickerContextForEditor, setStickerContextForEditor] = useState(null)
+
   const openWindow = useCallback((windowId) => {
     const config = WINDOW_CONFIGS[windowId]
     setHighestZIndex(prev => prev + 1)
@@ -391,6 +394,17 @@ export default function Desktop() {
     setCoinContextForEditor(null)
   }, [])
 
+  // Open meme studio with sticker context pre-loaded
+  const openMemeStudioWithSticker = useCallback((sticker) => {
+    setStickerContextForEditor(sticker)
+    openWindow('shitpost')
+  }, [openWindow])
+
+  // Clear sticker context after it's been used
+  const clearStickerContext = useCallback(() => {
+    setStickerContextForEditor(null)
+  }, [])
+
 
   // Render window content based on type
   const renderWindowContent = (windowId) => {
@@ -408,6 +422,8 @@ export default function Desktop() {
             onMintSuccess={refetchNFTs}
             coinContext={coinContextForEditor}
             onCoinContextUsed={clearCoinContext}
+            stickerContext={stickerContextForEditor}
+            onStickerContextUsed={clearStickerContext}
             onConnectWallet={() => setShowWalletModal(true)}
           />
         )
@@ -415,6 +431,7 @@ export default function Desktop() {
         return (
           <CoinExplorer
             onMakeMeme={openMemeStudioWithCoin}
+            onAddSticker={openMemeStudioWithSticker}
             onClose={() => closeWindow(windowId)}
             onMinimize={() => minimizeWindow(windowId)}
             onMaximize={() => maximizeWindow(windowId)}

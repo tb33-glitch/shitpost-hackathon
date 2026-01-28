@@ -1,7 +1,8 @@
-import { useState, useMemo, useCallback, useRef } from 'react'
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { addToRegistry, getLocalRegistry, clearRegistry } from '../../utils/templateRegistry'
 import { reloadCustomTemplates } from '../../config/memeTemplates'
 import { downloadVideo, saveVideo, getAllVideos, clearAllVideos } from '../../utils/videoStorage'
+import { isVideoContent } from '../../utils/urlValidation'
 
 export function ApprovedManager({ items }) {
   const [filterCategory, setFilterCategory] = useState('all')
@@ -17,10 +18,7 @@ export function ApprovedManager({ items }) {
   const filteredItems = useMemo(() => {
     return items.filter(item => {
       // Check if item is a video
-      const isVideo = item.mediaType === 'video' ||
-        item.mediaUrl?.includes('.mp4') ||
-        item.mediaUrl?.includes('.webm') ||
-        item.mediaUrl?.includes('video.twimg.com')
+      const isVideo = isVideoContent(item)
 
       // Handle filter categories
       if (filterCategory === 'videos') {
@@ -400,12 +398,7 @@ export function ApprovedManager({ items }) {
   }, [])
 
   const stats = useMemo(() => {
-    const videos = items.filter(i => {
-      return i.mediaType === 'video' ||
-        i.mediaUrl?.includes('.mp4') ||
-        i.mediaUrl?.includes('.webm') ||
-        i.mediaUrl?.includes('video.twimg.com')
-    }).length
+    const videos = items.filter(i => isVideoContent(i)).length
     return {
       total: items.length,
       templates: items.filter(i => i.category === 'templates').length - videos,
