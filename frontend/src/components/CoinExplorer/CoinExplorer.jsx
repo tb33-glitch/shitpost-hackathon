@@ -1,4 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { Window } from '../Windows98'
 import CoinCard from './CoinCard'
 import CoinDetail from './CoinDetail'
@@ -51,6 +53,14 @@ export default function CoinExplorer({
   const [helpPosition, setHelpPosition] = useState({ x: 100, y: 100 })
   const [isDraggingHelp, setIsDraggingHelp] = useState(false)
   const dragOffset = useRef({ x: 0, y: 0 })
+
+  // Wallet connection
+  const { publicKey, connected: isWalletConnected, disconnect } = useWallet()
+  const { setVisible: setWalletModalVisible } = useWalletModal()
+
+  const walletDisplayAddress = isWalletConnected && publicKey
+    ? `${publicKey.toString().slice(0, 4)}...${publicKey.toString().slice(-4)}`
+    : null
 
   // Help window drag handlers
   const handleHelpDragStart = useCallback((e) => {
@@ -365,6 +375,18 @@ export default function CoinExplorer({
               <span className={isConnected ? 'status-live' : 'status-offline'}>
                 {isConnected ? '🟢 Live' : '🔴 Offline'}
               </span>
+              <div className="status-wallet">
+                {isWalletConnected ? (
+                  <>
+                    <span className="wallet-address">◎ {walletDisplayAddress}</span>
+                    <button className="wallet-disconnect-btn" onClick={disconnect}>×</button>
+                  </>
+                ) : (
+                  <button className="wallet-connect-btn" onClick={() => setWalletModalVisible(true)}>
+                    Connect Wallet
+                  </button>
+                )}
+              </div>
             </div>
           </>
         )}

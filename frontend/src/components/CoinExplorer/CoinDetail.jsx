@@ -43,11 +43,7 @@ export default function CoinDetail({ coin, onBack, onMakeMeme }) {
   // Jupiter swap hook
   const { quote, isLoadingQuote, isSwapping, error, getQuote, executeSwap, reset } = useJupiterSwap()
 
-  // TODO: WALLET BALANCE NOT WORKING - Need to set up RPC endpoint
-  // The public Solana RPC blocks browser requests (403 error)
-  // Fix: Get a free API key from https://helius.dev and add to .env:
-  //   VITE_SOLANA_RPC_URL=https://mainnet.helius-rpc.com/?api-key=YOUR_KEY
-  // Then restart dev server
+  // Create a dedicated connection for balance fetching
   const balanceConnectionRef = useRef(null)
   if (!balanceConnectionRef.current) {
     const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com'
