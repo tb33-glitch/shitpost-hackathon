@@ -653,21 +653,27 @@
 
 .ds-menu-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 6px;
   flex: 1;
+}
+
+/* Make the 5th item (game) span center of bottom row */
+.ds-menu-item:nth-child(5) {
+  grid-column: 2;
 }
 
 .ds-menu-item {
   background: rgba(255,255,255,0.1);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 6px;
-  padding: 8px 5px;
+  padding: 6px 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -684,8 +690,8 @@
   box-shadow: none;
 }
 
-.ds-menu-icon { font-size: 31px; }
-.ds-menu-label { font-size: 13px; font-weight: 600; color: #fff; text-align: center; }
+.ds-menu-icon { font-size: 24px; }
+.ds-menu-label { font-size: 10px; font-weight: 600; color: #fff; text-align: center; line-height: 1.2; }
 
 .ds-menu-hint {
   font-size: 11px;
@@ -705,4 +711,192 @@
   .ds-shell:hover {
     transform: scale(0.7) perspective(1000px) rotateX(0deg);
   }
+}
+
+/* ==========================================
+   DINO GAME (Poop Runner)
+   ========================================== */
+
+.dino-game {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 70%, #f5f5dc 70%, #f5f5dc 100%);
+}
+
+.dino-sky {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 70%;
+  background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 100%);
+}
+
+.dino-play-area {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.dino-poop {
+  position: absolute;
+  left: 30px;
+  font-size: 28px;
+  line-height: 1;
+  transition: transform 0.1s ease;
+  filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.3));
+  z-index: 10;
+}
+
+.dino-obstacle {
+  position: absolute;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  font-size: 24px;
+  z-index: 5;
+}
+
+.dino-obstacle.cactus {
+  font-size: 28px;
+}
+
+.dino-obstacle.bird {
+  font-size: 22px;
+  animation: flapWings 0.2s ease-in-out infinite alternate;
+}
+
+@keyframes flapWings {
+  from { transform: scaleY(1); }
+  to { transform: scaleY(0.85); }
+}
+
+.dino-ground {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30px;
+  background: linear-gradient(180deg, #c2b280 0%, #a89060 100%);
+  border-top: 2px solid #8b7355;
+}
+
+.dino-ground::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: repeating-linear-gradient(90deg, #8b7355 0px, #8b7355 10px, transparent 10px, transparent 20px);
+}
+
+.dino-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.3);
+  z-index: 20;
+}
+
+.dino-start-text {
+  font-size: 12px;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+  animation: blink 1s ease-in-out infinite;
+}
+
+.dino-gameover {
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+  margin-bottom: 8px;
+}
+
+.dino-final-score {
+  font-size: 14px;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+  margin-bottom: 8px;
+}
+
+.dino-restart {
+  font-size: 10px;
+  color: #ddd;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+  animation: blink 1s ease-in-out infinite;
+}
+
+.dino-score {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  text-shadow: 1px 1px 0 #fff;
+  z-index: 15;
+}
+
+.dino-high-score {
+  position: absolute;
+  top: 8px;
+  right: 80px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: #666;
+  text-shadow: 1px 1px 0 #fff;
+  z-index: 15;
+}
+
+/* Game controls on bottom screen */
+.ds-game-controls {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+  padding: 15px;
+}
+
+.game-instructions {
+  text-align: center;
+}
+
+.game-title {
+  font-size: 22px;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+.game-hint {
+  font-size: 13px;
+  color: #aaa;
+  margin-bottom: 20px;
+}
+
+.game-back {
+  font-size: 11px;
+  color: #666;
+  cursor: pointer;
+  padding: 8px 16px;
+  border: 1px solid #444;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.game-back:hover {
+  color: #fff;
+  border-color: #ff6b00;
+  background: rgba(255, 107, 0, 0.1);
 }
