@@ -6,6 +6,7 @@ import {
   fetchGraduated,
   searchTokens as pumpSearch,
   fetchKingOfTheHill,
+  fetchTokenByMint,
 } from './usePumpFunAPI'
 
 /**
@@ -34,7 +35,13 @@ export const SORT_OPTIONS = {
   LIQUIDITY: 'liquidity',
 }
 
-// Pinned coins that always appear first (fetched from GeckoTerminal for EVM chains)
+// Pinned coins that always appear first
+// For Solana pump.fun tokens, just provide the mint address
+const PINNED_SOLANA_TOKENS = [
+  'FjHwh3VkCHdd6LxPXQsV2eKFX3DErzzHvxHrHtmRpump', // Pinned pump.fun token
+]
+
+// Pinned coins for EVM chains (fetched from GeckoTerminal)
 const PINNED_COINS = []
 
 // Build DexScreener image URL
@@ -204,11 +211,27 @@ export default function usePumpCoins(dataSource = DATA_SOURCES.TRENDING, sortOpt
     setError(null)
 
     try {
-      // Always fetch pinned coins
+      // Fetch pinned Solana tokens from pump.fun and enrich with DexScreener
+      let pinnedSolanaData = await Promise.all(
+        PINNED_SOLANA_TOKENS.map(async (mint) => {
+          const token = await fetchTokenByMint(mint)
+          if (token) {
+            token.isPinned = true
+          }
+          return token
+        })
+      )
+      pinnedSolanaData = pinnedSolanaData.filter(Boolean)
+      if (pinnedSolanaData.length > 0) {
+        pinnedSolanaData = await enrichWithDexScreener(pinnedSolanaData)
+      }
+      const validPinnedSolana = pinnedSolanaData
+
+      // Fetch pinned EVM coins from GeckoTerminal
       const pinnedCoinsData = await Promise.all(
         PINNED_COINS.map(coin => fetchPinnedCoinData(coin))
       )
-      const validPinnedCoins = pinnedCoinsData.filter(Boolean)
+      const validPinnedCoins = [...validPinnedSolana, ...pinnedCoinsData.filter(Boolean)]
 
       let fetchedCoins = []
 
@@ -307,7 +330,10 @@ export default function usePumpCoins(dataSource = DATA_SOURCES.TRENDING, sortOpt
           fetchedCoins = await enrichWithDexScreener(fetchedCoins)
       }
 
-      const allCoins = [...validPinnedCoins, ...fetchedCoins]
+      // Remove duplicates (pinned tokens might also appear in fetched results)
+      const pinnedMints = new Set(validPinnedCoins.map(c => c.mint))
+      const dedupedFetched = fetchedCoins.filter(c => !pinnedMints.has(c.mint))
+      const allCoins = [...validPinnedCoins, ...dedupedFetched]
       setCoins(allCoins)
       setIsLoading(false)
     } catch (err) {
