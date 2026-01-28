@@ -2,28 +2,31 @@
  * Template Registry - Manages community-submitted templates via IPFS
  *
  * Storage Architecture:
- * - Each template image is uploaded to IPFS
- * - Each template has metadata JSON uploaded to IPFS
+ * - Each template image is uploaded to IPFS via secure backend
+ * - Each template has metadata JSON uploaded to IPFS via secure backend
  * - A master registry JSON tracks all submissions (stored in localStorage + IPFS)
  * - Registry is periodically synced to IPFS for persistence
  */
 
-const PINATA_JWT = import.meta.env.VITE_PINATA_JWT
+import * as api from './api.js'
+
 const PINATA_GATEWAY = import.meta.env.VITE_PINATA_GATEWAY || 'gateway.pinata.cloud'
 const REGISTRY_KEY = 'shitpost-template-registry'
 const REGISTRY_CID_KEY = 'shitpost-registry-cid'
 
-// Check if Pinata is properly configured
-const isPinataConfigured = PINATA_JWT && PINATA_JWT !== 'your_pinata_jwt_here'
-
 // ==================== IPFS Upload Functions ====================
 
 /**
- * Upload a template image to IPFS via Pinata, or save locally if not configured
+ * Upload a template image to IPFS via backend, or save locally as fallback
  */
 export async function uploadTemplateImage(file, templateName) {
-  // If Pinata isn't configured, save as data URL in localStorage
-  if (!isPinataConfigured) {
+  try {
+    // Try to upload via backend API
+    return await api.uploadTemplateImage(file, templateName)
+  } catch (error) {
+    console.warn('Backend upload failed, falling back to local storage:', error.message)
+
+    // Fallback: save as data URL in localStorage
     return new Promise((resolve) => {
       const reader = new FileReader()
       reader.onloadend = () => {
@@ -38,41 +41,19 @@ export async function uploadTemplateImage(file, templateName) {
       reader.readAsDataURL(file)
     })
   }
-
-  const formData = new FormData()
-  const sanitizedName = templateName.toLowerCase().replace(/[^a-z0-9]/g, '-')
-  const extension = file.name.split('.').pop() || 'png'
-  const filename = `template-${sanitizedName}-${Date.now()}.${extension}`
-
-  formData.append('file', file, filename)
-
-  const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${PINATA_JWT}`,
-    },
-    body: formData,
-  })
-
-  if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`Failed to upload image: ${error}`)
-  }
-
-  const data = await response.json()
-  return {
-    cid: data.IpfsHash,
-    url: `ipfs://${data.IpfsHash}`,
-    gateway: `https://${PINATA_GATEWAY}/ipfs/${data.IpfsHash}`,
-  }
 }
 
 /**
- * Upload template metadata JSON to IPFS via Pinata, or save locally if not configured
+ * Upload template metadata JSON to IPFS via backend, or save locally as fallback
  */
 export async function uploadTemplateMetadata(metadata) {
-  // If Pinata isn't configured, just return a local ID
-  if (!isPinataConfigured) {
+  try {
+    // Try to upload via backend API
+    return await api.uploadTemplateMetadata(metadata)
+  } catch (error) {
+    console.warn('Backend metadata upload failed, falling back to local:', error.message)
+
+    // Fallback: just return a local ID
     const localId = `local-meta-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     return {
       cid: localId,
@@ -80,32 +61,6 @@ export async function uploadTemplateMetadata(metadata) {
       gateway: `local://${localId}`,
       isLocal: true,
     }
-  }
-
-  const response = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${PINATA_JWT}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      pinataContent: metadata,
-      pinataMetadata: {
-        name: `shitpost-template-${metadata.name}`,
-      },
-    }),
-  })
-
-  if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`Failed to upload metadata: ${error}`)
-  }
-
-  const data = await response.json()
-  return {
-    cid: data.IpfsHash,
-    url: `ipfs://${data.IpfsHash}`,
-    gateway: `https://${PINATA_GATEWAY}/ipfs/${data.IpfsHash}`,
   }
 }
 
@@ -149,6 +104,20 @@ export function saveLocalRegistry(registry) {
 }
 
 /**
+ * Upload the full registry to IPFS via backend
+ */
+async function uploadRegistryToIPFS(registry) {
+  // Use template metadata endpoint for registry as well
+  const response = await api.uploadTemplateMetadata({
+    ...registry,
+    name: 'shitpost-template-registry',
+    category: 'registry',
+    imageCid: 'registry',
+  })
+  return response.cid
+}
+
+/**
  * Add a new template to the registry
  */
 export async function addToRegistry(entry) {
@@ -161,49 +130,16 @@ export async function addToRegistry(entry) {
   // Save locally
   saveLocalRegistry(registry)
 
-  // Also upload the updated registry to IPFS for persistence (if configured)
-  if (isPinataConfigured) {
-    try {
-      const registryCid = await uploadRegistryToIPFS(registry)
-      localStorage.setItem(REGISTRY_CID_KEY, registryCid)
-    } catch (e) {
-      console.error('Failed to sync registry to IPFS:', e)
-      // Continue anyway - local storage is the primary source
-    }
+  // Also upload the updated registry to IPFS for persistence
+  try {
+    const registryCid = await uploadRegistryToIPFS(registry)
+    localStorage.setItem(REGISTRY_CID_KEY, registryCid)
+  } catch (e) {
+    console.error('Failed to sync registry to IPFS:', e)
+    // Continue anyway - local storage is the primary source
   }
 
   return registry
-}
-
-/**
- * Upload the full registry to IPFS
- */
-async function uploadRegistryToIPFS(registry) {
-  if (!PINATA_JWT) {
-    throw new Error('Pinata JWT not configured')
-  }
-
-  const response = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${PINATA_JWT}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      pinataContent: registry,
-      pinataMetadata: {
-        name: 'shitpost-template-registry',
-      },
-    }),
-  })
-
-  if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`Failed to upload registry: ${error}`)
-  }
-
-  const data = await response.json()
-  return data.IpfsHash
 }
 
 /**
