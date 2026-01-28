@@ -538,6 +538,64 @@
   border-radius: 2px;
 }
 
+/* Status Bar Wallet */
+.status-wallet {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.status-wallet .wallet-address {
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+  color: #316AC5;
+  background: #E3F0FF;
+  padding: 2px 8px;
+  border-radius: 3px;
+  border: 1px solid #7F9DB9;
+}
+
+.wallet-connect-btn {
+  padding: 3px 10px;
+  background: linear-gradient(180deg, #3ecf8e 0%, #2a9d6a 100%);
+  border: 1px solid #1a7a4a;
+  border-radius: 3px;
+  color: #fff;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.wallet-connect-btn:hover {
+  background: linear-gradient(180deg, #4edfa0 0%, #3aad7a 100%);
+}
+
+.wallet-disconnect-btn {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  background: linear-gradient(180deg, #FFFFFF 0%, #ECE9D8 45%, #D8D4C8 100%);
+  border: 1px solid #ACA899;
+  border-radius: 3px;
+  color: #606060;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.wallet-disconnect-btn:hover {
+  background: linear-gradient(180deg, #FFCCCC 0%, #FFAAAA 100%);
+  border-color: #CC0000;
+  color: #CC0000;
+}
+
 /* ========== CoinCard Styles ========== */
 .coin-card {
   display: flex;

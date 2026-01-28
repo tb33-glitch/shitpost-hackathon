@@ -10,11 +10,28 @@ const DB_VERSION = 1
 const STORE_NAME = 'videos'
 
 let dbPromise = null
+let dbInstance = null
 
 /**
  * Open/create the IndexedDB database
+ * Handles connection recovery if the database connection is closed
  */
 function openDB() {
+  // Check if existing connection is still valid
+  if (dbInstance) {
+    try {
+      // Test if the connection is still alive by checking objectStoreNames
+      if (dbInstance.objectStoreNames.contains(STORE_NAME)) {
+        return Promise.resolve(dbInstance)
+      }
+    } catch (e) {
+      // Connection is dead, reset and reconnect
+      console.log('[VideoStorage] Database connection stale, reconnecting...')
+      dbInstance = null
+      dbPromise = null
+    }
+  }
+
   if (dbPromise) return dbPromise
 
   dbPromise = new Promise((resolve, reject) => {
@@ -22,12 +39,26 @@ function openDB() {
 
     request.onerror = () => {
       console.error('[VideoStorage] Failed to open database:', request.error)
+      dbPromise = null
       reject(request.error)
     }
 
     request.onsuccess = () => {
       console.log('[VideoStorage] Database opened successfully')
-      resolve(request.result)
+      dbInstance = request.result
+
+      // Handle connection close events
+      dbInstance.onclose = () => {
+        console.log('[VideoStorage] Database connection closed')
+        dbInstance = null
+        dbPromise = null
+      }
+
+      dbInstance.onerror = (event) => {
+        console.error('[VideoStorage] Database error:', event.target.error)
+      }
+
+      resolve(dbInstance)
     }
 
     request.onupgradeneeded = (event) => {
@@ -233,7 +264,26 @@ export async function downloadVideo(url, onProgress, sourceUrl = null) {
  * Save a video to IndexedDB
  */
 export async function saveVideo(metadata, blob) {
-  const db = await openDB()
+  console.log('[VideoStorage] saveVideo called with:', {
+    id: metadata.id,
+    name: metadata.name,
+    blobSize: blob?.size,
+    blobType: blob?.type,
+  })
+
+  if (!blob || !(blob instanceof Blob)) {
+    console.error('[VideoStorage] Invalid blob provided:', blob)
+    throw new Error('Invalid blob provided to saveVideo')
+  }
+
+  let db
+  try {
+    db = await openDB()
+    console.log('[VideoStorage] Database connection obtained')
+  } catch (e) {
+    console.error('[VideoStorage] Failed to open database:', e)
+    throw e
+  }
 
   const video = {
     id: metadata.id || `video-${Date.now()}`,
@@ -250,12 +300,37 @@ export async function saveVideo(metadata, blob) {
   }
 
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], 'readwrite')
+    let transaction
+    try {
+      transaction = db.transaction([STORE_NAME], 'readwrite')
+    } catch (e) {
+      console.error('[VideoStorage] Failed to create transaction:', e)
+      // Reset connection and retry
+      dbInstance = null
+      dbPromise = null
+      reject(e)
+      return
+    }
+
     const store = transaction.objectStore(STORE_NAME)
     const request = store.put(video)
 
+    transaction.oncomplete = () => {
+      console.log('[VideoStorage] Transaction completed successfully for:', video.id)
+    }
+
+    transaction.onabort = () => {
+      console.error('[VideoStorage] Transaction aborted for:', video.id)
+      reject(new Error('Transaction aborted'))
+    }
+
+    transaction.onerror = (event) => {
+      console.error('[VideoStorage] Transaction error:', event.target.error)
+      reject(event.target.error)
+    }
+
     request.onsuccess = () => {
-      console.log('[VideoStorage] Saved video:', video.id)
+      console.log('[VideoStorage] Saved video:', video.id, 'size:', video.size)
       resolve(video)
     }
 
