@@ -33,6 +33,14 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api\/pump/, ''),
         secure: true,
       },
+      '/api/ipfs': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+      '/api/health': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
     },
   },
 })

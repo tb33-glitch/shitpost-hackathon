@@ -1,0 +1,148 @@
+/**
+ * shitpost.pro Backend API Server
+ * Secure server-side API for IPFS uploads via Pinata
+ */
+
+import 'dotenv/config'
+import Fastify from 'fastify'
+import cors from '@fastify/cors'
+import rateLimit from '@fastify/rate-limit'
+import multipart from '@fastify/multipart'
+import ipfsRoutes from './routes/ipfs.js'
+
+const PORT = process.env.PORT || 3001
+const HOST = process.env.HOST || '0.0.0.0'
+
+// Allowed origins for CORS
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173',
+  'http://localhost:4173',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:4173',
+]
+
+// Add production domain if configured
+if (process.env.PRODUCTION_DOMAIN) {
+  ALLOWED_ORIGINS.push(process.env.PRODUCTION_DOMAIN)
+  ALLOWED_ORIGINS.push(`https://${process.env.PRODUCTION_DOMAIN}`)
+}
+
+const fastify = Fastify({
+  logger: {
+    level: process.env.LOG_LEVEL || 'info',
+    transport:
+      process.env.NODE_ENV !== 'production'
+        ? {
+            target: 'pino-pretty',
+            options: {
+              colorize: true,
+            },
+          }
+        : undefined,
+  },
+})
+
+// Register CORS
+await fastify.register(cors, {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) {
+      return callback(null, true)
+    }
+
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      return callback(null, true)
+    }
+
+    // Log rejected origins for debugging
+    fastify.log.warn(`Blocked CORS request from origin: ${origin}`)
+    return callback(new Error('Not allowed by CORS'), false)
+  },
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+})
+
+// Register global rate limiter
+await fastify.register(rateLimit, {
+  max: 100,
+  timeWindow: '1 minute',
+  keyGenerator: (request) => {
+    // Use X-Forwarded-For header if behind a proxy, otherwise use IP
+    return request.headers['x-forwarded-for'] || request.ip
+  },
+  errorResponseBuilder: (request, context) => {
+    return {
+      error: 'Rate limit exceeded',
+      message: `Too many requests. Please wait ${Math.ceil(context.ttl / 1000)} seconds.`,
+      retryAfter: Math.ceil(context.ttl / 1000),
+    }
+  },
+})
+
+// Register multipart for file uploads
+await fastify.register(multipart, {
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB max
+    files: 1, // Only 1 file at a time
+  },
+})
+
+// Health check endpoint
+fastify.get('/api/health', async (request, reply) => {
+  return {
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    version: process.env.npm_package_version || '1.0.0',
+  }
+})
+
+// Register IPFS routes under /api/ipfs prefix
+await fastify.register(ipfsRoutes, { prefix: '/api/ipfs' })
+
+// Global error handler
+fastify.setErrorHandler((error, request, reply) => {
+  request.log.error(error)
+
+  // Handle validation errors
+  if (error.validation) {
+    return reply.status(400).send({
+      error: 'Validation error',
+      message: error.message,
+    })
+  }
+
+  // Handle rate limit errors
+  if (error.statusCode === 429) {
+    return reply.status(429).send({
+      error: 'Rate limit exceeded',
+      message: error.message,
+    })
+  }
+
+  // Generic error response (don't leak internal details)
+  return reply.status(error.statusCode || 500).send({
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'production' ? 'An error occurred' : error.message,
+  })
+})
+
+// Start server
+const start = async () => {
+  try {
+    // Validate Pinata configuration on startup
+    if (!process.env.PINATA_JWT) {
+      fastify.log.warn('PINATA_JWT not configured - uploads will fail')
+    }
+
+    await fastify.listen({ port: PORT, host: HOST })
+    fastify.log.info(`Server running at http://${HOST}:${PORT}`)
+    fastify.log.info(`Health check: http://${HOST}:${PORT}/api/health`)
+    fastify.log.info(`IPFS endpoints: http://${HOST}:${PORT}/api/ipfs/*`)
+  } catch (err) {
+    fastify.log.error(err)
+    process.exit(1)
+  }
+}
+
+start()
