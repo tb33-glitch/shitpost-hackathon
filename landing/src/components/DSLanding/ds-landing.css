@@ -1,0 +1,708 @@
+/* DS Landing Page - Nintendo DS Lite Accurate Build
+
+   Physical specs (from Nintendo):
+   - Console closed: 133mm × 73.9mm × 21.5mm
+   - Each screen: 62mm × 46mm (4:3 ratio, 256×192 pixels)
+   - Screen diagonal: 3" (77mm)
+   - Hinge: ~5mm thick
+
+   Scale: 2.5px per mm for balanced proportions
+*/
+
+:root {
+  /* DS Lite dimensions (44% larger - 1.2 * 1.2) */
+  --ds-width: 478px;
+  --ds-half-height: 266px;
+  --ds-screen-width: 223px;
+  --ds-screen-height: 166px;
+  --ds-corner-radius: 35px;
+  --ds-hinge-height: 17px;
+
+  /* Colors - Polar White DS Lite */
+  --ds-body-light: #f8f8f8;
+  --ds-body-mid: #e8e8e8;
+  --ds-body-dark: #d0d0d0;
+  --ds-screen-bezel: #111;
+  --ds-screen-off: #040406;
+  --ds-button-face: #d8d8d8;
+  --ds-dpad-color: #2d2d2d;
+}
+
+/* Container */
+.ds-landing-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0d0d14 0%, #1a1a28 100%);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.ds-landing-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(255, 107, 0, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 70%, rgba(100, 100, 255, 0.04) 0%, transparent 40%);
+  z-index: 0;
+}
+
+/* ==========================================
+   DS SHELL
+   ========================================== */
+
+.ds-shell {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: var(--ds-width);
+  filter: drop-shadow(0 20px 60px rgba(0, 0, 0, 0.5));
+  transform: perspective(1000px) rotateX(2deg);
+  transform-style: preserve-3d;
+  transition: transform 0.4s ease;
+}
+
+.ds-shell:hover {
+  transform: perspective(1000px) rotateX(0deg);
+}
+
+/* ==========================================
+   TOP HALF
+   ========================================== */
+
+.ds-top-half {
+  height: var(--ds-half-height);
+  background: linear-gradient(180deg,
+    var(--ds-body-light) 0%,
+    var(--ds-body-mid) 30%,
+    var(--ds-body-dark) 100%
+  );
+  border-radius: var(--ds-corner-radius) var(--ds-corner-radius) 0 0;
+  padding: 12px 16px 8px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Plastic edge highlight */
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,0.8),
+    inset 2px 0 0 rgba(255,255,255,0.4),
+    inset -2px 0 0 rgba(0,0,0,0.05);
+}
+
+/* Glossy top reflection */
+.ds-top-half::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 50%;
+  border-radius: var(--ds-corner-radius) var(--ds-corner-radius) 50% 50%;
+  background: linear-gradient(180deg,
+    rgba(255,255,255,0.5) 0%,
+    rgba(255,255,255,0.15) 40%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* Speaker grilles */
+.ds-speakers {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 20px;
+  margin-bottom: 8px;
+}
+
+.ds-speaker-grille {
+  display: flex;
+  gap: 3px;
+}
+
+.speaker-hole {
+  width: 7px;
+  height: 7px;
+  background: #888;
+  border-radius: 50%;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.7);
+}
+
+/* Screen bezel - black inner frame */
+.ds-screen-bezel {
+  background: var(--ds-screen-bezel);
+  border-radius: 4px;
+  padding: 6px 8px;
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,0.8),
+    0 1px 0 rgba(255,255,255,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Top bezel takes available space */
+.ds-screen-bezel.top {
+  flex: 1;
+}
+
+/* Bottom bezel is sized to fit between controls */
+.ds-screen-bezel.bottom {
+  flex-shrink: 0;
+}
+
+/* Screen */
+.ds-screen {
+  width: var(--ds-screen-width);
+  height: var(--ds-screen-height);
+  background: var(--ds-screen-off);
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.ds-screen.on {
+  background: #0a0a12;
+  box-shadow:
+    inset 0 0 20px rgba(0,0,0,0.3),
+    0 0 30px rgba(100,100,255,0.1);
+}
+
+.ds-screen-off {
+  width: 100%;
+  height: 100%;
+  background: var(--ds-screen-off);
+}
+
+.ds-camera {
+  display: none;
+}
+
+/* ==========================================
+   HINGE - Cylindrical barrel spanning full width
+   ========================================== */
+
+.ds-hinge {
+  height: var(--ds-hinge-height);
+  background: linear-gradient(180deg,
+    #e8e8e8 0%,
+    #c8c8c8 25%,
+    #909090 50%,
+    #b0b0b0 75%,
+    #d0d0d0 100%
+  );
+  position: relative;
+  box-shadow:
+    inset 0 2px 3px rgba(255,255,255,0.6),
+    inset 0 -2px 3px rgba(0,0,0,0.2),
+    0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* Cylindrical highlight */
+.ds-hinge::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 20px;
+  right: 20px;
+  height: 3px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255,255,255,0.7) 20%,
+    rgba(255,255,255,0.7) 80%,
+    transparent 100%
+  );
+  border-radius: 2px;
+}
+
+/* Hinge segments - decorative only */
+.ds-hinge-segment {
+  display: none;
+}
+
+/* ==========================================
+   BOTTOM HALF
+   ========================================== */
+
+.ds-bottom-half {
+  height: var(--ds-half-height);
+  background: linear-gradient(180deg,
+    var(--ds-body-dark) 0%,
+    var(--ds-body-mid) 30%,
+    var(--ds-body-light) 100%
+  );
+  border-radius: 0 0 var(--ds-corner-radius) var(--ds-corner-radius);
+  padding: 10px 12px 16px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  /* Plastic edge highlight */
+  box-shadow:
+    inset 0 -2px 0 rgba(255,255,255,0.6),
+    inset 2px 0 0 rgba(255,255,255,0.3),
+    inset -2px 0 0 rgba(0,0,0,0.05),
+    0 8px 24px rgba(0,0,0,0.3);
+}
+
+/* Subtle reflection */
+.ds-bottom-half::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 25%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+/* Main layout: D-Pad | Screen | Buttons */
+.ds-bottom-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  gap: 8px;
+}
+
+/* ==========================================
+   D-PAD - Plus shape with recessed center
+   ========================================== */
+
+.ds-dpad {
+  position: relative;
+  width: 74px;
+  height: 74px;
+  flex-shrink: 0;
+}
+
+.ds-dpad > div {
+  position: absolute;
+  background: var(--ds-dpad-color);
+  cursor: pointer;
+  transition: filter 0.1s ease;
+}
+
+.ds-dpad > div:not(.dpad-center):hover {
+  filter: brightness(1.3);
+}
+
+.ds-dpad > div:not(.dpad-center):active {
+  filter: brightness(0.8);
+}
+
+/* Vertical bar */
+.dpad-up, .dpad-down {
+  width: 26px;
+  height: 29px;
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,0.15),
+    0 2px 4px rgba(0,0,0,0.4);
+}
+.dpad-up {
+  top: 0;
+  border-radius: 6px 6px 0 0;
+}
+.dpad-down {
+  bottom: 0;
+  border-radius: 0 0 6px 6px;
+}
+
+/* Horizontal bar */
+.dpad-left, .dpad-right {
+  width: 29px;
+  height: 26px;
+  top: 50%;
+  transform: translateY(-50%);
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,0.15),
+    0 2px 4px rgba(0,0,0,0.4);
+}
+.dpad-left {
+  left: 0;
+  border-radius: 6px 0 0 6px;
+}
+.dpad-right {
+  right: 0;
+  border-radius: 0 6px 6px 0;
+}
+
+/* Center pivot - circular */
+.dpad-center {
+  width: 26px;
+  height: 26px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(180deg, #404040 0%, #252525 100%);
+  border-radius: 50%;
+  box-shadow: inset 0 2px 3px rgba(0,0,0,0.5);
+}
+
+/* ==========================================
+   ABXY BUTTONS - Diamond layout
+   ========================================== */
+
+.ds-buttons {
+  position: relative;
+  width: 74px;
+  height: 74px;
+  flex-shrink: 0;
+}
+
+.ds-btn {
+  position: absolute;
+  width: 23px;
+  height: 23px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, var(--ds-button-face) 0%, #c0c0c0 100%);
+  box-shadow:
+    inset 0 2px 2px rgba(255,255,255,0.7),
+    inset 0 -2px 2px rgba(0,0,0,0.15),
+    0 2px 4px rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  color: #666;
+  font-family: Arial, sans-serif;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.1s ease;
+}
+
+.ds-btn:active {
+  transform: scale(0.92);
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,0.5),
+    inset 0 -1px 1px rgba(0,0,0,0.1),
+    0 1px 2px rgba(0,0,0,0.2);
+}
+
+.btn-x { top: 0; left: 50%; transform: translateX(-50%); }
+.btn-a { top: 50%; right: 0; transform: translateY(-50%); }
+.btn-b { bottom: 0; left: 50%; transform: translateX(-50%); }
+.btn-y { top: 50%; left: 0; transform: translateY(-50%); }
+
+/* ==========================================
+   START / SELECT - Below screen, right of center
+   ========================================== */
+
+.ds-start-select {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 6px;
+  margin-right: 20px;
+  align-self: flex-end;
+}
+
+.ds-small-btn {
+  font-size: 7px;
+  font-weight: bold;
+  font-family: Arial, sans-serif;
+  color: #888;
+  background: linear-gradient(180deg, #e0e0e0 0%, #c8c8c8 100%);
+  padding: 3px 10px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.6),
+    0 1px 2px rgba(0,0,0,0.2);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.ds-small-btn:active {
+  transform: scale(0.95);
+}
+
+/* ==========================================
+   POWER LED - On right edge of bottom half
+   ========================================== */
+
+.ds-power-led {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #222;
+}
+
+.ds-power-led.on {
+  background: #00ff00;
+  box-shadow:
+    0 0 6px #00ff00,
+    0 0 12px rgba(0,255,0,0.6);
+  animation: ledPulse 2s ease-in-out infinite;
+}
+
+@keyframes ledPulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px #00ff00, 0 0 12px rgba(0,255,0,0.6); }
+  50% { opacity: 0.6; box-shadow: 0 0 4px #00ff00, 0 0 8px rgba(0,255,0,0.4); }
+}
+
+/* Mic hole - centered at bottom */
+.ds-mic-hole {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3px;
+  height: 3px;
+  background: #555;
+  border-radius: 50%;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.6);
+}
+
+/* ==========================================
+   SCREEN CONTENT STYLES
+   ========================================== */
+
+/* Power off state */
+.ds-off-prompt {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--ds-screen-off);
+  cursor: pointer;
+}
+
+.ds-power-text {
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  color: #444;
+  animation: blink 1.5s ease-in-out infinite;
+  font-style: italic;
+}
+
+.ds-power-hint {
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  color: #333;
+  margin-top: 6px;
+  font-style: italic;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* Boot logo */
+.ds-boot-logo {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #080810;
+  animation: fadeIn 0.5s ease;
+}
+
+.boot-logo-img {
+  width: 140px;
+  height: auto;
+}
+
+.boot-tagline {
+  font-size: 13px;
+  color: #666;
+  margin-top: 14px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  font-style: italic;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Warning screens */
+.ds-warning-top {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #141428 0%, #0a0a18 100%);
+}
+
+.warning-icon {
+  font-size: 56px;
+  animation: warningPulse 1s ease-in-out infinite;
+}
+
+@keyframes warningPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.ds-warning {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px;
+  background: linear-gradient(180deg, #f0f0f0, #e0e0e0);
+  cursor: pointer;
+}
+
+.warning-title {
+  font-size: 10px;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid #ccc;
+}
+
+.warning-content {
+  flex: 1;
+  font-size: 9px;
+  color: #444;
+  line-height: 1.4;
+  overflow: hidden;
+}
+
+.warning-content p { margin-bottom: 4px; }
+.warning-content ul { list-style: none; padding: 0; margin: 0; }
+.warning-content li { margin: 3px 0; }
+
+.warning-continue {
+  font-size: 7px;
+  color: #666;
+  text-align: center;
+  padding-top: 6px;
+  border-top: 1px solid #ccc;
+  animation: blink 1.5s ease-in-out infinite;
+}
+
+/* Home menu - top screen */
+.ds-home-top {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #181830 0%, #101020 100%);
+  padding: 8px;
+  position: relative;
+  transform: translateZ(1px);
+}
+
+.ds-home-top-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.ds-home-top-icon { font-size: 32px; }
+.ds-home-top-title { font-size: 20px; font-weight: bold; color: #fff; }
+
+.ds-home-top-desc {
+  font-size: 13px;
+  color: #888;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.ds-brand-logo {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 70px;
+  height: auto;
+  opacity: 0.6;
+}
+
+/* Home menu - bottom screen */
+.ds-home-menu {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #3a5888 0%, #2a4878 50%, #1a3868 100%);
+  padding: 10px;
+  transform: translateZ(1px);
+}
+
+.ds-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  flex: 1;
+}
+
+.ds-menu-item {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  padding: 8px 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ds-menu-item.selected,
+.ds-menu-item.clickable:hover {
+  background: rgba(255,255,255,0.2);
+  border-color: #ff6b00;
+  box-shadow: 0 0 10px rgba(255,107,0,0.3);
+}
+
+.ds-menu-item:not(.clickable).selected {
+  border-color: rgba(255,255,255,0.3);
+  box-shadow: none;
+}
+
+.ds-menu-icon { font-size: 26px; }
+.ds-menu-label { font-size: 11px; font-weight: 600; color: #fff; text-align: center; }
+
+.ds-menu-hint {
+  font-size: 9px;
+  color: rgba(255,255,255,0.4);
+  text-align: center;
+  margin-top: 6px;
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+
+@media (max-width: 520px) {
+  .ds-shell {
+    transform: scale(0.7) perspective(1000px) rotateX(2deg);
+  }
+  .ds-shell:hover {
+    transform: scale(0.7) perspective(1000px) rotateX(0deg);
+  }
+}
