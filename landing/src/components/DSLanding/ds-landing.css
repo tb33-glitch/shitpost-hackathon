@@ -900,3 +900,144 @@
   border-color: #ff6b00;
   background: rgba(255, 107, 0, 0.1);
 }
+
+/* Ghost players */
+.dino-ghost {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 3;
+  opacity: 0.6;
+}
+
+.ghost-emoji {
+  font-size: 20px;
+  filter: drop-shadow(0 0 3px rgba(255,255,255,0.5));
+}
+
+.ghost-tag {
+  font-size: 7px;
+  color: #fff;
+  background: rgba(0,0,0,0.5);
+  padding: 1px 3px;
+  border-radius: 2px;
+  margin-top: -2px;
+}
+
+/* Leaderboard on waiting screen */
+.dino-leaderboard {
+  margin-top: 12px;
+  background: rgba(0,0,0,0.4);
+  border-radius: 4px;
+  padding: 6px 10px;
+  min-width: 100px;
+}
+
+.leaderboard-title {
+  font-size: 9px;
+  color: #ff6b00;
+  text-align: center;
+  margin-bottom: 4px;
+  letter-spacing: 1px;
+}
+
+.leaderboard-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9px;
+  color: #fff;
+  padding: 2px 0;
+  gap: 8px;
+}
+
+.lb-rank {
+  color: #888;
+  width: 14px;
+}
+
+.lb-tag {
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.lb-score {
+  color: #aaa;
+  font-family: 'Courier New', monospace;
+}
+
+/* Tag input form */
+.tag-input-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.tag-prompt {
+  font-size: 10px;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+.tag-input {
+  width: 60px;
+  padding: 4px 8px;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  border: 2px solid #ff6b00;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  outline: none;
+}
+
+.tag-input::placeholder {
+  color: #666;
+  letter-spacing: 3px;
+}
+
+.tag-input:focus {
+  border-color: #ff9500;
+  box-shadow: 0 0 8px rgba(255,107,0,0.4);
+}
+
+.tag-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.tag-btn {
+  padding: 4px 12px;
+  font-size: 10px;
+  font-weight: bold;
+  border: 1px solid #ff6b00;
+  border-radius: 3px;
+  background: rgba(255,107,0,0.2);
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tag-btn:hover:not(:disabled) {
+  background: rgba(255,107,0,0.4);
+}
+
+.tag-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tag-btn.skip {
+  border-color: #666;
+  background: rgba(100,100,100,0.2);
+}
+
+.tag-btn.skip:hover:not(:disabled) {
+  background: rgba(100,100,100,0.4);
+}
