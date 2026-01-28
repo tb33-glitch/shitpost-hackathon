@@ -28,7 +28,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api/pump': {
-        target: 'https://frontend-api.pump.fun',
+        target: 'https://frontend-api-v3.pump.fun',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/pump/, ''),
         secure: true,

@@ -11,9 +11,14 @@ const TIME_FRAME_FIELDS = {
 
 /**
  * CoinCard - Pump.fun style coin card
- * Shows coin image, name, symbol, market cap, and time
+ * Shows coin image, name, symbol, market cap, and price changes
  */
-export default function CoinCard({ coin, onClick, timeFrame = '24h' }) {
+export default function CoinCard({
+  coin,
+  onClick,
+  timeFrame = '24h',
+  showBondingProgress = false,
+}) {
   const [imageError, setImageError] = useState(false)
 
   // Format numbers (market cap, volume, etc)
@@ -49,8 +54,13 @@ export default function CoinCard({ coin, onClick, timeFrame = '24h' }) {
   const priceChangeValue = coin[priceChangeField]
   const priceChange = formatChange(priceChangeValue)
 
+  // Bonding progress (for graduating tokens)
+  const bondingProgress = coin.bonding_progress || 0
+  const isNearGraduation = bondingProgress >= 80
+
   return (
     <div className="coin-card" onClick={() => onClick(coin)}>
+      {/* Image with sticker overlay button */}
       <div className="coin-card-image">
         {!imageError && coin.image_uri ? (
           <img
@@ -66,6 +76,20 @@ export default function CoinCard({ coin, onClick, timeFrame = '24h' }) {
             {coin.symbol?.[0] || '?'}
           </div>
         )}
+
+        {/* Graduated badge */}
+        {coin.complete && (
+          <div className="graduated-badge" title="Graduated to Raydium">
+            🚀
+          </div>
+        )}
+
+        {/* Near graduation badge */}
+        {!coin.complete && isNearGraduation && (
+          <div className="graduating-badge" title={`${bondingProgress}% to graduation`}>
+            🎓
+          </div>
+        )}
       </div>
 
       <div className="coin-card-info">
@@ -73,6 +97,19 @@ export default function CoinCard({ coin, onClick, timeFrame = '24h' }) {
           <span className="coin-card-name">{coin.name}</span>
           <span className="coin-card-symbol">${coin.symbol}</span>
         </div>
+
+        {/* Bonding Progress Bar (for graduating view) */}
+        {showBondingProgress && !coin.complete && bondingProgress > 0 && (
+          <div className="bonding-progress">
+            <div className="bonding-bar">
+              <div
+                className={`bonding-fill ${isNearGraduation ? 'near' : ''}`}
+                style={{ width: `${Math.min(bondingProgress, 100)}%` }}
+              />
+            </div>
+            <span className="bonding-text">{bondingProgress}%</span>
+          </div>
+        )}
 
         <div className="coin-card-stats">
           <span className="coin-card-mcap">

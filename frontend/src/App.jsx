@@ -15,7 +15,7 @@ import '98.css'
 import './styles/windows98.css'
 import './styles/app.css'
 
-export default function App({ onMinimize, onMaximize, onClose, isDesktopMode = false, onMintSuccess, coinContext = null, onCoinContextUsed = null, onConnectWallet }) {
+export default function App({ onMinimize, onMaximize, onClose, isDesktopMode = false, onMintSuccess, coinContext = null, onCoinContextUsed = null, stickerContext = null, onStickerContextUsed = null, onConnectWallet }) {
   const { publicKey, connected } = useWallet()
   const address = publicKey?.toString()
   const [showMintModal, setShowMintModal] = useState(false)
@@ -60,7 +60,7 @@ export default function App({ onMinimize, onMaximize, onClose, isDesktopMode = f
           onClose={isDesktopMode ? onClose : undefined}
           showControls={isDesktopMode}
         >
-          <MemeStudio isDesktopMode={isDesktopMode} onMint={handleMint} coinContext={coinContext} onCoinContextUsed={onCoinContextUsed} onClose={onClose} />
+          <MemeStudio isDesktopMode={isDesktopMode} onMint={handleMint} coinContext={coinContext} onCoinContextUsed={onCoinContextUsed} stickerContext={stickerContext} onStickerContextUsed={onStickerContextUsed} onClose={onClose} />
 
           {/* Status Bar */}
           <StatusBar

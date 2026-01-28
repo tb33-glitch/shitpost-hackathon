@@ -134,6 +134,60 @@ export function isVideoUrl(urlString) {
 }
 
 /**
+ * Video hosting domains that indicate video content
+ */
+const VIDEO_HOSTING_DOMAINS = [
+  'video.twimg.com',      // Twitter video CDN
+  'v.redd.it',            // Reddit video hosting
+  'redgifs.com',          // RedGIFs
+  'gfycat.com',           // Gfycat
+  'streamable.com',       // Streamable
+  'clips.twitch.tv',      // Twitch clips
+]
+
+/**
+ * Video file extensions
+ */
+const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.m4v', '.gifv']
+
+/**
+ * Comprehensive check if a media item is a video
+ * Works with both URL strings and media item objects
+ *
+ * @param {string|object} item - URL string or media item object with mediaUrl/mediaType
+ * @returns {boolean}
+ */
+export function isVideoContent(item) {
+  // Handle object with mediaType property
+  if (item && typeof item === 'object') {
+    // Explicit mediaType takes priority
+    if (item.mediaType === 'video') return true
+    if (item.mediaType === 'image') return false
+
+    // Check the URL
+    const url = item.mediaUrl || item.url || ''
+    return isVideoContent(url)
+  }
+
+  // Handle string URL
+  if (typeof item !== 'string' || !item) return false
+
+  const urlLower = item.toLowerCase()
+
+  // Check video hosting domains
+  for (const domain of VIDEO_HOSTING_DOMAINS) {
+    if (urlLower.includes(domain)) return true
+  }
+
+  // Check file extensions
+  for (const ext of VIDEO_EXTENSIONS) {
+    if (urlLower.includes(ext)) return true
+  }
+
+  return false
+}
+
+/**
  * Sanitize a URL for logging (hide sensitive query params)
  * @param {string} urlString - URL to sanitize
  * @returns {string}

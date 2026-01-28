@@ -14,9 +14,9 @@ import './styles/desktop.css'
 import './styles/outlook.css'
 import '@solana/wallet-adapter-react-ui/styles.css'
 
-// Get Solana endpoint
-const solanaNetwork = getSolanaNetwork('devnet')
-const solanaEndpoint = solanaNetwork.endpoint
+// Get Solana endpoint from environment variable
+// Default to mainnet public RPC (may be rate limited - recommend setting VITE_SOLANA_RPC_URL)
+const solanaEndpoint = import.meta.env.VITE_SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com'
 
 // Solana wallets
 const solanaWallets = [

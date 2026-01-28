@@ -7,15 +7,16 @@ export default function VideoLibrary({ onSelectVideo, onClose }) {
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState(null)
   const [previewUrls, setPreviewUrls] = useState({})
+  const [refreshKey, setRefreshKey] = useState(0)
 
-  // Load videos on mount
+  // Load videos on mount and when refreshKey changes
   useEffect(() => {
     loadVideos()
     return () => {
       // Cleanup preview URLs
       Object.values(previewUrls).forEach(url => URL.revokeObjectURL(url))
     }
-  }, [])
+  }, [refreshKey])
 
   const loadVideos = async () => {
     setLoading(true)
@@ -86,6 +87,23 @@ export default function VideoLibrary({ onSelectVideo, onClose }) {
             {stats.count} videos ({stats.totalSizeMB} MB)
           </span>
         )}
+        <button
+          className="video-library-refresh"
+          onClick={() => setRefreshKey(k => k + 1)}
+          title="Refresh"
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'white',
+            fontSize: '16px',
+            cursor: 'pointer',
+            padding: '0 8px',
+            opacity: loading ? 0.5 : 0.8,
+          }}
+          disabled={loading}
+        >
+          🔄
+        </button>
         <button className="video-library-close" onClick={onClose}>×</button>
       </div>
 

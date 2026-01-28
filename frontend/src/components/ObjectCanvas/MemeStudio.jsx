@@ -14,7 +14,7 @@ import VideoExportModal from './VideoExportModal'
 import SubmitTemplateModal from '../Editor/SubmitTemplateModal'
 import './MemeStudio.css'
 
-export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, onCoinContextUsed = null, onClose = null }) {
+export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, onCoinContextUsed = null, stickerContext = null, onStickerContextUsed = null, onClose = null }) {
   const {
     objects,
     selectedId,
@@ -157,6 +157,18 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
       img.src = coinContext.image_uri
     }
   }, [coinContext, addImage, onCoinContextUsed])
+
+  // Add sticker when stickerContext is provided (from CoinExplorer "Use as Sticker")
+  useEffect(() => {
+    if (stickerContext?.image) {
+      addSticker({
+        image: stickerContext.image,
+        aspectRatio: stickerContext.aspectRatio || 1,
+        name: stickerContext.name || 'Token sticker',
+      })
+      onStickerContextUsed?.()
+    }
+  }, [stickerContext, addSticker, onStickerContextUsed])
 
   // Keyboard shortcuts
   useEffect(() => {

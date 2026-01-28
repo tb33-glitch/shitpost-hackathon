@@ -18,8 +18,8 @@ export default function WalletProvider({ children }) {
   const solanaWallet = useSolanaWallet()
   const { connection: solanaConnection } = useConnection()
 
-  // Local state for network preference
-  const [solanaNetwork, setSolanaNetwork] = useState('devnet')
+  // Local state for network preference - mainnet for pump.fun/Jupiter
+  const [solanaNetwork, setSolanaNetwork] = useState('mainnet')
 
   // Connection state
   const isConnected = solanaWallet.connected

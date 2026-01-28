@@ -20,6 +20,145 @@
   background: #ECE9D8;
 }
 
+/* ========== Data Source Tabs ========== */
+.explorer-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 4px 8px;
+  background: linear-gradient(180deg, #F5F4EA 0%, #ECE9D8 100%);
+  border-bottom: 1px solid #ACA899;
+  overflow-x: auto;
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #ECE9D8 45%, #D8D4C8 100%);
+  border: 1px solid #ACA899;
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+  cursor: pointer;
+  color: #404040;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.tab-btn:hover {
+  background: linear-gradient(180deg, #E3F0FF 0%, #C4DCFB 100%);
+  color: #000;
+}
+
+.tab-btn.active {
+  background: #fff;
+  border-color: #ACA899;
+  border-bottom: 1px solid #fff;
+  margin-bottom: -1px;
+  color: #000;
+  font-weight: bold;
+}
+
+.tab-icon {
+  font-size: 12px;
+}
+
+.tab-label {
+  font-size: 11px;
+}
+
+/* ========== King of the Hill Banner ========== */
+.koth-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
+  border-bottom: 2px solid #B8860B;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.koth-banner:hover {
+  background: linear-gradient(135deg, #FFE44D 0%, #FFB830 50%, #FFA020 100%);
+}
+
+.koth-crown {
+  font-size: 28px;
+  animation: crownBounce 2s ease-in-out infinite;
+}
+
+@keyframes crownBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.koth-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.koth-label {
+  font-family: 'Tahoma', sans-serif;
+  font-size: 10px;
+  font-weight: bold;
+  color: #8B4513;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.koth-name {
+  font-family: 'Tahoma', sans-serif;
+  font-size: 16px;
+  font-weight: bold;
+  color: #000;
+}
+
+.koth-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #B8860B;
+  object-fit: cover;
+  margin-left: auto;
+}
+
+.koth-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.koth-mcap {
+  font-family: 'Tahoma', sans-serif;
+  font-size: 14px;
+  font-weight: bold;
+  color: #000;
+  background: rgba(255, 255, 255, 0.6);
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+/* ========== Graduating Info Banner ========== */
+.graduating-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+  border-bottom: 1px solid #81C784;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+  color: #2E7D32;
+}
+
+.graduating-icon {
+  font-size: 16px;
+}
+
 /* Toolbar */
 .explorer-toolbar {
   display: flex;
@@ -29,6 +168,7 @@
   background: linear-gradient(180deg, #F5F4EA 0%, #ECE9D8 100%);
   border-bottom: 1px solid #ACA899;
   flex-wrap: wrap;
+  position: relative;
 }
 
 .filter-btn {
@@ -97,6 +237,34 @@
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
+/* Sort Buttons */
+.sort-buttons {
+  display: flex;
+  gap: 2px;
+}
+
+.sort-btn {
+  padding: 4px 8px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #ECE9D8 45%, #D8D4C8 100%);
+  border: 1px solid #ACA899;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+  box-shadow: 0 1px 0 #fff inset;
+  transition: all 0.1s;
+}
+
+.sort-btn:hover {
+  background: linear-gradient(180deg, #E3F0FF 0%, #C4DCFB 100%);
+  border-color: #316AC5;
+}
+
+.sort-btn.active {
+  background: linear-gradient(180deg, #CCE4F7 0%, #9ECBEB 100%);
+  border-color: #316AC5;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
 .search-box {
   position: relative;
 }
@@ -121,6 +289,20 @@
   border-color: #316AC5;
 }
 
+.search-spinner {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: translateY(-50%) rotate(0deg); }
+  to { transform: translateY(-50%) rotate(360deg); }
+}
+
 .refresh-btn {
   padding: 4px 8px;
   background: linear-gradient(180deg, #FFFFFF 0%, #ECE9D8 45%, #D8D4C8 100%);
@@ -134,6 +316,142 @@
 .refresh-btn:hover {
   background: linear-gradient(180deg, #E3F0FF 0%, #C4DCFB 100%);
   border-color: #316AC5;
+}
+
+/* Help Button */
+.help-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: linear-gradient(180deg, #FFFFFF 0%, #ECE9D8 45%, #D8D4C8 100%);
+  border: 1px solid #ACA899;
+  border-radius: 50%;
+  cursor: pointer;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 14px;
+  font-weight: bold;
+  color: #316AC5;
+  box-shadow: 0 1px 0 #fff inset;
+}
+
+.help-btn:hover {
+  background: linear-gradient(180deg, #E3F0FF 0%, #C4DCFB 100%);
+  border-color: #316AC5;
+}
+
+/* Help Panel - Windows XP Style */
+.help-panel {
+  position: absolute;
+  top: 100%;
+  right: 8px;
+  width: 300px;
+  background: #ECE9D8;
+  border: 2px solid;
+  border-color: #DFDFDF #404040 #404040 #DFDFDF;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  font-family: 'Tahoma', sans-serif;
+}
+
+/* Floating/Draggable Help Panel */
+.help-panel.floating {
+  position: fixed;
+  top: auto;
+  right: auto;
+  z-index: 10000;
+  box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.4);
+  resize: both;
+  overflow: hidden;
+  min-width: 280px;
+  max-width: 400px;
+}
+
+.help-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 6px;
+  background: linear-gradient(180deg, #0A246A 0%, #0A246A 8%, #1B59B8 20%, #2A7AD5 40%, #2F80DC 50%, #2A7AD5 60%, #1B59B8 80%, #0A246A 92%, #0A246A 100%);
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: move;
+  user-select: none;
+}
+
+.help-close {
+  width: 21px;
+  height: 21px;
+  background: linear-gradient(180deg, #E08080 0%, #C45050 50%, #B03030 100%);
+  border: 1px solid;
+  border-color: #FFFFFF80 #40000080 #40000080 #FFFFFF80;
+  border-radius: 3px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+}
+
+.help-close:hover {
+  background: linear-gradient(180deg, #F09090 0%, #D06060 50%, #C04040 100%);
+}
+
+.help-content {
+  padding: 10px;
+  font-size: 12px;
+  color: #000;
+  max-height: 400px;
+  overflow-y: auto;
+  background: #fff;
+  margin: 4px;
+  border: 1px solid #7F9DB9;
+}
+
+.help-section {
+  margin-bottom: 14px;
+}
+
+.help-section:last-child {
+  margin-bottom: 0;
+}
+
+.help-section h4 {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  font-weight: bold;
+  color: #000;
+  background: linear-gradient(180deg, #F5F4EA 0%, #ECE9D8 100%);
+  padding: 4px 6px;
+  border: 1px solid #ACA899;
+  border-radius: 2px;
+}
+
+.help-section ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.help-section li {
+  margin-bottom: 5px;
+  line-height: 1.5;
+}
+
+.help-section li strong {
+  color: #0A246A;
+}
+
+.help-section p {
+  margin: 0;
+  line-height: 1.5;
+  padding: 4px;
+  background: #F5F4EA;
+  border: 1px solid #ACA899;
+  border-radius: 2px;
 }
 
 /* Coin Grid Container */
@@ -212,6 +530,14 @@
   color: #808080;
 }
 
+.status-source {
+  color: #606060;
+  font-size: 10px;
+  padding: 1px 6px;
+  background: #F5F4EA;
+  border-radius: 2px;
+}
+
 /* ========== CoinCard Styles ========== */
 .coin-card {
   display: flex;
@@ -237,6 +563,63 @@
   background: #fff;
   border: 1px solid #ACA899;
   flex-shrink: 0;
+  position: relative;
+}
+
+/* Sticker button overlay on coin card image */
+.sticker-btn {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #ACA899;
+  font-size: 10px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.coin-card:hover .sticker-btn {
+  opacity: 1;
+}
+
+.sticker-btn:hover {
+  background: #E3F0FF;
+  border-color: #316AC5;
+}
+
+/* Graduated/Graduating badges */
+.graduated-badge,
+.graduating-badge {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #ACA899;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.graduated-badge {
+  background: linear-gradient(135deg, #E3F0FF 0%, #C4DCFB 100%);
+  border-color: #316AC5;
+}
+
+.graduating-badge {
+  background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+  border-color: #81C784;
 }
 
 .coin-card-image img {
@@ -271,9 +654,52 @@
   gap: 6px;
 }
 
+/* Bonding Progress Bar */
+.bonding-progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0;
+}
+
+.bonding-bar {
+  flex: 1;
+  height: 6px;
+  background: #D4D0C8;
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid #ACA899;
+}
+
+.bonding-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.bonding-fill.near {
+  background: linear-gradient(90deg, #FF9800 0%, #FFC107 100%);
+  animation: bondingPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes bondingPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.bonding-text {
+  font-family: 'Tahoma', sans-serif;
+  font-size: 9px;
+  font-weight: bold;
+  color: #606060;
+  min-width: 28px;
+  text-align: right;
+}
+
 .coin-card-name {
   font-family: 'Tahoma', sans-serif;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: bold;
   color: #000;
   white-space: nowrap;
@@ -283,59 +709,60 @@
 
 .coin-card-symbol {
   font-family: 'Tahoma', sans-serif;
-  font-size: 10px;
-  color: #808080;
+  font-size: 11px;
+  color: #606060;
 }
 
 .coin-card-stats {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .coin-card-mcap {
   font-family: 'Tahoma', sans-serif;
-  font-size: 11px;
-  color: #404040;
+  font-size: 13px;
+  font-weight: 600;
+  color: #000;
 }
 
 .coin-card-change {
   font-family: 'Tahoma', sans-serif;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: bold;
 }
 
 .coin-card-change.positive {
-  color: #008000;
+  color: #008800;
 }
 
 .coin-card-change.negative {
-  color: #CC0000;
+  color: #DD0000;
 }
 
 .coin-card-change .time-label {
   font-weight: normal;
-  font-size: 9px;
-  color: #808080;
+  font-size: 10px;
+  color: #606060;
 }
 
 .coin-card-footer {
   margin-top: auto;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .coin-card-volume {
   font-family: 'Tahoma', sans-serif;
-  font-size: 10px;
-  color: #404040;
+  font-size: 12px;
+  color: #303030;
 }
 
 .coin-card-time {
   font-family: 'Tahoma', sans-serif;
-  font-size: 10px;
-  color: #808080;
+  font-size: 11px;
+  color: #606060;
 }
 
 /* ========== CoinDetail Styles ========== */
@@ -571,9 +998,34 @@
   color: #316AC5;
 }
 
+/* Header Actions */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.sticker-btn-detail {
+  padding: 6px 12px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #ECE9D8 45%, #D8D4C8 100%);
+  border: 1px solid #ACA899;
+  border-radius: 3px;
+  color: #000;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+  cursor: pointer;
+  box-shadow: 0 1px 0 #fff inset;
+}
+
+.sticker-btn-detail:hover {
+  background: linear-gradient(180deg, #E3F0FF 0%, #C4DCFB 100%);
+  border-color: #316AC5;
+}
+
 /* Header Make Meme Button */
 .header-meme-btn {
-  margin-left: auto;
+  /* Button styles inherited from .make-meme-btn */
 }
 
 /* Main Content Area - Chart + Swap Side by Side */
@@ -844,11 +1296,62 @@
   gap: 6px;
 }
 
+.swap-input-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .swap-input-label {
   font-family: 'Tahoma', sans-serif;
   font-size: 11px;
   color: #606060;
   font-weight: 500;
+}
+
+.swap-balance {
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+  color: #808080;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.swap-refresh-btn {
+  padding: 2px 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 10px;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.swap-refresh-btn:hover {
+  opacity: 1;
+}
+
+.swap-refresh-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.swap-max-btn {
+  padding: 2px 6px;
+  background: linear-gradient(180deg, #316AC5 0%, #1E4E8C 100%);
+  border: 1px solid #0C246A;
+  border-radius: 3px;
+  color: #fff;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 9px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.swap-max-btn:hover {
+  background: linear-gradient(180deg, #4178D5 0%, #2E5E9C 100%);
 }
 
 .swap-input-row,

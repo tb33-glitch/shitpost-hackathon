@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useWallet, useConnection } from '@solana/wallet-adapter-react'
+import { Connection, LAMPORTS_PER_SOL, clusterApiUrl } from '@solana/web3.js'
 import { ConnectButton } from '../Wallet'
 import useJupiterSwap, { SOL_MINT, formatTokenAmount, parseTokenAmount } from '../../hooks/useJupiterSwap'
 import './CoinExplorer.css'
@@ -31,6 +32,8 @@ export default function CoinDetail({ coin, onBack, onMakeMeme }) {
   const [inputAmount, setInputAmount] = useState('')
   const [swapSuccess, setSwapSuccess] = useState(null)
   const [slippage, setSlippage] = useState(1)
+  const [solBalance, setSolBalance] = useState(null)
+  const [isLoadingBalance, setIsLoadingBalance] = useState(false)
 
   const { publicKey, connected: isWalletConnected, signTransaction, signAllTransactions } = useWallet()
   const { connection } = useConnection()
@@ -39,6 +42,83 @@ export default function CoinDetail({ coin, onBack, onMakeMeme }) {
 
   // Jupiter swap hook
   const { quote, isLoadingQuote, isSwapping, error, getQuote, executeSwap, reset } = useJupiterSwap()
+
+  // TODO: WALLET BALANCE NOT WORKING - Need to set up RPC endpoint
+  // The public Solana RPC blocks browser requests (403 error)
+  // Fix: Get a free API key from https://helius.dev and add to .env:
+  //   VITE_SOLANA_RPC_URL=https://mainnet.helius-rpc.com/?api-key=YOUR_KEY
+  // Then restart dev server
+  const balanceConnectionRef = useRef(null)
+  if (!balanceConnectionRef.current) {
+    const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com'
+    balanceConnectionRef.current = new Connection(rpcUrl, 'confirmed')
+  }
+
+  // Fetch SOL balance when wallet connects
+  const fetchBalance = useCallback(async () => {
+    console.log('[Balance] Fetching...', {
+      isWalletConnected,
+      publicKey: publicKey?.toString(),
+    })
+
+    if (!isWalletConnected || !publicKey) {
+      console.log('[Balance] Not connected, skipping')
+      setSolBalance(null)
+      return
+    }
+
+    setIsLoadingBalance(true)
+    try {
+      // Try dedicated connection first, fallback to provider connection
+      const conn = balanceConnectionRef.current || connection
+      console.log('[Balance] Using connection:', conn?.rpcEndpoint)
+
+      const lamports = await conn.getBalance(publicKey)
+      const sol = lamports / LAMPORTS_PER_SOL
+      console.log('[Balance] Success:', { lamports, sol })
+      setSolBalance(sol)
+    } catch (err) {
+      console.error('[Balance] Error:', err.message)
+      // Try fallback with provider connection
+      if (connection && balanceConnectionRef.current) {
+        try {
+          console.log('[Balance] Trying fallback connection...')
+          const lamports = await connection.getBalance(publicKey)
+          const sol = lamports / LAMPORTS_PER_SOL
+          console.log('[Balance] Fallback success:', { lamports, sol })
+          setSolBalance(sol)
+        } catch (err2) {
+          console.error('[Balance] Fallback also failed:', err2.message)
+          setSolBalance(null)
+        }
+      } else {
+        setSolBalance(null)
+      }
+    }
+    setIsLoadingBalance(false)
+  }, [isWalletConnected, publicKey, connection])
+
+  // Fetch balance on mount and when wallet changes
+  useEffect(() => {
+    fetchBalance()
+  }, [fetchBalance])
+
+  // Refetch balance after successful swap
+  useEffect(() => {
+    if (swapSuccess) {
+      const timeout = setTimeout(fetchBalance, 2000)
+      return () => clearTimeout(timeout)
+    }
+  }, [swapSuccess, fetchBalance])
+
+  // Handle MAX button click
+  const handleMaxClick = useCallback(() => {
+    if (solBalance !== null && solBalance > 0) {
+      // Leave 0.01 SOL for transaction fees
+      const maxAmount = Math.max(0, solBalance - 0.01)
+      setInputAmount(maxAmount.toFixed(4))
+    }
+  }, [solBalance])
 
   // Fetch quote when input changes
   useEffect(() => {
@@ -184,15 +264,17 @@ export default function CoinDetail({ coin, onBack, onMakeMeme }) {
           </div>
         </div>
 
-        <button
-          className="make-meme-btn header-meme-btn"
-          onClick={() => onMakeMeme({
-            ...coin,
-            image_uri: getHighResImageUrl(coin.image_uri)
-          })}
-        >
-          🎨 Make Meme
-        </button>
+        <div className="header-actions">
+          <button
+            className="make-meme-btn header-meme-btn"
+            onClick={() => onMakeMeme({
+              ...coin,
+              image_uri: getHighResImageUrl(coin.image_uri)
+            })}
+          >
+            🎨 Make Meme
+          </button>
+        </div>
       </div>
 
       {/* Stats Row */}
@@ -270,7 +352,25 @@ export default function CoinDetail({ coin, onBack, onMakeMeme }) {
             </div>
 
             <div className="swap-input-group">
-              <div className="swap-input-label">You Pay</div>
+              <div className="swap-input-label-row">
+                <span className="swap-input-label">You Pay</span>
+                {isWalletConnected && (
+                  <span className="swap-balance">
+                    Balance: {isLoadingBalance ? '...' : solBalance !== null ? `${solBalance.toFixed(4)} SOL` : '—'}
+                    <button
+                      className="swap-refresh-btn"
+                      onClick={fetchBalance}
+                      disabled={isLoadingBalance}
+                      title="Refresh balance"
+                    >
+                      🔄
+                    </button>
+                    {solBalance !== null && solBalance > 0.01 && (
+                      <button className="swap-max-btn" onClick={handleMaxClick}>MAX</button>
+                    )}
+                  </span>
+                )}
+              </div>
               <div className="swap-input-row">
                 <div className="swap-token">
                   <img src={inputToken.image_uri} alt={inputToken.symbol} />
