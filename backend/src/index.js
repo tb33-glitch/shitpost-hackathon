@@ -9,6 +9,7 @@ import cors from '@fastify/cors'
 import rateLimit from '@fastify/rate-limit'
 import multipart from '@fastify/multipart'
 import ipfsRoutes from './routes/ipfs.js'
+import solanaRoutes from './routes/solana.js'
 
 const PORT = process.env.PORT || 3001
 const HOST = process.env.HOST || '0.0.0.0'
@@ -103,6 +104,9 @@ fastify.get('/api/health', async (request, reply) => {
 // Register IPFS routes under /api/ipfs prefix
 await fastify.register(ipfsRoutes, { prefix: '/api/ipfs' })
 
+// Register Solana RPC proxy routes under /api/solana prefix
+await fastify.register(solanaRoutes, { prefix: '/api/solana' })
+
 // Global error handler
 fastify.setErrorHandler((error, request, reply) => {
   request.log.error(error)
@@ -133,15 +137,19 @@ fastify.setErrorHandler((error, request, reply) => {
 // Start server
 const start = async () => {
   try {
-    // Validate Pinata configuration on startup
+    // Validate configuration on startup
     if (!process.env.PINATA_JWT) {
-      fastify.log.warn('PINATA_JWT not configured - uploads will fail')
+      fastify.log.warn('PINATA_JWT not configured - IPFS uploads will fail')
+    }
+    if (!process.env.SOLANA_RPC_URL) {
+      fastify.log.warn('SOLANA_RPC_URL not configured - Solana RPC proxy will fail')
     }
 
     await fastify.listen({ port: PORT, host: HOST })
     fastify.log.info(`Server running at http://${HOST}:${PORT}`)
     fastify.log.info(`Health check: http://${HOST}:${PORT}/api/health`)
     fastify.log.info(`IPFS endpoints: http://${HOST}:${PORT}/api/ipfs/*`)
+    fastify.log.info(`Solana RPC proxy: http://${HOST}:${PORT}/api/solana/rpc`)
   } catch (err) {
     fastify.log.error(err)
     process.exit(1)

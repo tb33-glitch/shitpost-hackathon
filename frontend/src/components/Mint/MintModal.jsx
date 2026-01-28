@@ -19,7 +19,7 @@ export default function MintModal({ isOpen, onClose, onSuccess, imageDataURL, on
     isSuccess,
     error: mintError,
     reset: mintReset,
-  } = useSolanaMint(solanaIdl, 'devnet')
+  } = useSolanaMint('devnet')
 
   // IPFS upload
   const { upload, error: ipfsError } = useIPFS()
@@ -74,7 +74,7 @@ export default function MintModal({ isOpen, onClose, onSuccess, imageDataURL, on
 
       // Call Solana mint
       console.log('Minting on Solana...')
-      await mint(metadataUrl)
+      await mint(metadataUrl, solanaIdl)
     } catch (err) {
       console.error('Mint error:', err)
       const errorMessage = err?.shortMessage || err?.message || 'Unknown error'
