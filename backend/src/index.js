@@ -9,7 +9,6 @@ import cors from '@fastify/cors'
 import rateLimit from '@fastify/rate-limit'
 import multipart from '@fastify/multipart'
 import ipfsRoutes from './routes/ipfs.js'
-import leaderboardRoutes from './routes/leaderboard.js'
 
 const PORT = process.env.PORT || 3001
 const HOST = process.env.HOST || '0.0.0.0'
@@ -103,9 +102,6 @@ fastify.get('/api/health', async (request, reply) => {
 
 // Register IPFS routes under /api/ipfs prefix
 await fastify.register(ipfsRoutes, { prefix: '/api/ipfs' })
-
-// Register leaderboard routes under /api/leaderboard prefix
-await fastify.register(leaderboardRoutes, { prefix: '/api/leaderboard' })
 
 // Global error handler
 fastify.setErrorHandler((error, request, reply) => {
