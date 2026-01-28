@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useWallet, useConnection } from '@solana/wallet-adapter-react'
-import { Connection, LAMPORTS_PER_SOL, clusterApiUrl } from '@solana/web3.js'
+import { LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { ConnectButton } from '../Wallet'
 import useJupiterSwap, { SOL_MINT, formatTokenAmount, parseTokenAmount } from '../../hooks/useJupiterSwap'
+import { getBalance as getBalanceFromProxy } from '../../utils/solanaRpc'
 import './CoinExplorer.css'
 
 // Get high-res image URL for meme making
@@ -43,16 +44,9 @@ export default function CoinDetail({ coin, onBack, onMakeMeme }) {
   // Jupiter swap hook
   const { quote, isLoadingQuote, isSwapping, error, getQuote, executeSwap, reset } = useJupiterSwap()
 
-  // Create a dedicated connection for balance fetching
-  const balanceConnectionRef = useRef(null)
-  if (!balanceConnectionRef.current) {
-    const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com'
-    balanceConnectionRef.current = new Connection(rpcUrl, 'confirmed')
-  }
-
-  // Fetch SOL balance when wallet connects
+  // Fetch SOL balance when wallet connects (using backend RPC proxy)
   const fetchBalance = useCallback(async () => {
-    console.log('[Balance] Fetching...', {
+    console.log('[Balance] Fetching via backend proxy...', {
       isWalletConnected,
       publicKey: publicKey?.toString(),
     })
@@ -65,29 +59,23 @@ export default function CoinDetail({ coin, onBack, onMakeMeme }) {
 
     setIsLoadingBalance(true)
     try {
-      // Try dedicated connection first, fallback to provider connection
-      const conn = balanceConnectionRef.current || connection
-      console.log('[Balance] Using connection:', conn?.rpcEndpoint)
-
-      const lamports = await conn.getBalance(publicKey)
+      // Use backend RPC proxy to keep API keys secure
+      const result = await getBalanceFromProxy(publicKey.toString())
+      const lamports = result?.value ?? result
       const sol = lamports / LAMPORTS_PER_SOL
-      console.log('[Balance] Success:', { lamports, sol })
+      console.log('[Balance] Success via proxy:', { lamports, sol })
       setSolBalance(sol)
     } catch (err) {
-      console.error('[Balance] Error:', err.message)
-      // Try fallback with provider connection
-      if (connection && balanceConnectionRef.current) {
-        try {
-          console.log('[Balance] Trying fallback connection...')
-          const lamports = await connection.getBalance(publicKey)
-          const sol = lamports / LAMPORTS_PER_SOL
-          console.log('[Balance] Fallback success:', { lamports, sol })
-          setSolBalance(sol)
-        } catch (err2) {
-          console.error('[Balance] Fallback also failed:', err2.message)
-          setSolBalance(null)
-        }
-      } else {
+      console.error('[Balance] Proxy error:', err.message)
+      // Fallback to wallet adapter connection (may be rate limited)
+      try {
+        console.log('[Balance] Trying fallback via wallet adapter connection...')
+        const lamports = await connection.getBalance(publicKey)
+        const sol = lamports / LAMPORTS_PER_SOL
+        console.log('[Balance] Fallback success:', { lamports, sol })
+        setSolBalance(sol)
+      } catch (err2) {
+        console.error('[Balance] Fallback also failed:', err2.message)
         setSolBalance(null)
       }
     }
