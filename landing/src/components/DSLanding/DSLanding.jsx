@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import DSShell from './DSShell'
+import DinoGame from './DinoGame'
 import './ds-landing.css'
 
 // Boot sequence states
@@ -8,6 +9,7 @@ const STATES = {
   BOOT_LOGO: 'BOOT_LOGO',
   WARNING_SCREEN: 'WARNING_SCREEN',
   HOME_MENU: 'HOME_MENU',
+  GAME: 'GAME',
 }
 
 // Timing constants (ms)
@@ -19,6 +21,7 @@ export default function DSLanding() {
   const [isPowerOn, setIsPowerOn] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [hoveredIndex, setHoveredIndex] = useState(null)
+  const gameJumpRef = useRef(null)
 
   // Power on handler
   const handlePowerOn = useCallback(() => {
@@ -77,6 +80,12 @@ export default function DSLanding() {
       label: '$SHITPOST',
       description: 'Fees fund perpetual buybacks.\nHolders unlock premium tools.\nGateway to sacred waste.',
       action: null, // Just shows info
+    },
+    {
+      icon: '🎮',
+      label: 'Play Game',
+      description: 'Poop Runner!\nPress B or SPACE to jump.\nAvoid the obstacles!',
+      action: () => setState(STATES.GAME),
     },
   ]
 
@@ -161,6 +170,14 @@ export default function DSLanding() {
           />
         )
 
+      case STATES.GAME:
+        return (
+          <DinoGame
+            isActive={state === STATES.GAME}
+            onJump={gameJumpRef}
+          />
+        )
+
       default:
         return null
     }
@@ -211,6 +228,19 @@ export default function DSLanding() {
           />
         )
 
+      case STATES.GAME:
+        return (
+          <div className="ds-game-controls">
+            <div className="game-instructions">
+              <div className="game-title">💩 Poop Runner</div>
+              <div className="game-hint">Press B or SPACE to jump!</div>
+              <div className="game-back" onClick={() => setState(STATES.HOME_MENU)}>
+                ← SELECT to go back
+              </div>
+            </div>
+          </div>
+        )
+
       default:
         return null
     }
@@ -244,6 +274,15 @@ export default function DSLanding() {
       handleSkipWarning()
     } else if (state === STATES.HOME_MENU && button === 'A') {
       handleMenuSelect(selectedIndex)
+    } else if (state === STATES.GAME) {
+      if (button === 'B' || button === 'A') {
+        // Jump in game
+        if (gameJumpRef.current) {
+          gameJumpRef.current()
+        }
+      } else if (button === 'SELECT') {
+        setState(STATES.HOME_MENU)
+      }
     }
   }
 
