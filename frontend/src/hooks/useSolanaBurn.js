@@ -91,7 +91,7 @@ export default function useSolanaBurn(network = 'devnet') {
           tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: SystemProgram.programId,
         })
-        .rpc()
+        .rpc({ skipPreflight: true })
 
       setSignature(tx)
       setIsSuccess(true)
@@ -180,7 +180,7 @@ export default function useSolanaBurn(network = 'devnet') {
           tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: SystemProgram.programId,
         })
-        .rpc()
+        .rpc({ skipPreflight: true })
 
       setSignature(tx)
       setIsSuccess(true)

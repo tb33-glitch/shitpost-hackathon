@@ -145,7 +145,8 @@ export default function useSolanaNFTs() {
     } else {
       setNfts([])
     }
-  }, [wallet.connected, wallet.publicKey, fetchNFTs])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wallet.connected, wallet.publicKey?.toString()])
 
   return {
     nfts,

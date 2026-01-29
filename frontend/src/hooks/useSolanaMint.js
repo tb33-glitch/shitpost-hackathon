@@ -70,10 +70,12 @@ export default function useSolanaMint(network = 'devnet') {
       const isDev = import.meta.env.DEV
       if (isDev) {
         console.log('[Solana Mint] Starting mint on', network)
+        console.log('[Solana Mint] RPC endpoint:', connection.rpcEndpoint)
       }
 
       // Verify network by checking genesis hash
       const genesisHash = await connection.getGenesisHash()
+      console.log('[Solana Mint] Genesis hash:', genesisHash)
       // Devnet genesis: EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG
       // Mainnet genesis: 5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d
       const isDevnet = genesisHash === 'EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG'
@@ -135,7 +137,7 @@ export default function useSolanaMint(network = 'devnet') {
           tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
         })
         .signers([mintKeypair])
-        .rpc()
+        .rpc({ skipPreflight: true })
 
       setSignature(tx)
       setIsSuccess(true)
@@ -154,6 +156,15 @@ export default function useSolanaMint(network = 'devnet') {
       }
       if (err.error) {
         console.error('[useSolanaMint] Inner error:', err.error)
+      }
+      // Try to get logs from SendTransactionError
+      if (err.getLogs) {
+        try {
+          const logs = await err.getLogs(connection)
+          console.error('[useSolanaMint] Detailed logs:', logs)
+        } catch (logErr) {
+          console.error('[useSolanaMint] Could not get logs:', logErr)
+        }
       }
       setError(err)
       throw err
