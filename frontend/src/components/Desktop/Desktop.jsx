@@ -483,12 +483,6 @@ export default function Desktop() {
           isActive={showWalletModal}
         />
 
-        <DesktopIcon
-          icon="📈"
-          label="Burn Feed"
-          onClick={() => setShowBurnTicker(true)}
-          isActive={showBurnTicker}
-        />
 
         {/* NFT Icons */}
         {isConnected && nfts && nfts.length > 0 && nfts.map((nft) => (
@@ -673,6 +667,10 @@ export default function Desktop() {
         onWindowClick={handleTaskbarClick}
         onWindowDoubleClick={centerWindow}
         onOpenWindow={openWindow}
+        onConnectWallet={() => setShowWalletModal(true)}
+        onShowHelp={() => restartOnboardingRef.current?.()}
+        isWalletConnected={isConnected}
+        walletAddress={address}
       />
 
       {/* Blue Screen of Death easter egg */}

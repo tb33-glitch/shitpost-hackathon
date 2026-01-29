@@ -7,6 +7,10 @@ export default function Taskbar({
   onWindowClick,
   onWindowDoubleClick,
   onOpenWindow,
+  onConnectWallet,
+  onShowHelp,
+  isWalletConnected,
+  walletAddress,
 }) {
   const [time, setTime] = useState(new Date())
   const [showStartMenu, setShowStartMenu] = useState(false)
@@ -63,6 +67,30 @@ export default function Taskbar({
                   <div className="start-menu-item-text">
                     <span className="start-menu-item-name">shitpost.pro</span>
                     <span className="start-menu-item-desc">Meme Studio</span>
+                  </div>
+                </button>
+
+                <button className="start-menu-item" onClick={() => handleStartItemClick('coinExplorer')}>
+                  <span className="start-menu-icon">📈</span>
+                  <div className="start-menu-item-text">
+                    <span className="start-menu-item-name">Coin Explorer</span>
+                    <span className="start-menu-item-desc">Browse & Trade Tokens</span>
+                  </div>
+                </button>
+
+                <button className="start-menu-item" onClick={() => { setShowStartMenu(false); onConnectWallet?.(); }}>
+                  <span className="start-menu-icon">{isWalletConnected ? '✅' : '💼'}</span>
+                  <div className="start-menu-item-text">
+                    <span className="start-menu-item-name">{isWalletConnected ? 'Wallet Connected' : 'Connect Wallet'}</span>
+                    <span className="start-menu-item-desc">{isWalletConnected ? `${walletAddress?.slice(0, 4)}...${walletAddress?.slice(-4)}` : 'Solana Wallet'}</span>
+                  </div>
+                </button>
+
+                <button className="start-menu-item" onClick={() => { setShowStartMenu(false); onShowHelp?.(); }}>
+                  <span className="start-menu-icon">❓</span>
+                  <div className="start-menu-item-text">
+                    <span className="start-menu-item-name">Help</span>
+                    <span className="start-menu-item-desc">Getting Started Guide</span>
                   </div>
                 </button>
               </div>
