@@ -51,6 +51,7 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
   const [showExportModal, setShowExportModal] = useState(false)
   const [showSubmitModal, setShowSubmitModal] = useState(false)
   const [showMobileSheet, setShowMobileSheet] = useState(false)
+  const [autoFocusTextInput, setAutoFocusTextInput] = useState(0) // Increment to trigger focus
 
   // Template submission
   const { submitTemplate } = useTemplateSubmission()
@@ -233,6 +234,13 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
     drawingLayerRef.current = imageData
   }, [drawingLayerRef])
 
+  // Handle double-click on text to edit it
+  const handleEditText = useCallback((textId) => {
+    selectObject(textId)
+    // Increment to trigger the autoFocus effect in PropertiesPanel
+    setAutoFocusTextInput(prev => prev + 1)
+  }, [selectObject])
+
   const drawWatermark = useCallback((ctx, canvasWidth, canvasHeight) => {
     const text = 'shitpost.pro'
     const fontSize = Math.round(canvasHeight * 0.03)
@@ -336,7 +344,7 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
           ctx.globalAlpha = 1
         }
       } else if (obj.type === OBJECT_TYPES.TEXT) {
-        ctx.font = `bold ${obj.fontSize}px ${obj.fontFamily}`
+        ctx.font = `bold ${obj.fontSize}px "${obj.fontFamily}", sans-serif`
         ctx.textAlign = obj.align || 'center'
         ctx.textBaseline = 'middle'
 
@@ -352,18 +360,28 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
 
         ctx.fillStyle = obj.color
         ctx.fillText(obj.text, textX, textY)
-      } else if (obj.type === OBJECT_TYPES.STICKER && obj.sticker?.data) {
-        const stickerData = obj.sticker.data
-        const stickerSize = stickerData.length
-        const pixelW = obj.width / stickerSize
-        const pixelH = obj.height / stickerSize
+      } else if (obj.type === OBJECT_TYPES.STICKER && obj.sticker) {
+        // Draw sticker (emoji)
+        if (obj.sticker.emoji) {
+          const fontSize = Math.min(obj.width, obj.height)
+          ctx.font = `${fontSize}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText(obj.sticker.emoji, obj.x + obj.width / 2, obj.y + obj.height / 2)
+        } else if (obj.sticker.data) {
+          // Legacy pixel data support
+          const stickerData = obj.sticker.data
+          const stickerSize = stickerData.length
+          const pixelW = obj.width / stickerSize
+          const pixelH = obj.height / stickerSize
 
-        for (let sy = 0; sy < stickerSize; sy++) {
-          for (let sx = 0; sx < stickerSize; sx++) {
-            const color = stickerData[sy][sx]
-            if (color) {
-              ctx.fillStyle = color
-              ctx.fillRect(obj.x + sx * pixelW, obj.y + sy * pixelH, Math.ceil(pixelW), Math.ceil(pixelH))
+          for (let sy = 0; sy < stickerSize; sy++) {
+            for (let sx = 0; sx < stickerSize; sx++) {
+              const color = stickerData[sy][sx]
+              if (color) {
+                ctx.fillStyle = color
+                ctx.fillRect(obj.x + sx * pixelW, obj.y + sy * pixelH, Math.ceil(pixelW), Math.ceil(pixelH))
+              }
             }
           }
         }
@@ -652,6 +670,7 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
               isMuted={videoPlayback.isMuted}
               videoRefs={videoRefs}
               onVideoElementReady={handleVideoElementReady}
+              onEditText={handleEditText}
             />
           </div>
 
@@ -695,6 +714,7 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
           onRemoveBackground={handleRemoveBackground}
           isRemovingBackground={isRemovingBackground}
           removeBackgroundProgress={removeBackgroundProgress}
+          autoFocusTextInput={autoFocusTextInput}
         />
       </div>
 
