@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, memo } from 'react'
 
-export default function NFTDesktopIcon({ nft, onClick, isActive }) {
+const NFTDesktopIcon = memo(function NFTDesktopIcon({ nft, onClick, isActive }) {
   const [isSelected, setIsSelected] = useState(false)
   const [imageError, setImageError] = useState(false)
+  const [imageLoaded, setImageLoaded] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
 
   const handleClick = (e) => {
@@ -44,12 +45,17 @@ export default function NFTDesktopIcon({ nft, onClick, isActive }) {
     >
       <div className="desktop-icon-image nft-image">
         {nft.image && !imageError ? (
-          <img
-            src={nft.image}
-            alt={nft.name}
-            onError={() => setImageError(true)}
-            draggable={false}
-          />
+          <>
+            {!imageLoaded && <span className="nft-placeholder">⏳</span>}
+            <img
+              src={nft.image}
+              alt={nft.name}
+              onError={() => setImageError(true)}
+              onLoad={() => setImageLoaded(true)}
+              draggable={false}
+              style={{ display: imageLoaded ? 'block' : 'none' }}
+            />
+          </>
         ) : (
           <span className="nft-placeholder">🖼️</span>
         )}
@@ -57,4 +63,12 @@ export default function NFTDesktopIcon({ nft, onClick, isActive }) {
       <div className="desktop-icon-label">{nft.name}</div>
     </div>
   )
-}
+}, (prevProps, nextProps) => {
+  // Only re-render if these specific props change
+  return prevProps.nft.tokenId === nextProps.nft.tokenId &&
+         prevProps.nft.image === nextProps.nft.image &&
+         prevProps.nft.name === nextProps.nft.name &&
+         prevProps.isActive === nextProps.isActive
+})
+
+export default NFTDesktopIcon

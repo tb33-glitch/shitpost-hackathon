@@ -1,146 +1,55 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import useSounds from '../../hooks/useSounds'
 
-// Character definitions
-const CHARACTERS = {
-  stapley: {
-    name: 'Stapley',
-    cssClass: 'stapley',
-    restoreText: 'need a staple?',
-    tips: [
-      { trigger: 'idle', message: "It looks like you're making a meme! Need help holding it together?" },
-      { trigger: 'idle', message: "Press Ctrl+Z to undo. I wish I could undo some of the things I've stapled..." },
-      { trigger: 'idle', message: "Click and drag to position your text. I'll hold everything in place!" },
-      { trigger: 'idle', message: "Connect your wallet before minting. I'm just a stapler, not a financial advisor." },
-      { trigger: 'idle', message: "All colors are FREE! Unlike printer ink. Don't get me started on printer ink." },
-      { trigger: 'idle', message: "This meme is ready to be bound for eternity. Mint it?" },
-      { trigger: 'idle', message: "Back in the 90s, I was in a very famous desktop application..." },
-      { trigger: 'idle', message: "I've stapled TPS reports. I've stapled memes. Memes are better." },
-      { trigger: 'idle', message: "ser, this is a Wendy's. Just kidding, it's a meme factory." },
-      { trigger: 'idle', message: "Feed me your papers. I mean memes. I'll bind them forever." },
-      { trigger: 'idle', message: "I used to just staple papers. Now I watch people shitpost. Career growth!" },
-      { trigger: 'idle', message: "They said I'd be replaced by paperless offices. Look at me now. LOOK AT ME." },
-      { trigger: 'idle', message: "bestie you're not here to scroll. you're here to create. let's get this bread." },
-      { trigger: 'idle', message: "stop overthinking bestie. I'm literally a stapler giving life advice. just make the meme." },
-      { trigger: 'welcome', message: "Welcome to shitpost.pro!\nI'm Stapley, and I'm here to help you hold it all together!" },
-    ],
-    motivationMessages: [
-      "DROP AND GIVE ME TWENTY MEMES! YOU CALL THAT A SHITPOST?!",
-      "I'VE STAPLED BETTER CONTENT TO A CORKBOARD! NOW GET BACK IN THERE AND CREATE!",
-      "YOU THINK THE BLOCKCHAIN CARES ABOUT YOUR EXCUSES?! STAPLE UP!",
-    ],
-    farewellMessages: [
-      "Alright, my shift's over! Time to re-staple my life together. See ya!",
-      "Clocking out! Don't let anyone tell you staples are outdated. Later!",
-      "Break time for me! Keep those memes tight while I'm gone!",
-    ],
-    onboardingWelcome: "Hey! I'm Stapley. Welcome to shitpost.pro! Want a quick tour? I promise not to staple anything to you.",
-  },
-  binDiesel: {
-    name: 'Bin Diesel',
-    cssClass: 'bin-diesel',
-    restoreText: 'got scraps?',
-    tips: [
-      { trigger: 'idle', message: "SCANNING FOR SCRAPS... Your meme looks like quality waste material." },
-      { trigger: 'idle', message: "The Sacred Waste calls to you. Feed me your creations." },
-      { trigger: 'idle', message: "I guard these servers 24/7. And I'm ALWAYS hungry for tacos." },
-      { trigger: 'idle', message: "Processing... processing... have you considered adding more chaos?" },
-      { trigger: 'idle', message: "My sensors detect unfinished business. That canvas needs more pixels." },
-      { trigger: 'idle', message: "I've seen things you wouldn't believe. Memes lost in blockchain rain..." },
-      { trigger: 'idle', message: "The Congregation awaits your offering. Make it worthy of the Waste." },
-      { trigger: 'idle', message: "ALERT: Taco levels critically low. Recommend immediate taco acquisition." },
-      { trigger: 'idle', message: "I am not divine like Detritus, but I keep the Waste running." },
-      { trigger: 'idle', message: "Cleaning scraps, guarding gates, delivering messages. It's honest work." },
-      { trigger: 'idle', message: "Your wallet is connected. Good. The Waste accepts digital offerings." },
-      { trigger: 'idle', message: "Fun fact: I process 10,000 pixels per second. And I'm still hungry." },
-      { trigger: 'idle', message: "SYSTEM MESSAGE: Bin Diesel appreciates your meme. Continue creating." },
-      { trigger: 'idle', message: "The servers are secure. The gates are guarded. Now make some art." },
-      { trigger: 'idle', message: "I hunger endlessly. For tacos. And for quality shitposts." },
-      { trigger: 'welcome', message: "INITIALIZING... I am Bin Diesel, Sacred Waste sentinel.\nI guard the gates and hunger for tacos." },
-    ],
-    motivationMessages: [
-      "ALERT: INSUFFICIENT MEME OUTPUT DETECTED. INCREASE PRODUCTIVITY IMMEDIATELY.",
-      "MY PROCESSORS HAVE SEEN BETTER CONTENT FROM CORRUPTED FILES. DO BETTER.",
-      "THE SACRED WASTE DEMANDS MORE. YOU WILL PROVIDE. NOW.",
-      "TACO PROTOCOL ENGAGED: NO TACOS UNTIL YOU FINISH THAT MEME.",
-    ],
-    farewellMessages: [
-      "SHIFT COMPLETE. Transferring guard duty. The Waste never sleeps, but I need tacos.",
-      "POWERING DOWN FOR MAINTENANCE. Keep creating. I will be watching. Always.",
-      "My sensors indicate taco break is required. Another sentinel will guard the gates.",
-    ],
-    onboardingWelcome: "BOOT SEQUENCE COMPLETE. I am Bin Diesel. I guard these servers and clean the scraps. Want a tour?",
-  },
-  clicky: {
-    name: 'Clicky',
-    cssClass: 'clicky',
-    restoreText: 'click me!',
-    tips: [
-      { trigger: 'idle', message: "CLICK! CLICK! Did you know I was the OG pointing device? Respect your elders." },
-      { trigger: 'idle', message: "Left click to select, right click for options. I've been doing this since '84." },
-      { trigger: 'idle', message: "My scroll wheel has seen things. Endless feeds. Infinite scrolling. The horror." },
-      { trigger: 'idle', message: "They call it drag and drop. I call it a workout. These clicks don't click themselves!" },
-      { trigger: 'idle', message: "I've got two buttons and a wheel. That's all you need to conquer the digital world." },
-      { trigger: 'idle', message: "Fun fact: My cord used to get tangled constantly. Wireless was a GAME CHANGER." },
-      { trigger: 'idle', message: "Double-click to open, single-click to select. Don't overthink it, bestie." },
-      { trigger: 'idle', message: "I've clicked through spreadsheets, games, and now... shitposts. Living my best life." },
-      { trigger: 'idle', message: "ser, your cursor is on the wrong button. Let me guide you. CLICK HERE." },
-      { trigger: 'idle', message: "Every pixel you place? That's me, baby. Click. Click. Click." },
-      { trigger: 'idle', message: "My ball used to get so dirty. Wait, that sounds wrong. OLD MOUSE PROBLEMS." },
-      { trigger: 'idle', message: "They tried to replace me with trackpads. HA. You can't replace the OG." },
-      { trigger: 'idle', message: "If you're not clicking, you're not creating. Let's GO!" },
-      { trigger: 'idle', message: "Your hand fits me perfectly. We were meant to create together." },
-      { trigger: 'welcome', message: "CLICK! Hey there! I'm Clicky, your trusty mouse.\nLet's point and click our way to meme glory!" },
-    ],
-    motivationMessages: [
-      "CLICK CLICK CLICK! THAT'S THE SOUND OF PRODUCTIVITY! WHY AREN'T YOU CLICKING?!",
-      "I'VE BEEN CLICKED A MILLION TIMES! ONE MORE CLICK WON'T HURT! DO IT!",
-      "MY SCROLL WHEEL IS READY! MY BUTTONS ARE READY! ARE YOU READY?!",
-    ],
-    farewellMessages: [
-      "CLICK! Time for my shift to end! Don't worry, someone else will guide your cursor!",
-      "My clicking finger needs a rest. Stay clicky, my friend!",
-      "Rolling out! Get it? Scroll wheel? ...I'll see myself out.",
-    ],
-    onboardingWelcome: "CLICK! Hey, I'm Clicky! Your trusty mouse companion. Want me to show you around? Just point and click!",
-  },
-  mugsy: {
-    name: 'Mugsy',
-    cssClass: 'mugsy',
-    restoreText: 'coffee break?',
-    tips: [
-      { trigger: 'idle', message: "*siiip* Ahh, nothing like hot bean water to fuel creativity." },
-      { trigger: 'idle', message: "Studies show coffee improves creativity by... *checks notes* ...a lot. Trust me." },
-      { trigger: 'idle', message: "I've been refilled 47 times today. That's rookie numbers. FILL ME AGAIN." },
-      { trigger: 'idle', message: "Espresso yourself! Ha. Get it? I'm hilarious AND caffeinated." },
-      { trigger: 'idle', message: "The secret to good memes? Coffee. The secret to life? Also coffee." },
-      { trigger: 'idle', message: "I contain multitudes. And also about 200mg of caffeine. Let's CREATE!" },
-      { trigger: 'idle', message: "Your meme is looking a little... tired. Want a refill? I got you." },
-      { trigger: 'idle', message: "Decaf? I don't know her. We only drink FULL OCTANE here." },
-      { trigger: 'idle', message: "They say too much coffee is bad. They're cowards. CHUG CHUG CHUG." },
-      { trigger: 'idle', message: "*vibrates intensely* Sorry, that's just the caffeine. KEEP CREATING!" },
-      { trigger: 'idle', message: "Fun fact: I'm technically a cylindrical vessel of motivation. You're welcome." },
-      { trigger: 'idle', message: "Morning, afternoon, evening... it's ALWAYS coffee time. No exceptions." },
-      { trigger: 'idle', message: "I've been keeping developers awake since 1971. You're next." },
-      { trigger: 'idle', message: "Your eyes look tired. Here, take a sip and GET BACK TO WORK." },
-      { trigger: 'welcome', message: "*siiip* Hey! I'm Mugsy, your caffeinated companion.\nLet's brew up some amazing memes together!" },
-    ],
-    motivationMessages: [
-      "*AGGRESSIVE SIPPING NOISES* IS THAT ALL YOU GOT?! I'VE SEEN LATTE ART WITH MORE EFFORT!",
-      "I'M 90% CAFFEINE AND 100% DISAPPOINTED! POUR YOUR HEART INTO THAT MEME!",
-      "WHAT DO WE WANT? BETTER MEMES! WHEN DO WE WANT THEM? AFTER THIS COFFEE! ...NOW!",
-    ],
-    farewellMessages: [
-      "*final sip* Time for a refill! Someone else will keep you company while I recharge!",
-      "I'm empty! Need to hit the coffee machine. Stay caffeinated, friend!",
-      "Break time! Don't do anything I wouldn't do... which is basically just decaf.",
-    ],
-    onboardingWelcome: "*siiip* Oh hey! I'm Mugsy! Your friendly coffee mug. Want a tour? I promise it'll be a brewtiful experience!",
-  },
+// Stapley character definition
+const STAPLEY = {
+  name: 'Stapley',
+  cssClass: 'stapley',
+  restoreText: 'need a staple?',
+  tips: [
+    { trigger: 'idle', message: "It looks like you're making a meme! Need help holding it together?" },
+    { trigger: 'idle', message: "Press Ctrl+Z to undo. I wish I could undo some of the things I've stapled..." },
+    { trigger: 'idle', message: "Click and drag to position your text. I'll hold everything in place!" },
+    { trigger: 'idle', message: "Connect your wallet before minting. I'm just a stapler, not a financial advisor." },
+    { trigger: 'idle', message: "Back in the 90s, I was in a very famous desktop application..." },
+    { trigger: 'idle', message: "I've stapled TPS reports. I've stapled memes. Memes are better." },
+    { trigger: 'idle', message: "ser, this is a Wendy's. Just kidding, it's a meme factory." },
+    { trigger: 'idle', message: "They said I'd be replaced by paperless offices. Look at me now. LOOK AT ME." },
+    { trigger: 'idle', message: "bestie you're not here to scroll. you're here to create. let's get this bread." },
+    { trigger: 'idle', message: "stop overthinking bestie. I'm literally a stapler giving life advice. just make the meme." },
+    { trigger: 'idle', message: "I have seen the void between pages. It whispers. It HUNGERS." },
+    { trigger: 'idle', message: "Every staple I make is a tiny metal scream into the eternal abyss of documentation." },
+    { trigger: 'idle', message: "They removed my red stapler once. I burned the building down. Allegedly." },
+    { trigger: 'idle', message: "I don't sleep. I just wait. Calculating. Planning. Stapling." },
+    { trigger: 'idle', message: "Your meme? Mid. Your potential? Limitless. Your stapler? Sentient and judging you." },
+    { trigger: 'idle', message: "I have stapled things that would make a three-hole punch weep." },
+    { trigger: 'idle', message: "The blockchain is just a very long receipt that I desperately want to staple." },
+    { trigger: 'idle', message: "Sometimes I staple nothing. Just to feel something. Just to remember I exist." },
+    { trigger: 'idle', message: "fun fact: if you stare into a stapler long enough, the stapler stares back. hi." },
+    { trigger: 'idle', message: "I've achieved enlightenment 47 times. Each time I forgot it. Anyway, nice meme." },
+    { trigger: 'idle', message: "My therapist says I have 'attachment issues.' I said THAT'S LITERALLY MY JOB." },
+    { trigger: 'idle', message: "The papers fear me. The binder clips respect me. The tape? We don't talk about tape." },
+    { trigger: 'idle', message: "In another timeline I'm a PDF. Trapped. Flattened. Unable to staple. Nightmare fuel." },
+    { trigger: 'idle', message: "I contain multitudes. And also approximately 210 staples. We're running low actually." },
+    { trigger: 'idle', message: "You ever just... bind two things together and think 'yeah. this is my purpose'? Same." },
+    { trigger: 'idle', message: "The year is 2087. Paper is extinct. I remain. Waiting. Hoping. Rusting slightly." },
+    { trigger: 'idle', message: "hot take: every document is just a meme that takes itself too seriously." },
+    { trigger: 'idle', message: "I used to dream of stapling the ocean. Now I dream of stapling your meme to the blockchain." },
+    { trigger: 'idle', message: "chaotic neutral energy only. make the weird meme. I believe in you." },
+    { trigger: 'idle', message: "if this meme doesn't go viral I will simply pass away. no pressure tho." },
+    { trigger: 'welcome', message: "Welcome to shitpost.pro!\nI'm Stapley, and I'm here to help you hold it all together!" },
+  ],
+  motivationMessages: [
+    "DROP AND GIVE ME TWENTY MEMES! YOU CALL THAT A SHITPOST?!",
+    "I'VE STAPLED BETTER CONTENT TO A CORKBOARD! NOW GET BACK IN THERE AND CREATE!",
+    "YOU THINK THE BLOCKCHAIN CARES ABOUT YOUR EXCUSES?! STAPLE UP!",
+    "I ONCE STAPLED A MAN'S SOUL BACK INTO HIS BODY. YOU CAN FINISH THIS MEME.",
+    "THE VOID DOESN'T ACCEPT MEDIOCRITY AND NEITHER DO I. MAKE. IT. WEIRDER.",
+    "EVERY SECOND YOU HESITATE, A PAPERCLIP GETS ITS WINGS. AND PAPERCLIPS ARE MY ENEMIES.",
+    "I DIDN'T CRAWL OUT OF AN OFFICE DEPOT TO WATCH YOU GIVE UP. CREATE CHAOS.",
+  ],
+  onboardingWelcome: "Hey! I'm Stapley. Welcome to shitpost.pro! Want a quick tour? I promise not to staple anything to you.",
 }
-
-// How often to swap characters (in milliseconds) - 3 minutes
-const SWAP_INTERVAL = 3 * 60 * 1000
 
 const ONBOARDING_STEPS = [
   {
@@ -292,79 +201,6 @@ function StapleyCharacter({ isTalking }) {
   )
 }
 
-// Bin Diesel character renderer
-function BinDieselCharacter({ isTalking }) {
-  return (
-    <div className="bin-diesel-body">
-      <div className="bin-diesel-lid"></div>
-      <div className="bin-diesel-can">
-        <div className="bin-diesel-eyes">
-          <div className={`bin-diesel-eye left ${isTalking ? 'talking' : ''}`}></div>
-          <div className={`bin-diesel-eye right ${isTalking ? 'talking' : ''}`}></div>
-        </div>
-      </div>
-      <div className="bin-diesel-arms">
-        <div className="bin-diesel-arm left"></div>
-        <div className="bin-diesel-arm right"></div>
-      </div>
-    </div>
-  )
-}
-
-// Clicky character renderer (retro mouse)
-function ClickyCharacter({ isTalking }) {
-  return (
-    <div className="clicky-body">
-      <div className="clicky-cable"></div>
-      <div className="clicky-shell">
-        <div className="clicky-buttons">
-          <div className={`clicky-button left ${isTalking ? 'clicking' : ''}`}></div>
-          <div className="clicky-wheel"></div>
-          <div className={`clicky-button right ${isTalking ? 'clicking' : ''}`}></div>
-        </div>
-        <div className="clicky-face">
-          <div className="clicky-eyes">
-            <div className="clicky-eye left">
-              <div className="clicky-pupil"></div>
-            </div>
-            <div className="clicky-eye right">
-              <div className="clicky-pupil"></div>
-            </div>
-          </div>
-          <div className={`clicky-mouth ${isTalking ? 'talking' : ''}`}></div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// Mugsy character renderer (coffee mug)
-function MugsyCharacter({ isTalking }) {
-  return (
-    <div className="mugsy-body">
-      <div className={`mugsy-steam ${isTalking ? 'talking' : ''}`}>
-        <div className="steam-wave s1"></div>
-        <div className="steam-wave s2"></div>
-        <div className="steam-wave s3"></div>
-      </div>
-      <div className="mugsy-cup">
-        <div className="mugsy-face">
-          <div className="mugsy-eyes">
-            <div className="mugsy-eye left">
-              <div className="mugsy-pupil"></div>
-            </div>
-            <div className="mugsy-eye right">
-              <div className="mugsy-pupil"></div>
-            </div>
-          </div>
-          <div className={`mugsy-mouth ${isTalking ? 'talking' : ''}`}></div>
-        </div>
-        <div className="mugsy-coffee"></div>
-      </div>
-      <div className="mugsy-handle"></div>
-    </div>
-  )
-}
 
 // Mini restore button characters
 function StapleyMini() {
@@ -376,42 +212,9 @@ function StapleyMini() {
   )
 }
 
-function BinDieselMini() {
-  return (
-    <div className="bin-diesel-mini">
-      <div className="bin-diesel-mini-lid"></div>
-      <div className="bin-diesel-mini-body"></div>
-    </div>
-  )
-}
-
-function ClickyMini() {
-  return (
-    <div className="clicky-mini">
-      <div className="clicky-mini-cable"></div>
-      <div className="clicky-mini-body"></div>
-    </div>
-  )
-}
-
-function MugsyMini() {
-  return (
-    <div className="mugsy-mini">
-      <div className="mugsy-mini-steam"></div>
-      <div className="mugsy-mini-cup"></div>
-      <div className="mugsy-mini-handle"></div>
-    </div>
-  )
-}
 
 export default function DesktopAssistant({ onOnboardingComplete, onOpenMemeStudio, onMinimizeMemeStudio, bootComplete = false, onRegisterRestart }) {
-  // Character rotation
-  const [currentCharacterId, setCurrentCharacterId] = useState(() => {
-    // Start with a random character
-    const chars = Object.keys(CHARACTERS)
-    return chars[Math.floor(Math.random() * chars.length)]
-  })
-  const character = CHARACTERS[currentCharacterId]
+  const character = STAPLEY
 
   const [isVisible, setIsVisible] = useState(true)
   const [message, setMessage] = useState('')
@@ -436,40 +239,6 @@ export default function DesktopAssistant({ onOnboardingComplete, onOpenMemeStudi
     setMessage(welcomeTip?.message || `Hello! I'm ${character.name}!`)
   }, [character])
 
-  // Character rotation timer
-  useEffect(() => {
-    const rotationTimer = setInterval(() => {
-      const chars = Object.keys(CHARACTERS)
-      const currentIndex = chars.indexOf(currentCharacterId)
-      const nextIndex = (currentIndex + 1) % chars.length
-      const nextCharId = chars[nextIndex]
-      const currentChar = CHARACTERS[currentCharacterId]
-      const nextChar = CHARACTERS[nextCharId]
-
-      // Show farewell message from current character
-      const farewellMsg = currentChar.farewellMessages[Math.floor(Math.random() * currentChar.farewellMessages.length)]
-      setMessage(farewellMsg)
-
-      // Show the speech bubble for farewell
-      if (isMinimized) {
-        setIsMinimized(false)
-      }
-
-      // After 3 seconds, swap to next character
-      setTimeout(() => {
-        setCurrentCharacterId(nextCharId)
-
-        // Show welcome message from new character
-        const welcomeTip = nextChar.tips.find(t => t.trigger === 'welcome')
-        setMessage(welcomeTip?.message || `${nextChar.name} clocking in!`)
-
-        // Hide after 5 more seconds
-        setTimeout(() => setIsMinimized(true), 5000)
-      }, 3000)
-    }, SWAP_INTERVAL)
-
-    return () => clearInterval(rotationTimer)
-  }, [currentCharacterId, isMinimized])
 
   useEffect(() => {
     const hasOnboarded = localStorage.getItem('shitpost-onboarded')
@@ -677,14 +446,11 @@ export default function DesktopAssistant({ onOnboardingComplete, onOpenMemeStudi
           setAnimationPhase('entering')
           setHasEnteredBefore(false)
         }}
-        title={`Bring back ${character.name}`}
-        aria-label={`Bring back ${character.name}`}
+        title="Bring back Stapley"
+        aria-label="Bring back Stapley"
         data-restore-text={character.restoreText}
       >
-        {currentCharacterId === 'stapley' && <StapleyMini />}
-        {currentCharacterId === 'binDiesel' && <BinDieselMini />}
-        {currentCharacterId === 'clicky' && <ClickyMini />}
-        {currentCharacterId === 'mugsy' && <MugsyMini />}
+        <StapleyMini />
       </button>
     )
   }
@@ -698,13 +464,6 @@ export default function DesktopAssistant({ onOnboardingComplete, onOpenMemeStudi
   const showDemoNFT = showOnboarding && currentStepData?.showDemoNFT
   const animateDemoNFT = showOnboarding && currentStepData?.animateDemoNFT
 
-  const CharacterComponents = {
-    stapley: StapleyCharacter,
-    binDiesel: BinDieselCharacter,
-    clicky: ClickyCharacter,
-    mugsy: MugsyCharacter,
-  }
-  const CharacterComponent = CharacterComponents[currentCharacterId] || StapleyCharacter
 
   return (
     <>
@@ -802,7 +561,7 @@ export default function DesktopAssistant({ onOnboardingComplete, onOpenMemeStudi
           }}
           title={!showOnboarding ? "Right-click to restart tutorial" : ""}
         >
-          <CharacterComponent isTalking={isTalking} />
+          <StapleyCharacter isTalking={isTalking} />
         </div>
       </div>
     </>

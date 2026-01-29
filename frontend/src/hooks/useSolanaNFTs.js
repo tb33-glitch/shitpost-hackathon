@@ -128,7 +128,17 @@ export default function useSolanaNFTs() {
       }
 
       console.log('[Solana NFTs] Total NFTs found:', ownedNFTs.length)
-      setNfts(ownedNFTs)
+
+      // Only update state if NFTs actually changed (compare by tokenId)
+      setNfts(prev => {
+        const prevIds = prev.map(n => n.tokenId).sort().join(',')
+        const newIds = ownedNFTs.map(n => n.tokenId).sort().join(',')
+        if (prevIds === newIds) {
+          console.log('[Solana NFTs] No changes detected, keeping existing state')
+          return prev
+        }
+        return ownedNFTs
+      })
     } catch (err) {
       console.error('[Solana NFTs] Error fetching NFTs:', err)
       setError(err.message)
