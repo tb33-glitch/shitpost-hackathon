@@ -27,6 +27,8 @@ export default function ObjectCanvas({
   isMuted = true,
   videoRefs = null,
   onVideoElementReady,
+  // Double-click to edit text
+  onEditText,
 }) {
   // Scale factor for display
   const DISPLAY_SCALE = zoom
@@ -105,7 +107,7 @@ export default function ObjectCanvas({
 
     if (obj.type === OBJECT_TYPES.TEXT && measureCanvasRef.current) {
       const ctx = measureCanvasRef.current.getContext('2d')
-      ctx.font = `bold ${obj.fontSize}px ${obj.fontFamily}`
+      ctx.font = `bold ${obj.fontSize}px "${obj.fontFamily}", sans-serif`
       const metrics = ctx.measureText(obj.text)
       const actualWidth = metrics.width
       const actualHeight = obj.fontSize * 1.2 // Approximate line height
@@ -293,6 +295,9 @@ export default function ObjectCanvas({
             startWidth: selectedObj.width,
             startHeight: selectedObj.height,
             aspectRatio: selectedObj.width / selectedObj.height,
+            // For text scaling
+            isText: selectedObj.type === OBJECT_TYPES.TEXT,
+            startFontSize: selectedObj.fontSize || 48,
           })
           return
         }
@@ -445,12 +450,23 @@ export default function ObjectCanvas({
         newX = startObjX - (newWidth - startWidth)
       }
 
-      onUpdateObject(resizeState.objectId, {
+      // Build update object
+      const update = {
         x: newX,
         y: newY,
         width: newWidth,
         height: newHeight,
-      })
+      }
+
+      // Scale font size for text objects
+      if (resizeState.isText && resizeState.startFontSize) {
+        const scaleFactor = newWidth / resizeState.startWidth
+        const newFontSize = Math.round(resizeState.startFontSize * scaleFactor)
+        // Clamp font size between 12 and 300
+        update.fontSize = Math.max(12, Math.min(300, newFontSize))
+      }
+
+      onUpdateObject(resizeState.objectId, update)
       return
     }
 
@@ -510,6 +526,26 @@ export default function ObjectCanvas({
     setRotateState(null)
     setCropDragState(null)
   }, [isDrawing, dragState, resizeState, rotateState, cropDragState, objects, onUpdateObjectWithHistory, onDrawingUpdate])
+
+  // Handle double-click to edit text
+  const handleDoubleClick = useCallback((e) => {
+    if (isDrawingMode) return
+
+    const coords = getCanvasCoords(e)
+    if (!coords) return
+
+    // Find which object was double-clicked
+    for (let i = objects.length - 1; i >= 0; i--) {
+      const obj = objects[i]
+      if (hitTest(coords.x, coords.y, obj)) {
+        // If it's a text object, trigger edit mode
+        if (obj.type === OBJECT_TYPES.TEXT && onEditText) {
+          onEditText(obj.id)
+        }
+        break
+      }
+    }
+  }, [objects, isDrawingMode, getCanvasCoords, hitTest, onEditText])
 
   // Global mouse/touch handlers for drag/resize/rotate/crop - prevents getting stuck when pointer leaves canvas
   useEffect(() => {
@@ -629,7 +665,7 @@ export default function ObjectCanvas({
         }
       } else if (obj.type === OBJECT_TYPES.TEXT) {
         // Draw text
-        ctx.font = `bold ${obj.fontSize}px ${obj.fontFamily}`
+        ctx.font = `bold ${obj.fontSize}px "${obj.fontFamily}", sans-serif`
         ctx.textAlign = obj.align || 'center'
         ctx.textBaseline = 'middle'
 
@@ -650,8 +686,15 @@ export default function ObjectCanvas({
         ctx.fillStyle = obj.color
         ctx.fillText(obj.text, textX, textY)
       } else if (obj.type === OBJECT_TYPES.STICKER) {
-        // Draw sticker (pixel data)
-        if (obj.sticker && obj.sticker.data) {
+        // Draw sticker (emoji)
+        if (obj.sticker && obj.sticker.emoji) {
+          const fontSize = Math.min(obj.width, obj.height)
+          ctx.font = `${fontSize}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText(obj.sticker.emoji, obj.x + obj.width / 2, obj.y + obj.height / 2)
+        } else if (obj.sticker && obj.sticker.data) {
+          // Legacy pixel data support
           const stickerData = obj.sticker.data
           const stickerSize = stickerData.length
           const pixelW = obj.width / stickerSize
@@ -787,6 +830,7 @@ export default function ObjectCanvas({
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={() => setHoveredHandle(null)}
+      onDoubleClick={handleDoubleClick}
       onTouchStart={handleMouseDown}
       onTouchMove={handleMouseMove}
       onTouchEnd={handleMouseUp}
