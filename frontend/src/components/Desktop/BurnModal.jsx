@@ -3,11 +3,12 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { Window } from '../Windows98'
 import useSolanaBurn from '../../hooks/useSolanaBurn'
 import solanaIdl from '../../contracts/idl/shitpost_pro.json'
+import { DEFAULT_SOLANA_NETWORK, getExplorerCluster } from '../../config/solana'
 
 export default function BurnModal({ isOpen, onClose, onSuccess, nft }) {
   const { connected } = useWallet()
 
-  // Solana burn hook
+  // Solana burn hook - uses network from config (VITE_SOLANA_NETWORK env var)
   const {
     burn: solanaBurn,
     signature,
@@ -16,7 +17,7 @@ export default function BurnModal({ isOpen, onClose, onSuccess, nft }) {
     isSuccess,
     error,
     reset
-  } = useSolanaBurn('devnet')
+  } = useSolanaBurn(DEFAULT_SOLANA_NETWORK)
 
   const [step, setStep] = useState('confirm') // confirm, burning, success, error
   const [txError, setTxError] = useState(null)
@@ -134,7 +135,7 @@ export default function BurnModal({ isOpen, onClose, onSuccess, nft }) {
               <div className="modal-actions">
                 {signature && (
                   <a
-                    href={`https://explorer.solana.com/tx/${signature}?cluster=devnet`}
+                    href={`https://explorer.solana.com/tx/${signature}${getExplorerCluster()}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="explorer-link"

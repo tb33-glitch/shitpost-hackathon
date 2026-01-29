@@ -28,8 +28,15 @@ export const SOLANA_NETWORKS = {
   },
 }
 
-// Default network (devnet for development)
-export const DEFAULT_SOLANA_NETWORK = 'devnet'
+// Default network - configurable via environment variable
+// Set VITE_SOLANA_NETWORK=mainnet for production
+export const DEFAULT_SOLANA_NETWORK = import.meta.env.VITE_SOLANA_NETWORK || 'devnet'
+
+// Get explorer cluster parameter for URLs
+export const getExplorerCluster = (network) => {
+  const net = network || DEFAULT_SOLANA_NETWORK
+  return net === 'mainnet' ? '' : `?cluster=${net}`
+}
 
 // Get network config by name
 export const getSolanaNetwork = (network) => SOLANA_NETWORKS[network] || SOLANA_NETWORKS[DEFAULT_SOLANA_NETWORK]

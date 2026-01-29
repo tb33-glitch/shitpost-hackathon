@@ -4,13 +4,14 @@ import { Window } from '../Windows98'
 import useSolanaMint from '../../hooks/useSolanaMint'
 import useIPFS from '../../hooks/useIPFS'
 import solanaIdl from '../../contracts/idl/shitpost_pro.json'
+import { DEFAULT_SOLANA_NETWORK, getExplorerCluster } from '../../config/solana'
 
 export default function MintModal({ isOpen, onClose, onSuccess, imageDataURL, onConnectWallet }) {
   // Solana wallet
   const { publicKey, connected } = useWallet()
   const { connection } = useConnection()
 
-  // Solana minting
+  // Solana minting - uses network from config (VITE_SOLANA_NETWORK env var)
   const {
     mint,
     signature,
@@ -19,7 +20,7 @@ export default function MintModal({ isOpen, onClose, onSuccess, imageDataURL, on
     isSuccess,
     error: mintError,
     reset: mintReset,
-  } = useSolanaMint('devnet')
+  } = useSolanaMint(DEFAULT_SOLANA_NETWORK)
 
   // IPFS upload
   const { upload, error: ipfsError } = useIPFS()
@@ -104,9 +105,9 @@ export default function MintModal({ isOpen, onClose, onSuccess, imageDataURL, on
 
   if (!isOpen) return null
 
-  // Solana explorer URL
+  // Solana explorer URL - uses configured network
   const explorerUrl = txHash
-    ? `https://explorer.solana.com/tx/${txHash}?cluster=devnet`
+    ? `https://explorer.solana.com/tx/${txHash}${getExplorerCluster()}`
     : null
 
   return (
@@ -124,7 +125,7 @@ export default function MintModal({ isOpen, onClose, onSuccess, imageDataURL, on
               </div>
 
               <div className="fee-notice">
-                Minting on: <strong>Solana Devnet</strong>
+                Minting on: <strong>Solana {DEFAULT_SOLANA_NETWORK === 'mainnet' ? 'Mainnet' : 'Devnet'}</strong>
                 <br />
                 Mint fee: <strong>~0.01 SOL</strong>
               </div>
