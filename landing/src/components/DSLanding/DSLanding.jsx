@@ -1,4 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+
+// Konami code: ↑ ↑ ↓ ↓ ← → ← → B A
+const KONAMI_CODE = ['up', 'up', 'down', 'down', 'left', 'right', 'left', 'right', 'B', 'A']
 import DSShell from './DSShell'
 import DinoGame from './DinoGame'
 import './ds-landing.css'
@@ -22,6 +25,22 @@ export default function DSLanding() {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [hoveredIndex, setHoveredIndex] = useState(null)
   const gameJumpRef = useRef(null)
+  const konamiProgress = useRef([])
+
+  // Check Konami code progress
+  const checkKonami = useCallback((input) => {
+    konamiProgress.current.push(input)
+    // Keep only last 10 inputs
+    if (konamiProgress.current.length > 10) {
+      konamiProgress.current.shift()
+    }
+    // Check if matches
+    if (konamiProgress.current.length === 10 &&
+        konamiProgress.current.every((val, i) => val === KONAMI_CODE[i])) {
+      konamiProgress.current = []
+      window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ&start_radio=1', '_blank')
+    }
+  }, [])
 
   // Power on handler
   const handlePowerOn = useCallback(() => {
@@ -242,6 +261,7 @@ export default function DSLanding() {
 
   // D-pad handler
   const handleDpad = (direction) => {
+    checkKonami(direction)
     if (state === STATES.HOME_MENU) {
       switch (direction) {
         case 'up':
@@ -262,6 +282,11 @@ export default function DSLanding() {
 
   // Button handler
   const handleButton = (button) => {
+    // Track A and B for Konami code
+    if (button === 'A' || button === 'B') {
+      checkKonami(button)
+    }
+
     if (state === STATES.OFF && (button === 'A' || button === 'START')) {
       handlePowerOn()
     } else if (state === STATES.WARNING_SCREEN && (button === 'A' || button === 'START')) {
