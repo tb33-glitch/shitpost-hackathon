@@ -170,6 +170,8 @@
   position: relative !important;
   top: auto !important;
   left: auto !important;
+  min-width: auto !important;
+  width: auto !important;
 }
 
 .color-picker-popup {

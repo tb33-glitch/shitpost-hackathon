@@ -189,8 +189,8 @@ export async function syncRegistryFromIPFS() {
  * Get all community templates in a format compatible with the template picker
  */
 export async function getCommunityTemplates() {
-  // First try to sync with IPFS
-  await syncRegistryFromIPFS()
+  // Skip IPFS sync for now - just use local registry
+  // await syncRegistryFromIPFS()
 
   const registry = getLocalRegistry()
 
@@ -318,6 +318,50 @@ export function clearRegistry() {
   localStorage.removeItem(REGISTRY_CID_KEY)
 }
 
+/**
+ * Keep only the last N templates in the registry (admin function)
+ */
+export function keepLastNTemplates(n = 2) {
+  const registry = getLocalRegistry()
+  const total = registry.templates.length
+  if (total <= n) {
+    console.log(`[Registry] Only ${total} templates, keeping all`)
+    return registry
+  }
+
+  // Keep only the last N (most recent)
+  registry.templates = registry.templates.slice(-n)
+  registry.lastUpdated = new Date().toISOString()
+  saveLocalRegistry(registry)
+  console.log(`[Registry] Kept last ${n} templates, removed ${total - n}`)
+  return registry
+}
+
+// One-time cleanup: nuke everything and keep only ohio + Template
+// TODO: Remove this after running once
+;(() => {
+  console.log('[Registry] Running aggressive cleanup...')
+  // Clear IPFS sync completely
+  localStorage.removeItem('shitpost-registry-cid')
+
+  const registry = getLocalRegistry()
+  console.log('[Registry] Before cleanup:', registry.templates.map(t => t.name))
+
+  // Only keep templates submitted by wallet starting with 2f9
+  const filtered = registry.templates.filter(t => t.submittedBy?.startsWith('2f9'))
+
+  console.log('[Registry] After filter:', filtered.map(t => t.name))
+
+  // Force save the filtered registry
+  const cleanRegistry = {
+    version: '1.0',
+    lastUpdated: new Date().toISOString(),
+    templates: filtered.slice(-2) // Keep last 2 only
+  }
+  localStorage.setItem('shitpost-template-registry', JSON.stringify(cleanRegistry))
+  console.log('[Registry] Saved clean registry with', cleanRegistry.templates.length, 'templates')
+})()
+
 export default {
   uploadTemplateImage,
   uploadTemplateMetadata,
@@ -331,4 +375,5 @@ export default {
   ipfsToGateway,
   removeFromRegistry,
   clearRegistry,
+  keepLastNTemplates,
 }

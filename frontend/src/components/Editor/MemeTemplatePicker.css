@@ -1,13 +1,13 @@
-/* Meme Template Picker - Windows XP Style */
+/* Meme Template Picker - Simplified Search-First Design */
 
 .meme-template-picker {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 600px;
-  max-width: 90vw;
-  max-height: 80vh;
+  width: 900px;
+  max-width: 95vw;
+  max-height: 90vh;
   background: #ECE9D8;
   border: 2px solid;
   border-color: #DFDFDF #404040 #404040 #DFDFDF;
@@ -54,95 +54,120 @@
 .picker-search {
   display: flex;
   align-items: center;
-  padding: 8px;
+  padding: 12px;
+  gap: 8px;
   background: #F5F4EA;
   border-bottom: 1px solid #ACA899;
 }
 
 .picker-search-input {
   flex: 1;
-  padding: 4px 8px;
+  padding: 8px 12px;
   border: 1px solid #7F9DB9;
-  border-radius: 2px;
+  border-radius: 3px;
   font-family: 'Tahoma', sans-serif;
-  font-size: 11px;
+  font-size: 13px;
   background: white;
 }
 
 .picker-search-input:focus {
   outline: none;
   border-color: #316AC5;
+  box-shadow: 0 0 3px rgba(49, 106, 197, 0.3);
+}
+
+.picker-search-input::placeholder {
+  color: #808080;
 }
 
 .picker-search-clear {
-  margin-left: 4px;
   background: #ECE9D8;
   border: 1px solid #ACA899;
-  border-radius: 2px;
-  padding: 2px 6px;
-  font-size: 10px;
+  border-radius: 3px;
+  padding: 6px 10px;
+  font-size: 11px;
   cursor: pointer;
+  font-weight: bold;
 }
 
 .picker-search-clear:hover {
   background: #F5F4EA;
 }
 
-.picker-submit-btn {
-  margin-left: 8px;
+.picker-upload-btn {
   background: linear-gradient(180deg, #4E9A06 0%, #3B7305 100%);
   border: 1px solid #2E5904;
   border-radius: 3px;
-  padding: 4px 12px;
+  padding: 6px 14px;
   font-family: 'Tahoma', sans-serif;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: bold;
   color: white;
   cursor: pointer;
   white-space: nowrap;
 }
 
-.picker-submit-btn:hover {
+.picker-upload-btn:hover {
   background: linear-gradient(180deg, #5CB007 0%, #4A8F06 100%);
 }
 
-/* Category Tabs */
+/* Tabs */
 .picker-tabs {
   display: flex;
-  gap: 2px;
-  padding: 8px 8px 0;
+  gap: 0;
   background: #ECE9D8;
+  padding: 0 12px;
   border-bottom: 1px solid #ACA899;
 }
 
 .picker-tab {
-  padding: 6px 16px;
-  background: linear-gradient(180deg, #F5F4EA 0%, #E8E6DA 100%);
-  border: 1px solid #ACA899;
-  border-bottom: none;
-  border-radius: 4px 4px 0 0;
+  padding: 8px 20px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
   font-family: 'Tahoma', sans-serif;
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #666;
   cursor: pointer;
-  position: relative;
-  bottom: -1px;
+  transition: all 0.15s ease;
 }
 
 .picker-tab:hover {
-  background: linear-gradient(180deg, #FFFFFF 0%, #F5F4EA 100%);
+  color: #333;
+  background: rgba(0, 0, 0, 0.03);
 }
 
 .picker-tab.active {
-  background: #ECE9D8;
-  border-bottom: 1px solid #ECE9D8;
-  font-weight: bold;
+  color: #0053E0;
+  border-bottom-color: #0053E0;
+}
+
+/* Status Bar */
+.picker-status {
+  padding: 6px 12px;
+  background: #F5F4EA;
+  border-bottom: 1px solid #ACA899;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+  color: #555;
+}
+
+.picker-status .status-loading {
+  color: #0053E0;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 /* Template Grid */
 .picker-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
   padding: 12px;
   overflow-y: auto;
   flex: 1;
@@ -161,18 +186,18 @@
   border: 1px solid #DFDFDF;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.1s ease;
 }
 
 .picker-template-card:hover {
   background: #E3F0FF;
   border-color: #316AC5;
-  transform: translateY(-2px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transform: scale(1.02);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .picker-template-card:active {
-  transform: translateY(0);
+  transform: scale(0.98);
 }
 
 /* Template Preview */
@@ -210,7 +235,7 @@
 .picker-template-card .template-name {
   margin-top: 6px;
   font-family: 'Tahoma', sans-serif;
-  font-size: 10px;
+  font-size: 11px;
   text-align: center;
   color: #000;
   line-height: 1.2;
@@ -219,502 +244,67 @@
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  max-width: 100%;
 }
 
-.custom-badge {
-  display: inline-block;
-  background: #27ae60;
-  color: white;
-  font-size: 8px;
-  font-weight: bold;
-  padding: 1px 4px;
-  border-radius: 2px;
-  margin-right: 4px;
-  vertical-align: middle;
-}
-
-.community-badge {
-  display: inline-block;
-  background: #9b59b6;
-  color: white;
-  font-size: 8px;
-  font-weight: bold;
-  padding: 1px 4px;
-  border-radius: 2px;
-  margin-right: 4px;
-  vertical-align: middle;
-}
-
-/* Report Button */
-.template-preview {
-  position: relative;
-}
-
-.template-report-btn {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 14px;
-  height: 14px;
-  padding: 0;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid #C94035;
-  border-radius: 50%;
-  color: #C94035;
-  font-size: 9px;
-  font-weight: bold;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-
-.picker-template-card:hover .template-report-btn {
-  opacity: 1;
-}
-
-.template-report-btn:hover {
-  background: #C94035;
-  color: white;
-}
-
-/* Upload Card */
-.upload-card {
-  border: 2px dashed #ACA899;
-  background: #FAFAF8;
-}
-
-.upload-card:hover {
-  border-color: #316AC5;
-  background: #E3F0FF;
-}
-
-.upload-placeholder {
-  width: 100%;
-  aspect-ratio: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.upload-icon {
-  font-size: 32px;
-  color: #808080;
-  font-weight: bold;
-}
-
-.upload-card:hover .upload-icon {
-  color: #316AC5;
-}
-
-.upload-text {
+/* Popularity indicator */
+.template-popularity {
+  margin-top: 2px;
   font-family: 'Tahoma', sans-serif;
-  font-size: 10px;
+  font-size: 9px;
   color: #808080;
 }
 
-.upload-card:hover .upload-text {
-  color: #316AC5;
-}
-
-/* Voting Buttons */
-.template-votes {
-  display: flex;
-  gap: 2px;
-  margin-top: 4px;
-  width: 100%;
-  justify-content: center;
-}
-
-.vote-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1px;
-  padding: 1px 4px;
-  font-size: 9px;
+/* Community submitter info */
+.template-submitter {
+  margin-top: 2px;
   font-family: 'Tahoma', sans-serif;
-  background: #F5F4EA;
-  border: 1px solid #ACA899;
-  border-radius: 2px;
-  cursor: pointer;
-  transition: all 0.1s;
-  min-width: 28px;
-}
-
-.vote-btn:hover {
-  background: #E3F0FF;
-  border-color: #316AC5;
-}
-
-.vote-btn.up.active {
-  background: #D4EDDA;
-  border-color: #28A745;
-  color: #155724;
-}
-
-.vote-btn.down.active {
-  background: #F8D7DA;
-  border-color: #DC3545;
-  color: #721C24;
+  font-size: 8px;
+  color: #9b59b6;
+  font-style: italic;
 }
 
 /* Empty State */
 .picker-empty {
-  padding: 40px;
+  padding: 60px 40px;
   text-align: center;
   color: #808080;
   font-family: 'Tahoma', sans-serif;
-  font-size: 12px;
-}
-
-/* Leaderboard View */
-.picker-leaderboard {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px;
-  overflow-y: auto;
-  flex: 1;
+  font-size: 13px;
   background: white;
   border: 1px solid #ACA899;
   margin: 8px;
   border-radius: 2px;
-}
-
-.leaderboard-my-stats {
-  background: linear-gradient(180deg, #E3F0FF 0%, #CCE5FF 100%);
-  border: 1px solid #7F9DB9;
-  border-radius: 4px;
-  padding: 8px 12px;
-}
-
-.leaderboard-my-stats .my-stats-header {
+  flex: 1;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;
-}
-
-.leaderboard-my-stats .my-stats-label {
-  font-family: 'Tahoma', sans-serif;
-  font-size: 10px;
-  color: #555;
-}
-
-.leaderboard-my-stats .my-stats-row {
-  display: flex;
-  gap: 16px;
-  font-family: 'Tahoma', sans-serif;
-  font-size: 12px;
-}
-
-.leaderboard-my-stats .my-stat strong {
-  color: #0053E0;
-}
-
-.leaderboard-my-stats .my-display-name {
-  margin-top: 6px;
-  font-family: 'Tahoma', sans-serif;
-  font-size: 10px;
-  color: #555;
-}
-
-.leaderboard-my-stats .my-display-name strong {
-  color: #000;
-}
-
-/* Claim Button */
-.claim-btn {
-  background: linear-gradient(180deg, #4E9A06 0%, #3B7305 100%);
-  border: 1px solid #2E5904;
-  border-radius: 3px;
-  padding: 3px 8px;
-  font-family: 'Tahoma', sans-serif;
-  font-size: 9px;
-  font-weight: bold;
-  color: white;
-  cursor: pointer;
-}
-
-.claim-btn:hover {
-  background: linear-gradient(180deg, #5CB007 0%, #4A8F06 100%);
-}
-
-.claim-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.claimed-badge {
-  background: #0053E0;
-  color: white;
-  font-family: 'Tahoma', sans-serif;
-  font-size: 9px;
-  font-weight: bold;
-  padding: 2px 6px;
-  border-radius: 3px;
-}
-
-/* Verified Badge in Leaderboard */
-.lb-verified {
-  color: #0053E0;
-  font-size: 10px;
-  margin-left: 4px;
-}
-
-/* Claim Modal */
-.claim-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
 }
 
-.claim-modal {
-  background: #ECE9D8;
-  border: 2px solid;
-  border-color: #DFDFDF #404040 #404040 #DFDFDF;
-  border-radius: 3px;
-  width: 320px;
-  max-width: 90vw;
-  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);
-}
-
-.claim-modal-header {
+.empty-community {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  padding: 4px 8px;
-  background: linear-gradient(180deg, #0997FF 0%, #0053E0 100%);
-  color: white;
-  font-weight: bold;
-  font-family: 'Tahoma', sans-serif;
-  font-size: 12px;
+  gap: 8px;
 }
 
-.claim-modal-close {
-  background: transparent;
-  border: none;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-  padding: 0 4px;
-}
-
-.claim-modal-close:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.claim-modal-content {
-  padding: 12px;
-}
-
-.claim-modal-content > p {
-  font-family: 'Tahoma', sans-serif;
-  font-size: 11px;
-  color: #333;
-  margin: 0 0 12px 0;
-  line-height: 1.4;
-}
-
-.claim-form {
-  margin-bottom: 12px;
-}
-
-.claim-form label {
-  display: block;
-  font-family: 'Tahoma', sans-serif;
-  font-size: 10px;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 4px;
-}
-
-.claim-form input {
-  width: 100%;
-  padding: 6px 8px;
-  border: 1px solid #7F9DB9;
-  border-radius: 2px;
-  font-family: 'Tahoma', sans-serif;
-  font-size: 11px;
-  box-sizing: border-box;
-}
-
-.claim-form input:focus {
-  outline: none;
-  border-color: #316AC5;
-}
-
-.claim-hint {
-  font-family: 'Tahoma', sans-serif;
-  font-size: 9px;
-  color: #808080;
-  margin: 4px 0 0 0;
-}
-
-.claim-preview {
-  background: white;
-  border: 1px solid #ACA899;
-  border-radius: 2px;
-  padding: 8px;
-  margin-bottom: 12px;
-}
-
-.claim-preview-row {
-  display: flex;
-  justify-content: space-between;
-  font-family: 'Tahoma', sans-serif;
-  font-size: 11px;
-  padding: 2px 0;
-}
-
-.claim-preview-row strong {
-  color: #4E9A06;
-}
-
-.claim-submit-btn {
-  width: 100%;
-  background: linear-gradient(180deg, #4E9A06 0%, #3B7305 100%);
-  border: 1px solid #2E5904;
-  border-radius: 3px;
-  padding: 8px 16px;
-  font-family: 'Tahoma', sans-serif;
-  font-size: 12px;
-  font-weight: bold;
-  color: white;
-  cursor: pointer;
-}
-
-.claim-submit-btn:hover {
-  background: linear-gradient(180deg, #5CB007 0%, #4A8F06 100%);
-}
-
-.claim-submit-btn:disabled {
-  background: #ACA899;
-  border-color: #808080;
-  cursor: not-allowed;
-}
-
-.leaderboard-list {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.leaderboard-empty {
-  text-align: center;
-  padding: 40px 20px;
-  color: #808080;
-  font-family: 'Tahoma', sans-serif;
-}
-
-.leaderboard-empty .empty-trophy {
+.empty-community .empty-icon {
   font-size: 48px;
-  margin-bottom: 12px;
 }
 
-.leaderboard-empty p {
-  margin: 4px 0;
-  font-size: 12px;
+.empty-community p {
+  margin: 0;
 }
 
-.leaderboard-empty .empty-hint {
-  font-size: 10px;
-  color: #aaa;
-}
-
-.leaderboard-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px;
-  border-bottom: 1px solid #E8E6DA;
-  font-family: 'Tahoma', sans-serif;
+.empty-community .empty-hint {
   font-size: 11px;
-}
-
-.leaderboard-row:last-child {
-  border-bottom: none;
-}
-
-.leaderboard-row.is-me {
-  background: #E3F0FF;
-  border-radius: 4px;
-}
-
-.leaderboard-row .lb-rank {
-  width: 32px;
-  text-align: center;
-  font-weight: bold;
-  font-size: 14px;
-}
-
-.leaderboard-row .lb-user {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.leaderboard-row .lb-name {
-  font-weight: bold;
-  color: #000;
-}
-
-.leaderboard-row .lb-you {
-  background: #0053E0;
-  color: white;
-  font-size: 8px;
-  font-weight: bold;
-  padding: 1px 4px;
-  border-radius: 2px;
-}
-
-.leaderboard-row .lb-stats {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.leaderboard-row .lb-xp {
-  background: linear-gradient(180deg, #4E9A06 0%, #3B7305 100%);
-  color: white;
-  padding: 2px 6px;
-  border-radius: 8px;
-  font-size: 10px;
-  font-weight: bold;
-}
-
-.leaderboard-row .lb-count {
-  color: #808080;
-  font-size: 10px;
-}
-
-.leaderboard-info {
-  background: #F5F4EA;
-  border: 1px solid #ACA899;
-  border-radius: 4px;
-  padding: 8px 12px;
-  font-family: 'Tahoma', sans-serif;
-  font-size: 10px;
-  color: #555;
+  color: #aaa;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
   .meme-template-picker {
-    /* Reset positioning - let parent container handle it */
     position: relative !important;
     top: auto !important;
     left: auto !important;
@@ -731,40 +321,24 @@
   .picker-grid {
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 8px;
+    padding: 8px;
   }
 
-  .picker-tabs {
-    flex-wrap: wrap;
+  .picker-template-card {
+    padding: 6px;
   }
 
-  .picker-tab {
-    padding: 4px 10px;
+  .picker-template-card .template-name {
     font-size: 10px;
   }
 
-  .picker-content {
-    flex: 1;
-    min-height: 0;
-  }
-
-  .picker-category-sidebar {
-    min-width: 60px;
-    max-width: 80px;
-  }
-
-  .category-btn {
-    padding: 6px 8px;
-    font-size: 10px;
-  }
-
-  .leaderboard-my-stats .my-stats-row {
+  .picker-search {
     flex-wrap: wrap;
-    gap: 8px;
   }
 
-  .leaderboard-row .lb-stats {
-    flex-direction: column;
-    gap: 2px;
-    align-items: flex-end;
+  .picker-search-input {
+    width: 100%;
+    order: -1;
+    margin-bottom: 8px;
   }
 }

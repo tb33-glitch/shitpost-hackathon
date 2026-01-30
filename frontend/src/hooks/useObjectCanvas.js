@@ -142,7 +142,7 @@ const measureText = (text, fontSize, fontFamily) => {
 // Create a new text object
 const createTextObject = (text = 'YOUR TEXT HERE', x = 100, y = 100) => {
   const fontSize = 48
-  const fontFamily = 'Impact, sans-serif'
+  const fontFamily = 'Impact'
   const { width, height } = measureText(text, fontSize, fontFamily)
 
   return {

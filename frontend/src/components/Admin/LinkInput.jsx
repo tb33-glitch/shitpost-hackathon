@@ -33,11 +33,10 @@ export function LinkInput({ onSubmit }) {
 
   const handlePasteExample = () => {
     const examples = [
-      'https://twitter.com/example/status/1234567890',
-      'https://www.reddit.com/r/memes/comments/abc123/funny_meme/',
-      'https://imgur.com/gallery/abc123',
+      'https://www.reddit.com/r/memes/comments/1qq6k04/how_evil_can_you_be_amazon_yes/',
       'https://i.imgur.com/abc123.jpg',
-      'https://example.com/image.png',
+      'https://i.redd.it/example.jpg',
+      'https://pbs.twimg.com/media/example.jpg',
     ]
     setInputValue(examples.join('\n'))
   }
@@ -45,16 +44,16 @@ export function LinkInput({ onSubmit }) {
   return (
     <div className="link-input-container">
       <h2>Add URLs to Extract</h2>
-      <p>Paste one URL per line. Supported sources: Twitter/X, Reddit, Imgur, YouTube thumbnails, and direct image URLs.</p>
+      <p>Paste one URL per line. Works best with Reddit, Imgur, and direct image URLs.</p>
 
       <textarea
         className="link-input-textarea"
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
-        placeholder="https://twitter.com/user/status/123456789
-https://www.reddit.com/r/memes/comments/abc123/funny/
+        placeholder="https://www.reddit.com/r/memes/comments/abc123/funny/
 https://imgur.com/gallery/xyz789
-https://i.imgur.com/direct-image.png"
+https://i.imgur.com/direct-image.png
+https://i.redd.it/example.jpg"
       />
 
       <div className="link-input-actions">
@@ -75,12 +74,14 @@ https://i.imgur.com/direct-image.png"
       <div className="supported-sources">
         <h3>Supported Sources</h3>
         <div className="source-badges">
-          <span className="source-badge">Twitter/X</span>
-          <span className="source-badge">Reddit</span>
-          <span className="source-badge">Imgur</span>
-          <span className="source-badge">YouTube (thumbnails)</span>
-          <span className="source-badge">Direct Image URLs</span>
+          <span className="source-badge" style={{background: '#27ae60'}}>Reddit</span>
+          <span className="source-badge" style={{background: '#27ae60'}}>Imgur</span>
+          <span className="source-badge" style={{background: '#27ae60'}}>Direct URLs</span>
+          <span className="source-badge" style={{background: '#95a5a6'}}>Twitter (limited)</span>
         </div>
+        <p style={{fontSize: '0.75rem', color: '#888', marginTop: '0.5rem'}}>
+          For Twitter: right-click the image → "Copy image address" → paste that URL
+        </p>
       </div>
     </div>
   )

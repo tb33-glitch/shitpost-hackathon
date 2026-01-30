@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react'
 import './PropertiesPanel.css'
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../../hooks/useObjectCanvas'
 
@@ -13,13 +14,13 @@ const TEXT_COLORS = [
 const FONT_SIZES = [24, 36, 48, 64, 80, 96, 120]
 
 const FONT_FAMILIES = [
-  { value: 'Impact, sans-serif', label: 'Impact' },
-  { value: '"Comic Sans MS", cursive', label: 'Comic Sans' },
-  { value: '"Arial Black", sans-serif', label: 'Arial Black' },
-  { value: 'Arial, sans-serif', label: 'Arial' },
-  { value: '"Times New Roman", serif', label: 'Times' },
-  { value: '"Courier New", monospace', label: 'Courier' },
-  { value: 'Georgia, serif', label: 'Georgia' },
+  { value: 'Impact', label: 'Impact' },
+  { value: 'Comic Sans MS', label: 'Comic Sans' },
+  { value: 'Arial Black', label: 'Arial Black' },
+  { value: 'Arial', label: 'Arial' },
+  { value: 'Times New Roman', label: 'Times' },
+  { value: 'Courier New', label: 'Courier' },
+  { value: 'Georgia', label: 'Georgia' },
 ]
 
 export default function PropertiesPanel({
@@ -38,7 +39,19 @@ export default function PropertiesPanel({
   onRemoveBackground,
   isRemovingBackground,
   removeBackgroundProgress,
+  autoFocusTextInput,
 }) {
+  const textInputRef = useRef(null)
+
+  // Auto-focus text input when triggered (e.g., double-click on text)
+  // Only depend on autoFocusTextInput - we don't want to re-select when text changes
+  useEffect(() => {
+    if (autoFocusTextInput && textInputRef.current && selectedObject?.type === 'text') {
+      textInputRef.current.focus()
+      textInputRef.current.select()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoFocusTextInput])
   // Format seconds to MM:SS for display
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60)
@@ -95,6 +108,7 @@ export default function PropertiesPanel({
           <div className="panel-section">
             <div className="section-label">Content</div>
             <textarea
+              ref={textInputRef}
               className="text-input"
               value={selectedObject.text}
               onChange={(e) => onUpdateObject(selectedObject.id, { text: e.target.value })}
@@ -108,7 +122,7 @@ export default function PropertiesPanel({
             <div className="section-label">Font</div>
             <select
               className="font-select"
-              value={selectedObject.fontFamily}
+              value={FONT_FAMILIES.some(f => f.value === selectedObject.fontFamily) ? selectedObject.fontFamily : 'Impact'}
               onChange={(e) => onUpdateObject(selectedObject.id, { fontFamily: e.target.value })}
             >
               {FONT_FAMILIES.map(({ value, label }) => (

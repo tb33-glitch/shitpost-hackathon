@@ -10,6 +10,9 @@ import rateLimit from '@fastify/rate-limit'
 import multipart from '@fastify/multipart'
 import ipfsRoutes from './routes/ipfs.js'
 import solanaRoutes from './routes/solana.js'
+import memesRoutes from './routes/memes.js'
+import scraperRoutes from './routes/scraper.js'
+import leaderboardRoutes from './routes/leaderboard.js'
 
 const PORT = process.env.PORT || 3001
 const HOST = process.env.HOST || '0.0.0.0'
@@ -21,6 +24,7 @@ const ALLOWED_ORIGINS = [
   'http://127.0.0.1:5173',
   'http://127.0.0.1:4173',
   'http://localhost:3000',
+  'http://127.0.0.1:3000',
   'https://shitpost.pro',
   'https://www.shitpost.pro',
 ]
@@ -107,6 +111,15 @@ await fastify.register(ipfsRoutes, { prefix: '/api/ipfs' })
 // Register Solana RPC proxy routes under /api/solana prefix
 await fastify.register(solanaRoutes, { prefix: '/api/solana' })
 
+// Register Meme templates routes under /api/memes prefix
+await fastify.register(memesRoutes, { prefix: '/api/memes' })
+
+// Register Scraper routes under /api/scraper prefix
+await fastify.register(scraperRoutes, { prefix: '/api/scraper' })
+
+// Register Leaderboard routes under /api/leaderboard prefix
+await fastify.register(leaderboardRoutes, { prefix: '/api/leaderboard' })
+
 // Global error handler
 fastify.setErrorHandler((error, request, reply) => {
   request.log.error(error)
@@ -150,6 +163,7 @@ const start = async () => {
     fastify.log.info(`Health check: http://${HOST}:${PORT}/api/health`)
     fastify.log.info(`IPFS endpoints: http://${HOST}:${PORT}/api/ipfs/*`)
     fastify.log.info(`Solana RPC proxy: http://${HOST}:${PORT}/api/solana/rpc`)
+    fastify.log.info(`Meme templates: http://${HOST}:${PORT}/api/memes/templates`)
   } catch (err) {
     fastify.log.error(err)
     process.exit(1)
