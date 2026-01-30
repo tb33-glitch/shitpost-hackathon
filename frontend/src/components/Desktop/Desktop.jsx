@@ -100,7 +100,7 @@ export default function Desktop() {
   const [resizeState, setResizeState] = useState(null) // { windowId, direction, startX, startY, startWidth, startHeight }
 
   const [activeWindow, setActiveWindow] = useState('shitpost')
-  const [highestZIndex, setHighestZIndex] = useState(1)
+  const [highestZIndex, setHighestZIndex] = useState(100) // Start at 100 so windows are above sticky notes
   const [bootComplete, setBootComplete] = useState(false)
   const restartOnboardingRef = useRef(null)
 
@@ -109,6 +109,7 @@ export default function Desktop() {
   const konamiIndexRef = useRef(0)
 
   // Sticky notes state - load from localStorage
+  // Use low z-index (1-50) so they stay behind windows
   const [stickyNotes, setStickyNotes] = useState(() => {
     try {
       const saved = localStorage.getItem('shitpost-sticky-notes')
@@ -117,7 +118,7 @@ export default function Desktop() {
       return []
     }
   })
-  const [stickyZIndex, setStickyZIndex] = useState(100)
+  const [stickyZIndex, setStickyZIndex] = useState(1)
 
   // Save sticky notes to localStorage
   useEffect(() => {
