@@ -7,7 +7,7 @@ const GROUND_HEIGHT = 30
 const POOP_SIZE = 28
 const GRAVITY = 0.6
 const JUMP_FORCE = -11
-const GAME_SPEED_INITIAL = 4
+const GAME_SPEED_INITIAL = 5
 
 const supabase = createClient(
   'https://rnfwvqmwyfntsxdeafvx.supabase.co',
@@ -183,8 +183,8 @@ export default function DinoGame({ isActive, onJump }) {
         .map(o => ({ ...o, x: o.x - game.gameSpeed }))
         .filter(o => o.x > -40)
 
-      if (game.frameCount - game.lastObstacle > 90 + Math.random() * 50) {
-        const type = Math.random() > 0.75 ? 'bird' : 'cactus'
+      if (game.frameCount - game.lastObstacle > 60 + Math.random() * 40) {
+        const type = Math.random() > 0.65 ? 'bird' : 'cactus'
         game.obstacles.push({
           x: GAME_WIDTH + 10,
           y: type === 'bird'
@@ -229,7 +229,7 @@ export default function DinoGame({ isActive, onJump }) {
       }
 
       game.score++
-      game.gameSpeed += 0.002
+      game.gameSpeed += 0.003
 
       forceUpdate(n => n + 1)
       animationRef.current = requestAnimationFrame(loop)
