@@ -1,35 +1,48 @@
-import { extractTwitterMedia } from './twitter'
-import { extractRedditMedia } from './reddit'
-import { extractImgurMedia } from './imgur'
-import { extractYoutubeThumb } from './youtube'
-import { extractDirectMedia } from './direct'
+/**
+ * Media Extraction API
+ * Uses backend server for extraction (no CORS issues!)
+ */
+
+const API_BASE = '/api/scraper'
 
 /**
- * Extract media from a URL based on its type
+ * Extract media from a URL via backend API
  * @param {string} url - The URL to extract media from
- * @param {string} type - The detected URL type (twitter, reddit, imgur, youtube, direct)
  * @returns {Promise<Array<{mediaUrl: string, mediaType: string, metadata: object}>>}
  */
-export async function extractMedia(url, type) {
-  switch (type) {
-    case 'twitter':
-      return extractTwitterMedia(url)
-    case 'reddit':
-      return extractRedditMedia(url)
-    case 'imgur':
-      return extractImgurMedia(url)
-    case 'youtube':
-      return extractYoutubeThumb(url)
-    case 'direct':
-      return extractDirectMedia(url)
-    default:
-      // Try direct extraction as fallback
-      return extractDirectMedia(url)
+export async function extractMedia(url) {
+  const response = await fetch(`${API_BASE}/extract`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url }),
+  })
+
+  const data = await response.json()
+
+  if (!data.success) {
+    throw new Error(data.error || 'Extraction failed')
   }
+
+  return data.media
 }
 
 /**
- * Detect the type of URL
+ * Extract media from multiple URLs via backend API
+ * @param {string[]} urls - Array of URLs to extract
+ * @returns {Promise<{total: number, success: number, failed: number, results: Array}>}
+ */
+export async function extractMediaBatch(urls) {
+  const response = await fetch(`${API_BASE}/extract-batch`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ urls }),
+  })
+
+  return await response.json()
+}
+
+/**
+ * Detect the type of URL (for display purposes)
  * @param {string} url
  * @returns {string}
  */
@@ -38,13 +51,13 @@ export function detectUrlType(url) {
     const urlObj = new URL(url)
     const hostname = urlObj.hostname.toLowerCase()
 
-    // Check for direct image CDN URLs first (before checking main domains)
+    // Direct image CDNs
     const directImageHosts = [
-      'pbs.twimg.com',      // Twitter images
-      'i.redd.it',          // Reddit images
-      'preview.redd.it',    // Reddit previews
-      'i.imgur.com',        // Imgur direct images
-      'media.giphy.com',    // Giphy
+      'pbs.twimg.com',
+      'i.redd.it',
+      'preview.redd.it',
+      'i.imgur.com',
+      'media.giphy.com',
     ]
     if (directImageHosts.some(host => hostname.includes(host))) {
       return 'direct'
@@ -66,11 +79,6 @@ export function detectUrlType(url) {
     // Check for direct image URLs by extension
     const path = urlObj.pathname.toLowerCase()
     if (/\.(jpg|jpeg|png|gif|webp|mp4|webm)(\?.*)?$/i.test(path)) {
-      return 'direct'
-    }
-
-    // Check for format query param (Twitter style)
-    if (/[?&]format=(jpg|jpeg|png|gif|webp)/i.test(url)) {
       return 'direct'
     }
 

@@ -63,6 +63,9 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
   const videoPlayback = useVideoPlayback(videoObject)
   const videoRefs = useRef({})
 
+  // Ref to hold copy function for keyboard shortcut
+  const copyToClipboardRef = useRef(null)
+
   // Video export
   const videoExport = useVideoExport()
 
@@ -204,6 +207,12 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
       if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
         e.preventDefault()
         redo()
+      }
+
+      // Ctrl+C / Cmd+C - Copy canvas with watermark
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+        e.preventDefault()
+        copyToClipboardRef.current?.()
       }
 
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && selectedId) {
@@ -514,6 +523,11 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
       }
     }, 'image/png')
   }, [renderObjectsToCanvas, videoObject, videoPlayback.currentTime])
+
+  // Keep ref updated for keyboard shortcut
+  useEffect(() => {
+    copyToClipboardRef.current = handleCopyToClipboard
+  }, [handleCopyToClipboard])
 
   const handleOpenSubmitModal = useCallback(async () => {
     // Capture current canvas state

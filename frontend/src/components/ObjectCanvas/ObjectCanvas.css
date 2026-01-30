@@ -10,12 +10,14 @@
 
 .object-canvas-main {
   display: block;
-  image-rendering: pixelated;
+  /* Use auto for smooth text rendering, or crisp-edges for sharper lines */
+  image-rendering: auto;
+  -webkit-font-smoothing: antialiased;
 }
 
 .drawing-canvas-layer {
   display: block;
-  image-rendering: pixelated;
+  image-rendering: auto;
 }
 
 /* Selection overlay */

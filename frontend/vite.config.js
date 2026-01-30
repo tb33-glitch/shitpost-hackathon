@@ -45,6 +45,14 @@ export default defineConfig({
         target: 'http://localhost:3001',
         changeOrigin: true,
       },
+      '/api/memes': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+      '/api/scraper': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
     },
   },
 })

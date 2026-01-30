@@ -359,7 +359,7 @@ legend {
 
 /* XP-style standard buttons (dialogs, modals, etc.) */
 .xp-button,
-button:not(.title-bar-controls button):not(.tool-button):not(.start-button):not(.quick-launch-btn):not(.taskbar-window-btn):not(.dookie-minimize):not(.dookie-close):not(.dookie-restore-btn):not(.mail-close):not(.mail-mute):not(.meme-tab):not(.meme-refresh-btn):not(.color-option):not(.bg-color-option) {
+button:not(.title-bar-controls button):not(.tool-button):not(.start-button):not(.quick-launch-btn):not(.taskbar-window-btn):not(.dookie-minimize):not(.dookie-close):not(.dookie-restore-btn):not(.mail-close):not(.mail-mute):not(.meme-tab):not(.meme-refresh-btn):not(.color-option):not(.bg-color-option):not(.color-btn) {
   background: linear-gradient(180deg, #FFFFFF 0%, #ECE9D8 45%, #D8D4C8 100%) !important;
   border: 1px solid #ACA899 !important;
   border-radius: 3px !important;
@@ -372,19 +372,19 @@ button:not(.title-bar-controls button):not(.tool-button):not(.start-button):not(
 }
 
 .xp-button:hover,
-button:not(.title-bar-controls button):not(.tool-button):not(.start-button):not(.quick-launch-btn):not(.taskbar-window-btn):not(.dookie-minimize):not(.dookie-close):not(.dookie-restore-btn):not(.mail-close):not(.mail-mute):not(.meme-tab):not(.meme-refresh-btn):hover {
+button:not(.title-bar-controls button):not(.tool-button):not(.start-button):not(.quick-launch-btn):not(.taskbar-window-btn):not(.dookie-minimize):not(.dookie-close):not(.dookie-restore-btn):not(.mail-close):not(.mail-mute):not(.meme-tab):not(.meme-refresh-btn):not(.color-btn):hover {
   background: linear-gradient(180deg, #FFFFFF 0%, #F5F3ED 45%, #E5E1D5 100%) !important;
   border-color: #316AC5 !important;
 }
 
 .xp-button:active,
-button:not(.title-bar-controls button):not(.tool-button):not(.start-button):not(.quick-launch-btn):not(.taskbar-window-btn):not(.dookie-minimize):not(.dookie-close):not(.dookie-restore-btn):not(.mail-close):not(.mail-mute):not(.meme-tab):not(.meme-refresh-btn):active {
+button:not(.title-bar-controls button):not(.tool-button):not(.start-button):not(.quick-launch-btn):not(.taskbar-window-btn):not(.dookie-minimize):not(.dookie-close):not(.dookie-restore-btn):not(.mail-close):not(.mail-mute):not(.meme-tab):not(.meme-refresh-btn):not(.color-btn):active {
   background: linear-gradient(180deg, #D8D4C8 0%, #ECE9D8 45%, #FFFFFF 100%) !important;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2) !important;
 }
 
 .xp-button:focus,
-button:not(.title-bar-controls button):not(.tool-button):not(.start-button):not(.quick-launch-btn):not(.taskbar-window-btn):not(.dookie-minimize):not(.dookie-close):not(.dookie-restore-btn):not(.mail-close):not(.mail-mute):not(.meme-tab):not(.meme-refresh-btn):focus {
+button:not(.title-bar-controls button):not(.tool-button):not(.start-button):not(.quick-launch-btn):not(.taskbar-window-btn):not(.dookie-minimize):not(.dookie-close):not(.dookie-restore-btn):not(.mail-close):not(.mail-mute):not(.meme-tab):not(.meme-refresh-btn):not(.color-btn):focus {
   outline: 1px dotted #000000;
   outline-offset: -4px;
 }

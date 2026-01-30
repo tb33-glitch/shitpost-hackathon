@@ -118,7 +118,7 @@ export default function SubmitTemplateModal({ isOpen, onClose, onSubmit, capture
               <div className="status-icon">+10 XP</div>
               <div className="status-title">Template Submitted!</div>
               <div className="status-subtitle">
-                Your template is now in the "Recent" tab.
+                Your template is now in the Community tab!
               </div>
               <div className="modal-buttons">
                 <button className="submit-btn" onClick={onClose}>
