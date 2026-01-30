@@ -55,14 +55,8 @@ export default function DSLanding() {
     }
   }, [state])
 
-  // Menu items for pre-launch
+  // Menu items for pre-launch (2x2 grid)
   const menuItems = [
-    {
-      icon: '💬',
-      label: 'Join Telegram',
-      description: 'Join the community.\nGet alpha.\nBe early.',
-      action: () => window.open('https://t.me/+8iOD_GrF-OFiYTJh', '_blank', 'noopener,noreferrer'),
-    },
     {
       icon: '𝕏',
       label: 'Follow X',
@@ -70,22 +64,22 @@ export default function DSLanding() {
       action: () => window.open('https://x.com/0xwasteland', '_blank', 'noopener,noreferrer'),
     },
     {
+      icon: '🎮',
+      label: 'Play Game',
+      description: 'Poop Runner!\nPress B or SPACE to jump.\nAvoid the obstacles!',
+      action: () => setState(STATES.GAME),
+    },
+    {
       icon: '💩',
       label: 'WTF is this?',
       description: 'Meme creation studio.\nMint NFTs on Solana.\nLaunching soon.',
-      action: null, // Just shows info
+      action: null,
     },
     {
       icon: '💰',
       label: '$SHITPOST',
       description: 'Fees fund perpetual buybacks.\nHolders unlock premium tools.\nGateway to sacred waste.',
-      action: null, // Just shows info
-    },
-    {
-      icon: '🎮',
-      label: 'Play Game',
-      description: 'Poop Runner!\nPress B or SPACE to jump.\nAvoid the obstacles!',
-      action: () => setState(STATES.GAME),
+      action: null,
     },
   ]
 

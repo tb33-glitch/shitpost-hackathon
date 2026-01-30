@@ -653,15 +653,10 @@
 
 .ds-menu-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   grid-template-rows: repeat(2, 1fr);
-  gap: 6px;
+  gap: 8px;
   flex: 1;
-}
-
-/* Make the 5th item (game) span center of bottom row */
-.ds-menu-item:nth-child(5) {
-  grid-column: 2;
 }
 
 .ds-menu-item {
