@@ -7,7 +7,7 @@ const GROUND_HEIGHT = 30
 const POOP_SIZE = 28
 const GRAVITY = 0.6
 const JUMP_FORCE = -11
-const GAME_SPEED_INITIAL = 3
+const GAME_SPEED_INITIAL = 4
 
 const supabase = createClient(
   'https://rnfwvqmwyfntsxdeafvx.supabase.co',
@@ -229,7 +229,7 @@ export default function DinoGame({ isActive, onJump }) {
       }
 
       game.score++
-      game.gameSpeed += 0.0008
+      game.gameSpeed += 0.002
 
       forceUpdate(n => n + 1)
       animationRef.current = requestAnimationFrame(loop)
