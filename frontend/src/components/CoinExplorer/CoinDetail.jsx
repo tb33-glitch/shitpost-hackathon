@@ -319,7 +319,7 @@ export default function CoinDetail({ coin, onBack, onMakeMeme }) {
           </div>
           <div className="chart-container">
             <iframe
-              src={`https://dexscreener.com/solana/${coin.mint}?embed=1&loadChartSettings=0&trades=0&info=0&chartLeftToolbar=0&chartTheme=light&theme=light&chartStyle=0&chartType=usd&interval=15`}
+              src={`https://dexscreener.com/solana/${coin.mint}?embed=1&loadChartSettings=0&trades=0&info=0&chartLeftToolbar=0&chartTheme=light&theme=light&chartStyle=1&chartType=mcap&interval=15`}
               title={`${coin.symbol} Chart`}
               className="chart-iframe"
               allow="clipboard-write"
