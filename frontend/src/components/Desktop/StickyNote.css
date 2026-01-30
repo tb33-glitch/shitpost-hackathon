@@ -1,0 +1,92 @@
+.sticky-note {
+  position: absolute;
+  width: 200px;
+  min-height: 180px;
+  background: linear-gradient(180deg, #ffff88 0%, #ffffa0 100%);
+  border: 1px solid #d4d400;
+  border-radius: 0 0 2px 2px;
+  box-shadow:
+    2px 2px 8px rgba(0, 0, 0, 0.3),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  display: flex;
+  flex-direction: column;
+  font-family: 'Segoe UI', 'Comic Sans MS', cursive, sans-serif;
+  user-select: none;
+}
+
+.sticky-note.dragging {
+  opacity: 0.9;
+  cursor: grabbing;
+}
+
+.sticky-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 6px;
+  background: linear-gradient(180deg, #ffee44 0%, #ffdd00 100%);
+  border-bottom: 1px solid #d4c400;
+  cursor: grab;
+}
+
+.sticky-note.dragging .sticky-header {
+  cursor: grabbing;
+}
+
+.sticky-title {
+  font-size: 11px;
+  font-weight: bold;
+  color: #665500;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.sticky-close {
+  background: transparent;
+  border: none;
+  color: #886600;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  border-radius: 2px;
+}
+
+.sticky-close:hover {
+  background: rgba(255, 0, 0, 0.2);
+  color: #cc0000;
+}
+
+.sticky-content {
+  flex: 1;
+  min-height: 140px;
+  padding: 8px;
+  border: none;
+  background: transparent;
+  resize: none;
+  font-family: 'Segoe UI', 'Comic Sans MS', cursive, sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #333;
+  outline: none;
+  cursor: text;
+  user-select: text;
+}
+
+.sticky-content::placeholder {
+  color: #998800;
+  font-style: italic;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .sticky-note {
+    width: 160px;
+    min-height: 140px;
+  }
+
+  .sticky-content {
+    min-height: 100px;
+    font-size: 12px;
+  }
+}

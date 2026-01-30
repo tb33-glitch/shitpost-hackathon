@@ -8,6 +8,7 @@ import BurnModal from './BurnModal'
 import DesktopAssistant from './DesktopAssistant'
 import BootScreen from './BootScreen'
 import BlueScreen from './BlueScreen'
+import StickyNote from './StickyNote'
 import App from '../../App'
 import useSolanaNFTs from '../../hooks/useSolanaNFTs'
 import { Window } from '../Windows98'
@@ -106,6 +107,61 @@ export default function Desktop() {
   // Blue Screen of Death easter egg
   const [showBSOD, setShowBSOD] = useState(false)
   const konamiIndexRef = useRef(0)
+
+  // Sticky notes state - load from localStorage
+  const [stickyNotes, setStickyNotes] = useState(() => {
+    try {
+      const saved = localStorage.getItem('shitpost-sticky-notes')
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
+  const [stickyZIndex, setStickyZIndex] = useState(100)
+
+  // Save sticky notes to localStorage
+  useEffect(() => {
+    localStorage.setItem('shitpost-sticky-notes', JSON.stringify(stickyNotes))
+  }, [stickyNotes])
+
+  // Create new sticky note
+  const createStickyNote = useCallback(() => {
+    const newNote = {
+      id: Date.now().toString(),
+      text: '',
+      position: {
+        x: 150 + Math.random() * 100,
+        y: 100 + Math.random() * 100,
+      },
+      zIndex: stickyZIndex + 1,
+    }
+    setStickyNotes(prev => [...prev, newNote])
+    setStickyZIndex(prev => prev + 1)
+  }, [stickyZIndex])
+
+  // Update sticky note
+  const updateStickyNote = useCallback((id, updates) => {
+    setStickyNotes(prev =>
+      prev.map(note =>
+        note.id === id ? { ...note, ...updates } : note
+      )
+    )
+  }, [])
+
+  // Delete sticky note
+  const deleteStickyNote = useCallback((id) => {
+    setStickyNotes(prev => prev.filter(note => note.id !== id))
+  }, [])
+
+  // Focus sticky note (bring to front)
+  const focusStickyNote = useCallback((id) => {
+    setStickyZIndex(prev => prev + 1)
+    setStickyNotes(prev =>
+      prev.map(note =>
+        note.id === id ? { ...note, zIndex: stickyZIndex + 1 } : note
+      )
+    )
+  }, [stickyZIndex])
 
   // Konami code detection
   useEffect(() => {
@@ -483,6 +539,12 @@ export default function Desktop() {
           isActive={showWalletModal}
         />
 
+        <DesktopIcon
+          icon="📝"
+          label="Sticky Note"
+          onClick={createStickyNote}
+        />
+
 
         {/* NFT Icons */}
         {isConnected && nfts && nfts.length > 0 && nfts.map((nft) => (
@@ -650,6 +712,20 @@ export default function Desktop() {
           </div>
         </div>
       )}
+
+      {/* Sticky Notes */}
+      {stickyNotes.map(note => (
+        <StickyNote
+          key={note.id}
+          id={note.id}
+          initialText={note.text}
+          initialPosition={note.position}
+          zIndex={note.zIndex}
+          onClose={deleteStickyNote}
+          onUpdate={updateStickyNote}
+          onFocus={() => focusStickyNote(note.id)}
+        />
+      ))}
 
       {/* Desktop Assistant (rotating characters) */}
       <DesktopAssistant
