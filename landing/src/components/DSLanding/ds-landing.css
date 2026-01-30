@@ -1041,3 +1041,267 @@
 .tag-btn.skip:hover:not(:disabled) {
   background: rgba(100,100,100,0.4);
 }
+
+/* ==========================================
+   LEADERBOARD OVERLAY
+   ========================================== */
+
+.dino-start-hint,
+.dino-leaderboard-hint {
+  font-size: 9px;
+  color: #aaa;
+  margin-top: 8px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.dino-leaderboard-hint:hover {
+  color: #ff6b00;
+}
+
+.dino-leaderboard-overlay {
+  background: rgba(0,0,0,0.85);
+}
+
+.dino-leaderboard-overlay .dino-leaderboard {
+  background: rgba(20,20,40,0.95);
+  border: 2px solid #ff6b00;
+  border-radius: 8px;
+  padding: 12px 16px;
+  min-width: 180px;
+  max-width: 220px;
+}
+
+.dino-leaderboard-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #ff6b00;
+  text-align: center;
+  margin-bottom: 10px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(255,107,0,0.5);
+}
+
+.dino-leaderboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 10px;
+  max-height: 100px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.dino-leaderboard-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.dino-leaderboard-list::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+}
+
+.dino-leaderboard-list::-webkit-scrollbar-thumb {
+  background: #ff6b00;
+  border-radius: 2px;
+}
+
+.dino-leaderboard-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 3px;
+  font-size: 10px;
+  color: #ccc;
+}
+
+.dino-leaderboard-entry.top-three {
+  background: linear-gradient(90deg, rgba(255,107,0,0.2) 0%, rgba(255,107,0,0.05) 100%);
+  border-left: 2px solid #ff6b00;
+}
+
+.dino-leaderboard-entry.top-three:first-child {
+  background: linear-gradient(90deg, rgba(255,215,0,0.25) 0%, rgba(255,215,0,0.05) 100%);
+  border-left-color: gold;
+}
+
+.dino-leaderboard-entry .lb-rank {
+  color: #888;
+  font-weight: bold;
+  min-width: 24px;
+}
+
+.dino-leaderboard-entry .lb-name {
+  flex: 1;
+  color: #fff;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0 8px;
+}
+
+.dino-leaderboard-entry .lb-score {
+  font-family: 'Courier New', monospace;
+  color: #ff6b00;
+  font-weight: bold;
+}
+
+.dino-no-scores {
+  font-size: 10px;
+  color: #666;
+  text-align: center;
+  padding: 16px 0;
+}
+
+.dino-name-input {
+  margin-bottom: 10px;
+}
+
+.dino-name-input input {
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 11px;
+  border: 1px solid #444;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.4);
+  color: #fff;
+  outline: none;
+  text-align: center;
+}
+
+.dino-name-input input:focus {
+  border-color: #ff6b00;
+  box-shadow: 0 0 6px rgba(255,107,0,0.3);
+}
+
+.dino-name-input input::placeholder {
+  color: #666;
+}
+
+.dino-leaderboard-close {
+  font-size: 9px;
+  color: #666;
+  text-align: center;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.dino-leaderboard-close:hover {
+  color: #ff6b00;
+}
+
+.dino-rank-badge {
+  font-size: 12px;
+  font-weight: bold;
+  color: #fff;
+  background: linear-gradient(135deg, #ff6b00 0%, #ff9500 100%);
+  padding: 4px 12px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  animation: badgePulse 1s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 10px rgba(255,107,0,0.5); }
+  50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(255,107,0,0.8); }
+}
+
+.dino-submitting {
+  font-size: 10px;
+  color: #aaa;
+  margin-bottom: 8px;
+  animation: blink 0.8s ease-in-out infinite;
+}
+
+.dino-submit-error {
+  font-size: 9px;
+  color: #ff6b6b;
+  margin-bottom: 8px;
+}
+
+.dino-rank-info {
+  font-size: 11px;
+  color: #aaa;
+  margin-bottom: 8px;
+}
+
+/* Initials input screen */
+.dino-initials-prompt {
+  font-size: 10px;
+  color: #ff6b00;
+  margin: 8px 0 6px;
+  letter-spacing: 1px;
+}
+
+.dino-initials-input {
+  width: 70px;
+  padding: 6px 10px;
+  font-size: 20px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 8px;
+  border: 2px solid #ff6b00;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  outline: none;
+  caret-color: #ff6b00;
+}
+
+.dino-initials-input::placeholder {
+  color: #444;
+  letter-spacing: 8px;
+}
+
+.dino-initials-input:focus {
+  border-color: #ff9500;
+  box-shadow: 0 0 10px rgba(255,107,0,0.5);
+}
+
+.dino-initials-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.dino-btn-submit,
+.dino-btn-skip {
+  padding: 5px 14px;
+  font-size: 10px;
+  font-weight: bold;
+  font-family: inherit;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dino-btn-submit {
+  background: linear-gradient(180deg, #ff6b00 0%, #cc5500 100%);
+  color: #fff;
+}
+
+.dino-btn-submit:hover:not(:disabled) {
+  background: linear-gradient(180deg, #ff8533 0%, #ff6b00 100%);
+}
+
+.dino-btn-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dino-btn-skip {
+  background: rgba(100,100,100,0.5);
+  color: #aaa;
+  border: 1px solid #555;
+}
+
+.dino-btn-skip:hover {
+  background: rgba(100,100,100,0.7);
+  color: #fff;
+}
