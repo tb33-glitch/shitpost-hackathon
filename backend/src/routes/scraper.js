@@ -5,6 +5,57 @@
  */
 
 /**
+ * SSRF Protection - Block requests to private/internal networks
+ */
+const BLOCKED_HOSTNAMES = [
+  'localhost',
+  '127.0.0.1',
+  '0.0.0.0',
+  '::1',
+  'metadata.google.internal',
+  '169.254.169.254', // AWS/GCP metadata
+]
+
+const BLOCKED_IP_RANGES = [
+  /^10\./,           // 10.0.0.0/8
+  /^172\.(1[6-9]|2[0-9]|3[0-1])\./, // 172.16.0.0/12
+  /^192\.168\./,     // 192.168.0.0/16
+  /^127\./,          // 127.0.0.0/8
+  /^0\./,            // 0.0.0.0/8
+  /^169\.254\./,     // Link-local
+  /^fc00:/i,         // IPv6 private
+  /^fe80:/i,         // IPv6 link-local
+]
+
+function isBlockedUrl(urlString) {
+  try {
+    const url = new URL(urlString)
+    const hostname = url.hostname.toLowerCase()
+
+    // Block known internal hostnames
+    if (BLOCKED_HOSTNAMES.includes(hostname)) {
+      return true
+    }
+
+    // Block private IP ranges
+    for (const pattern of BLOCKED_IP_RANGES) {
+      if (pattern.test(hostname)) {
+        return true
+      }
+    }
+
+    // Only allow http/https
+    if (!['http:', 'https:'].includes(url.protocol)) {
+      return true
+    }
+
+    return false
+  } catch {
+    return true // Invalid URLs are blocked
+  }
+}
+
+/**
  * Extract tweet ID from URL
  */
 function extractTweetId(url) {
@@ -346,8 +397,16 @@ async function extractImgurSingle(imageId) {
  * Extract from direct image URL
  */
 async function extractDirect(url) {
-  // Verify URL is accessible
-  const response = await fetch(url, { method: 'HEAD' })
+  // SSRF Protection: Block requests to private/internal networks
+  if (isBlockedUrl(url)) {
+    throw new Error('URL not allowed: private or internal network')
+  }
+
+  // Verify URL is accessible with timeout
+  const response = await fetch(url, {
+    method: 'HEAD',
+    signal: AbortSignal.timeout(5000), // 5 second timeout
+  })
 
   if (!response.ok) {
     throw new Error(`URL returned ${response.status}`)
@@ -439,6 +498,16 @@ export default async function scraperRoutes(fastify, options) {
     },
   }, async (request, reply) => {
     const { url } = request.body
+
+    // SSRF Protection: Block private/internal URLs at entry point
+    if (isBlockedUrl(url)) {
+      fastify.log.warn({ url }, 'Blocked SSRF attempt')
+      return reply.status(403).send({
+        success: false,
+        error: 'URL not allowed: private or internal network',
+      })
+    }
+
     const type = detectUrlType(url)
 
     fastify.log.info({ url, type }, 'Extracting media')

@@ -53,8 +53,13 @@ const fastify = Fastify({
 // Register CORS
 await fastify.register(cors, {
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl)
+    // In production, require origin header for security
+    // In development, allow no-origin for tools like curl
     if (!origin) {
+      if (process.env.NODE_ENV === 'production') {
+        fastify.log.warn('Blocked request with no origin in production')
+        return callback(new Error('Origin header required'), false)
+      }
       return callback(null, true)
     }
 
@@ -67,8 +72,20 @@ await fastify.register(cors, {
     return callback(new Error('Not allowed by CORS'), false)
   },
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Admin-Key'],
   credentials: true,
+})
+
+// Security headers
+fastify.addHook('onSend', (request, reply, payload, done) => {
+  reply.header('X-Content-Type-Options', 'nosniff')
+  reply.header('X-Frame-Options', 'DENY')
+  reply.header('X-XSS-Protection', '1; mode=block')
+  reply.header('Referrer-Policy', 'strict-origin-when-cross-origin')
+  if (process.env.NODE_ENV === 'production') {
+    reply.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+  }
+  done()
 })
 
 // Register global rate limiter

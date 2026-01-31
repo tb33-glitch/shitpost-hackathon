@@ -156,6 +156,86 @@ export default async function memesRoutes(fastify, options) {
     }
   })
 
+  // Proxy external images to avoid CORS issues
+  fastify.get('/proxy-image', {
+    config: {
+      rateLimit: {
+        max: 60,
+        timeWindow: '1 minute',
+      },
+    },
+    schema: {
+      querystring: {
+        type: 'object',
+        required: ['url'],
+        properties: {
+          url: { type: 'string', format: 'uri' },
+        },
+      },
+    },
+  }, async (request, reply) => {
+    const { url } = request.query
+
+    // Only allow proxying from known safe domains (exact match for security)
+    const allowedDomains = [
+      'i.imgflip.com',
+      'api.memegen.link',
+      'gateway.pinata.cloud',
+    ]
+
+    // Allowed content types for images
+    const allowedContentTypes = [
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+      'image/gif',
+      'image/webp',
+    ]
+
+    try {
+      const parsedUrl = new URL(url)
+
+      // Security: Use exact hostname match, not endsWith (prevents evil.i.imgflip.com attacks)
+      if (!allowedDomains.includes(parsedUrl.hostname)) {
+        fastify.log.warn(`Blocked proxy request for domain: ${parsedUrl.hostname}`)
+        return reply.status(403).send({ error: 'Domain not allowed' })
+      }
+
+      // Security: Only allow HTTPS in production
+      if (process.env.NODE_ENV === 'production' && parsedUrl.protocol !== 'https:') {
+        return reply.status(403).send({ error: 'HTTPS required' })
+      }
+
+      const response = await fetch(url, {
+        headers: { 'User-Agent': 'shitpost-proxy/1.0' },
+        signal: AbortSignal.timeout(10000), // 10 second timeout
+      })
+
+      if (!response.ok) {
+        return reply.status(response.status).send({ error: 'Failed to fetch image' })
+      }
+
+      const contentType = response.headers.get('content-type') || ''
+
+      // Security: Validate content type is actually an image
+      const isValidImage = allowedContentTypes.some(type => contentType.startsWith(type))
+      if (!isValidImage) {
+        fastify.log.warn(`Blocked non-image content type: ${contentType}`)
+        return reply.status(403).send({ error: 'Invalid content type' })
+      }
+
+      const buffer = await response.arrayBuffer()
+
+      return reply
+        .header('Content-Type', contentType)
+        .header('Cache-Control', 'public, max-age=86400') // Cache for 24 hours
+        .send(Buffer.from(buffer))
+    } catch (error) {
+      fastify.log.error('Image proxy error:', error)
+      return reply.status(500).send({ error: 'Failed to proxy image' })
+    }
+  })
+
   // Get image URL mappings for replacing placeholders
   fastify.get('/mappings', {
     config: {
