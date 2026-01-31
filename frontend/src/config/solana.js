@@ -1,5 +1,9 @@
 import { PublicKey, clusterApiUrl } from '@solana/web3.js'
 
+// $SHITPOST token (pump.fun)
+export const SHITPOST_TOKEN_MINT = 'FjHwh3VkCHdd6LxPXQsV2eKFX3DErzzHvxHrHtmRpump'
+export const SHITPOST_TOKEN_PUBKEY = new PublicKey(SHITPOST_TOKEN_MINT)
+
 // Treasury address for mint fees (set in .env)
 // This should be the same address that the keeper bot monitors
 const TREASURY_ADDRESS = import.meta.env.VITE_TREASURY_ADDRESS_SOLANA

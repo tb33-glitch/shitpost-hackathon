@@ -8,6 +8,7 @@ import {
   fetchKingOfTheHill,
   fetchTokenByMint,
 } from './usePumpFunAPI'
+import { SHITPOST_TOKEN_MINT } from '../config/solana'
 
 /**
  * Unified hook for fetching coins from pump.fun + DexScreener
@@ -38,7 +39,7 @@ export const SORT_OPTIONS = {
 // Pinned coins that always appear first
 // For Solana pump.fun tokens, just provide the mint address
 const PINNED_SOLANA_TOKENS = [
-  'FjHwh3VkCHdd6LxPXQsV2eKFX3DErzzHvxHrHtmRpump', // Pinned pump.fun token
+  SHITPOST_TOKEN_MINT, // $SHITPOST token
 ]
 
 // Pinned coins for EVM chains (fetched from GeckoTerminal)
