@@ -1,8 +1,10 @@
 import { useState, useCallback, useRef } from 'react'
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+
 /**
  * Hook for video export using canvas recording
- * Uses MediaRecorder for WebM export and frame-by-frame for GIF
+ * Uses MediaRecorder for WebM capture, then server-side conversion to MP4
  */
 export default function useVideoExport() {
   const [isLoading, setIsLoading] = useState(false)
@@ -10,6 +12,28 @@ export default function useVideoExport() {
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState(null)
   const cancelRef = useRef(false)
+
+  // Convert WebM to MP4 via server
+  const convertToMP4 = useCallback(async (webmBlob) => {
+    const formData = new FormData()
+    formData.append('video', webmBlob, 'video.webm')
+
+    console.log('[VideoExport] Uploading WebM for conversion...', webmBlob.size, 'bytes')
+
+    const response = await fetch(`${API_BASE_URL}/templates/convert-video`, {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Conversion failed' }))
+      throw new Error(error.error || 'Failed to convert video to MP4')
+    }
+
+    const mp4Blob = await response.blob()
+    console.log('[VideoExport] MP4 received:', mp4Blob.size, 'bytes')
+    return mp4Blob
+  }, [])
 
   /**
    * Export video as WebM using MediaRecorder with real-time playback
@@ -38,6 +62,20 @@ export default function useVideoExport() {
       canvas.width = width
       canvas.height = height
       const ctx = canvas.getContext('2d')
+
+      // Check if the video causes canvas tainting (CORS issue)
+      // Draw a frame and try to read it back
+      ctx.drawImage(videoElement, 0, 0, width, height)
+      try {
+        ctx.getImageData(0, 0, 1, 1)
+        console.log('[VideoExport] Canvas is not tainted, proceeding with export')
+      } catch (taintError) {
+        console.error('[VideoExport] Canvas is tainted by cross-origin video:', taintError)
+        throw new Error('Cannot export this video due to cross-origin restrictions. The video source does not allow recording. Try uploading the video directly or using a different source.')
+      }
+
+      // Clear and reset canvas for recording
+      ctx.clearRect(0, 0, width, height)
 
       // Try to get a stream from the canvas
       let canvasStream
@@ -104,6 +142,7 @@ export default function useVideoExport() {
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
           chunks.push(e.data)
+          console.log('[VideoExport] Data chunk received:', e.data.size, 'bytes, total chunks:', chunks.length)
         }
       }
 
@@ -117,15 +156,29 @@ export default function useVideoExport() {
         videoElement.addEventListener('seeked', onSeeked)
       })
 
-      // Start recording and playback together
+      // Start recording first
       recorder.start(100) // Collect data every 100ms
-      videoElement.play()
+      console.log('[VideoExport] MediaRecorder started')
+
+      // Try to play video - handle autoplay restrictions
+      try {
+        await videoElement.play()
+        console.log('[VideoExport] Video playback started')
+      } catch (playError) {
+        console.error('[VideoExport] Failed to start video playback:', playError)
+        recorder.stop()
+        throw new Error('Could not start video playback. Please try again.')
+      }
+
+      // Wait a moment to ensure recorder has started collecting data
+      await new Promise(r => setTimeout(r, 100))
 
       const startTime = Date.now()
 
       // Real-time render loop
       await new Promise((resolve, reject) => {
         let animFrameId = null
+        let lastDataTime = Date.now()
 
         const renderLoop = () => {
           if (cancelRef.current) {
@@ -146,9 +199,12 @@ export default function useVideoExport() {
 
           // Check if we've reached the end
           if (currentTime >= trimEnd - 0.05 || videoElement.ended) {
-            videoElement.pause()
-            cancelAnimationFrame(animFrameId)
-            resolve()
+            // Wait a bit to ensure final frames are captured
+            setTimeout(() => {
+              videoElement.pause()
+              cancelAnimationFrame(animFrameId)
+              resolve()
+            }, 200)
             return
           }
 
@@ -158,8 +214,11 @@ export default function useVideoExport() {
         // Handle video ending naturally
         const onEnded = () => {
           videoElement.removeEventListener('ended', onEnded)
-          cancelAnimationFrame(animFrameId)
-          resolve()
+          // Wait a bit to ensure final frames are captured
+          setTimeout(() => {
+            cancelAnimationFrame(animFrameId)
+            resolve()
+          }, 200)
         }
         videoElement.addEventListener('ended', onEnded)
 
@@ -168,11 +227,22 @@ export default function useVideoExport() {
           if (videoElement.currentTime >= trimEnd) {
             videoElement.removeEventListener('timeupdate', onTimeUpdate)
             videoElement.pause()
-            cancelAnimationFrame(animFrameId)
-            resolve()
+            // Wait a bit to ensure final frames are captured
+            setTimeout(() => {
+              cancelAnimationFrame(animFrameId)
+              resolve()
+            }, 200)
           }
         }
         videoElement.addEventListener('timeupdate', onTimeUpdate)
+
+        // Handle video errors
+        const onError = (e) => {
+          videoElement.removeEventListener('error', onError)
+          cancelAnimationFrame(animFrameId)
+          reject(new Error('Video playback error during export'))
+        }
+        videoElement.addEventListener('error', onError)
 
         // Start the render loop
         renderLoop()
@@ -180,37 +250,73 @@ export default function useVideoExport() {
 
       // Stop recording and wait for data
       setProgress(95)
+      console.log('[VideoExport] Stopping recorder, chunks collected:', chunks.length)
+
+      // Give a final moment for any remaining data
+      await new Promise(r => setTimeout(r, 300))
 
       const blob = await new Promise((resolve, reject) => {
         recorder.onstop = () => {
           // Restore muted state
           videoElement.muted = wasMuted
 
+          console.log('[VideoExport] Recorder stopped, final chunk count:', chunks.length)
+
           if (chunks.length === 0) {
-            reject(new Error('No video data recorded'))
+            reject(new Error('No video data recorded. Try a longer video segment or refresh the page.'))
             return
           }
           resolve(new Blob(chunks, { type: mimeType }))
         }
         recorder.onerror = (e) => {
+          console.error('[VideoExport] Recorder error:', e)
           videoElement.muted = wasMuted
-          reject(e)
+          reject(new Error('Recording failed: ' + (e.message || 'Unknown error')))
         }
-        recorder.stop()
+
+        // Only stop if still recording
+        if (recorder.state === 'recording') {
+          recorder.stop()
+        } else {
+          console.log('[VideoExport] Recorder already stopped, state:', recorder.state)
+          // Manually trigger onstop logic
+          videoElement.muted = wasMuted
+          if (chunks.length === 0) {
+            reject(new Error('No video data recorded. Try a longer video segment or refresh the page.'))
+          } else {
+            resolve(new Blob(chunks, { type: mimeType }))
+          }
+        }
       })
 
-      setProgress(100)
-      setIsExporting(false)
+      // Convert WebM to MP4 via server
+      setProgress(85)
+      console.log('[VideoExport] WebM recorded:', blob.size, 'bytes. Converting to MP4...')
 
-      console.log('[VideoExport] Export complete:', blob.size, 'bytes, hasAudio:', hasAudio)
-      return blob
+      try {
+        setProgress(90)
+        const mp4Blob = await convertToMP4(blob)
+        setProgress(100)
+        setIsExporting(false)
+
+        console.log('[VideoExport] MP4 export complete:', mp4Blob.size, 'bytes, hasAudio:', hasAudio)
+        return mp4Blob
+      } catch (conversionError) {
+        console.error('[VideoExport] Server conversion failed:', conversionError)
+        // Fall back to WebM if server conversion fails
+        console.log('[VideoExport] Falling back to WebM format')
+        setProgress(100)
+        setIsExporting(false)
+        setError('MP4 conversion failed. Downloading as WebM instead.')
+        return blob
+      }
     } catch (err) {
       console.error('Video export failed:', err)
       setError(err.message || 'Video export failed. Please try again.')
       setIsExporting(false)
       throw err
     }
-  }, [])
+  }, [convertToMP4])
 
   /**
    * Export as GIF using frame capture and gif.js-style encoding

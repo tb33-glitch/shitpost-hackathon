@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
 import { CANVAS_WIDTH, CANVAS_HEIGHT, OBJECT_TYPES } from '../../hooks/useObjectCanvas'
+import { getProxiedMediaUrl } from '../../utils/api'
 import './ObjectCanvas.css'
 
 export default function ObjectCanvas({
@@ -912,8 +913,8 @@ export default function ObjectCanvas({
               videoRefs.current[obj.id] = el
             }
           }}
-          src={obj.src}
-          crossOrigin={obj.src?.includes('.supabase.co/') ? undefined : 'anonymous'}
+          src={getProxiedMediaUrl(obj.src)}
+          crossOrigin="anonymous"
           style={{ display: 'none' }}
           muted={isMuted}
           playsInline
@@ -930,6 +931,7 @@ export default function ObjectCanvas({
           }}
           onError={(e) => {
             console.error('[ObjectCanvas] Video load error:', obj.src, e.target.error)
+            // If CORS fails, video won't load - this is expected for some external sources
           }}
         />
       ))}

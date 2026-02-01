@@ -318,6 +318,32 @@ export async function updateTemplate(id, updates) {
   return response.json()
 }
 
+/**
+ * Get a proxied URL for media files (videos/images from Supabase)
+ * This allows cross-origin media to be used in canvas without tainting
+ * @param {string} url - Original media URL
+ * @returns {string} Proxied URL or original if not from Supabase
+ */
+export function getProxiedMediaUrl(url) {
+  if (!url) return url
+
+  // Only proxy Supabase storage URLs
+  if (url.includes('.supabase.co/storage/')) {
+    return `${API_BASE_URL}/templates/media-proxy?url=${encodeURIComponent(url)}`
+  }
+
+  return url
+}
+
+/**
+ * Check if a URL is from Supabase storage
+ * @param {string} url - URL to check
+ * @returns {boolean}
+ */
+export function isSupabaseUrl(url) {
+  return url && url.includes('.supabase.co/')
+}
+
 export default {
   uploadImage,
   uploadMetadata,
@@ -332,4 +358,6 @@ export default {
   importTemplate,
   importTemplatesBatch,
   updateTemplate,
+  getProxiedMediaUrl,
+  isSupabaseUrl,
 }

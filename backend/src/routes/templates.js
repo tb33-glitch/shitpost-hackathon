@@ -747,11 +747,11 @@ export default async function templatesRoutes(fastify, options) {
         return reply.status(400).send({ error: 'Only image and video files are allowed' })
       }
 
-      // Size limits: 10MB for images, 25MB for videos
-      const maxSize = isVideo ? 25 * 1024 * 1024 : 10 * 1024 * 1024
+      // Size limits: 10MB for images, 50MB for videos
+      const maxSize = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024
       if (buffer.length > maxSize) {
         return reply.status(400).send({
-          error: `File too large (max ${isVideo ? '25MB' : '10MB'} for ${isVideo ? 'videos' : 'images'})`
+          error: `File too large (max ${isVideo ? '50MB' : '10MB'} for ${isVideo ? 'videos' : 'images'})`
         })
       }
 
@@ -829,6 +829,143 @@ export default async function templatesRoutes(fastify, options) {
         error: 'Failed to upload template',
         message: err.message,
       })
+    }
+  })
+
+  // ============================================
+  // Media Proxy - Serves media with CORS headers
+  // ============================================
+  // This allows videos from Supabase Storage to be used in canvas export
+  // without CORS issues (canvas tainting)
+  fastify.get('/media-proxy', async (request, reply) => {
+    const { url } = request.query
+
+    if (!url) {
+      return reply.status(400).send({ error: 'URL parameter required' })
+    }
+
+    // Only allow proxying from our Supabase storage
+    const supabaseUrl = process.env.SUPABASE_URL
+    if (!supabaseUrl || !url.startsWith(supabaseUrl)) {
+      return reply.status(403).send({ error: 'Only Supabase storage URLs can be proxied' })
+    }
+
+    try {
+      const response = await fetch(url)
+
+      if (!response.ok) {
+        return reply.status(response.status).send({ error: 'Failed to fetch media' })
+      }
+
+      const contentType = response.headers.get('content-type') || 'application/octet-stream'
+      const contentLength = response.headers.get('content-length')
+
+      // Set headers for proper media streaming
+      reply.header('Content-Type', contentType)
+      if (contentLength) {
+        reply.header('Content-Length', contentLength)
+      }
+      reply.header('Cache-Control', 'public, max-age=3600') // Cache for 1 hour
+      reply.header('Access-Control-Allow-Origin', '*')
+      reply.header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+
+      // Stream the response body
+      return reply.send(response.body)
+    } catch (err) {
+      fastify.log.error(err, 'Failed to proxy media')
+      return reply.status(500).send({ error: 'Failed to proxy media' })
+    }
+  })
+
+  // ============================================
+  // Video Conversion - WebM to MP4
+  // ============================================
+  fastify.post('/convert-video', async (request, reply) => {
+    const { spawn } = await import('child_process')
+    const { randomUUID } = await import('crypto')
+    const fs = await import('fs/promises')
+    const path = await import('path')
+    const os = await import('os')
+
+    let inputPath, outputPath
+
+    try {
+      const data = await request.file()
+
+      if (!data) {
+        return reply.status(400).send({ error: 'No video file provided' })
+      }
+
+      const buffer = await data.toBuffer()
+      fastify.log.info({ size: buffer.length }, 'Received video for conversion')
+
+      // Create temp files
+      const tempDir = os.tmpdir()
+      const id = randomUUID()
+      inputPath = path.join(tempDir, `input-${id}.webm`)
+      outputPath = path.join(tempDir, `output-${id}.mp4`)
+
+      // Write input file
+      await fs.writeFile(inputPath, buffer)
+
+      // Convert using FFmpeg
+      await new Promise((resolve, reject) => {
+        const ffmpeg = spawn('ffmpeg', [
+          '-i', inputPath,
+          '-c:v', 'libx264',
+          '-preset', 'fast',
+          '-crf', '23',
+          '-c:a', 'aac',
+          '-b:a', '128k',
+          '-movflags', '+faststart',
+          '-y', // Overwrite output
+          outputPath
+        ])
+
+        let stderr = ''
+        ffmpeg.stderr.on('data', (data) => {
+          stderr += data.toString()
+        })
+
+        ffmpeg.on('close', (code) => {
+          if (code === 0) {
+            resolve()
+          } else {
+            reject(new Error(`FFmpeg exited with code ${code}: ${stderr.slice(-500)}`))
+          }
+        })
+
+        ffmpeg.on('error', (err) => {
+          reject(new Error(`FFmpeg error: ${err.message}`))
+        })
+
+        // Timeout after 60 seconds
+        setTimeout(() => {
+          ffmpeg.kill()
+          reject(new Error('FFmpeg conversion timed out'))
+        }, 60000)
+      })
+
+      // Read output file
+      const mp4Buffer = await fs.readFile(outputPath)
+      fastify.log.info({ inputSize: buffer.length, outputSize: mp4Buffer.length }, 'Video conversion complete')
+
+      // Cleanup temp files
+      await fs.unlink(inputPath).catch(() => {})
+      await fs.unlink(outputPath).catch(() => {})
+
+      // Send MP4
+      reply.header('Content-Type', 'video/mp4')
+      reply.header('Content-Length', mp4Buffer.length)
+      return reply.send(mp4Buffer)
+    } catch (err) {
+      fastify.log.error(err, 'Video conversion failed')
+
+      // Cleanup on error
+      if (inputPath) await fs.unlink(inputPath).catch(() => {})
+      if (outputPath) await fs.unlink(outputPath).catch(() => {})
+
+      return reply.status(500).send({ error: 'Video conversion failed: ' + err.message })
     }
   })
 }

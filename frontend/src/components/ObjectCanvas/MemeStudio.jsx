@@ -550,7 +550,7 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
           renderFrame,
           includeAudio: options.includeAudio !== false,
         })
-        videoExport.download(blob, `shitpost-${Date.now()}.webm`)
+        videoExport.download(blob, `shitpost-${Date.now()}.mp4`)
       }
 
       setShowExportModal(false)
@@ -586,16 +586,39 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
       const ctx = canvas.getContext('2d')
 
       const videoEl = videoObject ? videoRefs.current[videoObject.id] : null
-      // Respect watermark toggle
-      const includeWatermark = showWatermark || !hasTokenAccess
-      await renderObjectsToCanvas(ctx, videoEl, videoPlayback.currentTime, includeWatermark)
+
+      // If there's a video, make sure we're at the right frame
+      if (videoEl && videoObject) {
+        // Seek to current playback time if needed
+        const targetTime = videoPlayback.currentTime
+        if (Math.abs(videoEl.currentTime - targetTime) > 0.1) {
+          videoEl.currentTime = targetTime
+          // Wait for seek to complete
+          await new Promise((resolve) => {
+            const onSeeked = () => {
+              videoEl.removeEventListener('seeked', onSeeked)
+              resolve()
+            }
+            videoEl.addEventListener('seeked', onSeeked)
+            // Timeout fallback
+            setTimeout(resolve, 500)
+          })
+        }
+      }
+
+      // Always include watermark for copy
+      await renderObjectsToCanvas(ctx, videoEl, videoPlayback.currentTime, true)
 
       canvas.toBlob(async (blob) => {
+        if (!blob) {
+          console.error('[Copy] Failed to create blob from canvas')
+          return
+        }
         try {
           await navigator.clipboard.write([
             new ClipboardItem({ 'image/png': blob })
           ])
-          // Brief visual feedback could be added here
+          console.log('[Copy] Copied to clipboard successfully')
         } catch (err) {
           console.error('Failed to copy to clipboard:', err)
           // Fallback: download instead
@@ -609,7 +632,7 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
     } catch (err) {
       console.error('[Copy] Failed to render canvas:', err)
     }
-  }, [renderObjectsToCanvas, videoObject, videoPlayback.currentTime, showWatermark, hasTokenAccess])
+  }, [renderObjectsToCanvas, videoObject, videoPlayback.currentTime])
 
   // Keep ref updated for keyboard shortcut
   useEffect(() => {
