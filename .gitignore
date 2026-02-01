@@ -26,3 +26,9 @@ npm-debug.log*
 
 # Testing
 coverage/
+
+# Solana
+contracts/solana/target/
+contracts/solana/test-ledger/
+*-keypair.json
+*.so

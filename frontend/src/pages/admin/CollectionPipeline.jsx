@@ -141,7 +141,9 @@ export function CollectionPipeline() {
 
   // Auto-sync images to template registry
   const autoSyncContent = useCallback(async (mediaItems, sourceUrl) => {
+    console.log('[autoSyncContent] Starting sync for', mediaItems.length, 'items')
     const registry = getLocalRegistry()
+    console.log('[autoSyncContent] Current registry has', registry.templates?.length || 0, 'templates')
     const existingImageUrls = new Set(registry.templates.map(t => t.imageUrl))
 
     let syncedImages = 0
@@ -186,8 +188,13 @@ export function CollectionPipeline() {
     // Reload templates cache
     if (syncedImages > 0) {
       await reloadCustomTemplates()
+      const updatedRegistry = getLocalRegistry()
+      console.log('[autoSyncContent] After sync, registry has', updatedRegistry.templates?.length || 0, 'templates')
+      console.log('[autoSyncContent] Registry contents:', updatedRegistry.templates)
       setSyncStatus(`Synced ${syncedImages} image(s) to templates`)
       setTimeout(() => setSyncStatus(null), 5000)
+    } else {
+      console.log('[autoSyncContent] No images synced (all skipped or failed)')
     }
   }, [addLog])
 

@@ -67,8 +67,27 @@ export default function MemeTemplatePicker({ onSelectTemplate, onClose }) {
       })
 
     // Load community templates
-    getCommunityTemplates().then(setCommunityTemplates)
+    getCommunityTemplates().then(templates => {
+      console.log('[MemeTemplatePicker] Loaded community templates:', templates.length, templates)
+      setCommunityTemplates(templates)
+    })
+
+    // Listen for localStorage changes (from admin panel in another tab)
+    const handleStorageChange = (e) => {
+      if (e.key === 'shitpost-template-registry') {
+        getCommunityTemplates().then(setCommunityTemplates)
+      }
+    }
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
+
+  // Reload community templates when switching to Community tab
+  useEffect(() => {
+    if (activeTab === TABS.COMMUNITY) {
+      getCommunityTemplates().then(setCommunityTemplates)
+    }
+  }, [activeTab])
 
   // Generate text zones based on box count
   function generateTextZones(boxCount) {
@@ -213,6 +232,24 @@ export default function MemeTemplatePicker({ onSelectTemplate, onClose }) {
           onClick={() => setActiveTab(TABS.COMMUNITY)}
         >
           Community ({communityTemplates.length})
+        </button>
+        <button
+          className="picker-tab"
+          style={{ background: '#f39c12', color: 'white' }}
+          onClick={() => {
+            const raw = localStorage.getItem('shitpost-template-registry')
+            const registry = raw ? JSON.parse(raw) : null
+            console.log('[DEBUG] Raw localStorage:', raw)
+            console.log('[DEBUG] Parsed registry:', registry)
+            if (registry?.templates) {
+              registry.templates.forEach((t, i) => {
+                console.log(`[DEBUG] Template ${i}:`, t.name, '| imageUrl:', t.imageUrl?.slice(0, 60) || 'undefined', '| imageCid:', t.imageCid)
+              })
+            }
+            alert(`Registry has ${registry?.templates?.length || 0} templates. Check console for details.`)
+          }}
+        >
+          Debug
         </button>
       </div>
 

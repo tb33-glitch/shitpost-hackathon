@@ -189,6 +189,7 @@ export async function syncRegistryFromIPFS() {
  * Get all community templates in a format compatible with the template picker
  */
 export async function getCommunityTemplates() {
+  console.log('[getCommunityTemplates] Starting...')
   const templates = []
 
   // Load admin-curated templates from metadata.json
@@ -218,7 +219,9 @@ export async function getCommunityTemplates() {
 
   // Also load user-submitted templates from localStorage
   const registry = getLocalRegistry()
+  console.log('[getCommunityTemplates] Registry has', registry.templates?.length || 0, 'templates')
   registry.templates.forEach((entry, index) => {
+    console.log('[getCommunityTemplates] Adding template:', entry.name, 'imageUrl:', entry.imageUrl?.slice(0, 50))
     templates.push({
       id: `community-${entry.cid}-${index}`,
       name: entry.name,
@@ -237,6 +240,7 @@ export async function getCommunityTemplates() {
     })
   })
 
+  console.log('[getCommunityTemplates] Returning', templates.length, 'total templates')
   return templates
 }
 
