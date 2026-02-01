@@ -337,30 +337,6 @@ export function keepLastNTemplates(n = 2) {
   return registry
 }
 
-// One-time cleanup: nuke everything and keep only ohio + Template
-// TODO: Remove this after running once
-;(() => {
-  console.log('[Registry] Running aggressive cleanup...')
-  // Clear IPFS sync completely
-  localStorage.removeItem('shitpost-registry-cid')
-
-  const registry = getLocalRegistry()
-  console.log('[Registry] Before cleanup:', registry.templates.map(t => t.name))
-
-  // Only keep templates submitted by wallet starting with 2f9
-  const filtered = registry.templates.filter(t => t.submittedBy?.startsWith('2f9'))
-
-  console.log('[Registry] After filter:', filtered.map(t => t.name))
-
-  // Force save the filtered registry
-  const cleanRegistry = {
-    version: '1.0',
-    lastUpdated: new Date().toISOString(),
-    templates: filtered.slice(-2) // Keep last 2 only
-  }
-  localStorage.setItem('shitpost-template-registry', JSON.stringify(cleanRegistry))
-  console.log('[Registry] Saved clean registry with', cleanRegistry.templates.length, 'templates')
-})()
 
 export default {
   uploadTemplateImage,

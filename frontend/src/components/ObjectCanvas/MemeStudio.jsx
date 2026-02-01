@@ -54,9 +54,10 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
   const [autoFocusTextInput, setAutoFocusTextInput] = useState(0) // Increment to trigger focus
 
   // Template submission
-  const { submitTemplate } = useTemplateSubmission()
+  const { submitTemplate, isSubmitting } = useTemplateSubmission()
   const [capturedCanvasBlob, setCapturedCanvasBlob] = useState(null)
   const [capturedCanvasPreview, setCapturedCanvasPreview] = useState(null)
+  const [isCapturingCanvas, setIsCapturingCanvas] = useState(false)
 
   // Video playback
   const videoObject = getVideoObject()
@@ -290,13 +291,24 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
       .map(obj => {
         return new Promise((imgResolve) => {
           const img = new Image()
-          // Only use crossOrigin for local/data URLs to avoid CORS issues with external images
-          const isExternalImage = obj.src.startsWith('http') && !obj.src.includes(window.location.host)
-          if (!isExternalImage) {
+          // Always try CORS first for http images (most CDNs/IPFS gateways support it)
+          // Data URLs and blob URLs don't need crossOrigin
+          const isDataOrBlob = obj.src.startsWith('data:') || obj.src.startsWith('blob:')
+          if (!isDataOrBlob) {
             img.crossOrigin = 'anonymous'
           }
           img.onload = () => imgResolve({ obj, img })
-          img.onerror = () => imgResolve({ obj, img: null })
+          img.onerror = () => {
+            // If CORS fails, try loading without crossOrigin (canvas will be tainted but at least renders)
+            if (img.crossOrigin) {
+              const fallbackImg = new Image()
+              fallbackImg.onload = () => imgResolve({ obj, img: fallbackImg, tainted: true })
+              fallbackImg.onerror = () => imgResolve({ obj, img: null })
+              fallbackImg.src = obj.src
+            } else {
+              imgResolve({ obj, img: null })
+            }
+          }
           img.src = obj.src
         })
       })
@@ -414,19 +426,23 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
   }, [objects, backgroundColor, drawingLayerRef, drawWatermark, hasVideo, videoObject])
 
   const handleExport = useCallback(async () => {
-    const canvas = document.createElement('canvas')
-    canvas.width = CANVAS_WIDTH
-    canvas.height = CANVAS_HEIGHT
-    const ctx = canvas.getContext('2d')
+    try {
+      const canvas = document.createElement('canvas')
+      canvas.width = CANVAS_WIDTH
+      canvas.height = CANVAS_HEIGHT
+      const ctx = canvas.getContext('2d')
 
-    const videoEl = videoObject ? videoRefs.current[videoObject.id] : null
-    await renderObjectsToCanvas(ctx, videoEl, videoPlayback.currentTime)
+      const videoEl = videoObject ? videoRefs.current[videoObject.id] : null
+      await renderObjectsToCanvas(ctx, videoEl, videoPlayback.currentTime)
 
-    const dataUrl = canvas.toDataURL('image/png')
-    const link = document.createElement('a')
-    link.download = `shitpost-${Date.now()}.png`
-    link.href = dataUrl
-    link.click()
+      const dataUrl = canvas.toDataURL('image/png')
+      const link = document.createElement('a')
+      link.download = `shitpost-${Date.now()}.png`
+      link.href = dataUrl
+      link.click()
+    } catch (err) {
+      console.error('[Export] Failed:', err)
+    }
   }, [renderObjectsToCanvas, videoObject, videoPlayback.currentTime])
 
   const handleExportVideo = useCallback(async (options) => {
@@ -498,30 +514,34 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
   }, [renderObjectsToCanvas, videoObject, videoPlayback.currentTime, onMint])
 
   const handleCopyToClipboard = useCallback(async () => {
-    const canvas = document.createElement('canvas')
-    canvas.width = CANVAS_WIDTH
-    canvas.height = CANVAS_HEIGHT
-    const ctx = canvas.getContext('2d')
+    try {
+      const canvas = document.createElement('canvas')
+      canvas.width = CANVAS_WIDTH
+      canvas.height = CANVAS_HEIGHT
+      const ctx = canvas.getContext('2d')
 
-    const videoEl = videoObject ? videoRefs.current[videoObject.id] : null
-    await renderObjectsToCanvas(ctx, videoEl, videoPlayback.currentTime)
+      const videoEl = videoObject ? videoRefs.current[videoObject.id] : null
+      await renderObjectsToCanvas(ctx, videoEl, videoPlayback.currentTime)
 
-    canvas.toBlob(async (blob) => {
-      try {
-        await navigator.clipboard.write([
-          new ClipboardItem({ 'image/png': blob })
-        ])
-        // Brief visual feedback could be added here
-      } catch (err) {
-        console.error('Failed to copy to clipboard:', err)
-        // Fallback: download instead
-        const dataUrl = canvas.toDataURL('image/png')
-        const link = document.createElement('a')
-        link.download = `shitpost-${Date.now()}.png`
-        link.href = dataUrl
-        link.click()
-      }
-    }, 'image/png')
+      canvas.toBlob(async (blob) => {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ])
+          // Brief visual feedback could be added here
+        } catch (err) {
+          console.error('Failed to copy to clipboard:', err)
+          // Fallback: download instead
+          const dataUrl = canvas.toDataURL('image/png')
+          const link = document.createElement('a')
+          link.download = `shitpost-${Date.now()}.png`
+          link.href = dataUrl
+          link.click()
+        }
+      }, 'image/png')
+    } catch (err) {
+      console.error('[Copy] Failed to render canvas:', err)
+    }
   }, [renderObjectsToCanvas, videoObject, videoPlayback.currentTime])
 
   // Keep ref updated for keyboard shortcut
@@ -530,29 +550,44 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
   }, [handleCopyToClipboard])
 
   const handleOpenSubmitModal = useCallback(async () => {
-    // Capture current canvas state
-    const canvas = document.createElement('canvas')
-    canvas.width = CANVAS_WIDTH
-    canvas.height = CANVAS_HEIGHT
-    const ctx = canvas.getContext('2d')
+    if (isCapturingCanvas || showSubmitModal) return // Prevent double-clicks
 
-    const videoEl = videoObject ? videoRefs.current[videoObject.id] : null
-    await renderObjectsToCanvas(ctx, videoEl, videoPlayback.currentTime, false) // No watermark for templates
+    setIsCapturingCanvas(true)
+    try {
+      // Capture current canvas state
+      const canvas = document.createElement('canvas')
+      canvas.width = CANVAS_WIDTH
+      canvas.height = CANVAS_HEIGHT
+      const ctx = canvas.getContext('2d')
 
-    // Convert to blob
-    canvas.toBlob((blob) => {
+      const videoEl = videoObject ? videoRefs.current[videoObject.id] : null
+      await renderObjectsToCanvas(ctx, videoEl, videoPlayback.currentTime, false) // No watermark for templates
+
+      // Convert to blob with promise wrapper for reliability
+      const blob = await new Promise((resolve) => {
+        canvas.toBlob((b) => resolve(b), 'image/png')
+      })
+
       setCapturedCanvasBlob(blob)
       setCapturedCanvasPreview(canvas.toDataURL('image/png'))
       setShowSubmitModal(true)
-    }, 'image/png')
-  }, [renderObjectsToCanvas, videoObject, videoPlayback.currentTime])
+    } catch (err) {
+      console.error('[Submit] Failed to capture canvas:', err)
+    } finally {
+      setIsCapturingCanvas(false)
+    }
+  }, [renderObjectsToCanvas, videoObject, videoPlayback.currentTime, isCapturingCanvas, showSubmitModal])
 
   const handleSubmitTemplate = async (data) => {
-    const result = await submitTemplate(data)
-    await reloadCustomTemplates()
-    setCapturedCanvasBlob(null)
-    setCapturedCanvasPreview(null)
-    return result
+    try {
+      const result = await submitTemplate(data)
+      await reloadCustomTemplates()
+      return result
+    } finally {
+      // Always clear captured data after submission attempt
+      setCapturedCanvasBlob(null)
+      setCapturedCanvasPreview(null)
+    }
   }
 
   const handleCloseSubmitModal = () => {
@@ -605,8 +640,13 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
           </button>
         </div>
         <div className="top-bar-right" data-onboarding="export-buttons">
-          <button className="top-btn submit" onClick={handleOpenSubmitModal} title="Submit canvas as template">
-            ⬆️ Submit
+          <button
+            className="top-btn submit"
+            onClick={handleOpenSubmitModal}
+            disabled={isCapturingCanvas || isSubmitting}
+            title="Submit canvas as template"
+          >
+            {isCapturingCanvas ? '...' : '⬆️ Submit'}
           </button>
           <button className="top-btn submit" onClick={handleCopyToClipboard} title="Copy to clipboard">
             📋 Copy

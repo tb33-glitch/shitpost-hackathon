@@ -9,6 +9,20 @@ const TABS = {
   COMMUNITY: 'community',
 }
 
+// Proxy external images through backend to avoid CORS issues
+function getProxiedImageUrl(url) {
+  if (!url) return url
+  // Don't proxy data URLs, blob URLs, or already-proxied URLs
+  if (url.startsWith('data:') || url.startsWith('blob:') || url.startsWith('/api/')) {
+    return url
+  }
+  // Proxy external URLs
+  if (url.startsWith('http')) {
+    return `/api/memes/proxy-image?url=${encodeURIComponent(url)}`
+  }
+  return url
+}
+
 export default function MemeTemplatePicker({ onSelectTemplate, onClose }) {
   const [activeTab, setActiveTab] = useState(TABS.ALL)
   const [searchQuery, setSearchQuery] = useState('')
@@ -113,15 +127,13 @@ export default function MemeTemplatePicker({ onSelectTemplate, onClose }) {
 
   const displayTemplates = getCurrentTemplates()
 
-  // Debug logging
-  console.log('[TemplatePicker] activeTab:', activeTab)
-  console.log('[TemplatePicker] allTemplates:', allTemplates.length)
-  console.log('[TemplatePicker] hotTemplates:', hotTemplates.length)
-  console.log('[TemplatePicker] communityTemplates:', communityTemplates.length, communityTemplates.map(t => t.name))
-  console.log('[TemplatePicker] displayTemplates:', displayTemplates.length, displayTemplates.slice(0, 5).map(t => t.name))
-
   const handleTemplateClick = (template) => {
-    onSelectTemplate(template)
+    // Proxy the image URL to avoid CORS issues when exporting
+    const proxiedTemplate = {
+      ...template,
+      image: getProxiedImageUrl(template.image),
+    }
+    onSelectTemplate(proxiedTemplate)
     onClose()
   }
 
@@ -222,9 +234,9 @@ export default function MemeTemplatePicker({ onSelectTemplate, onClose }) {
       {/* Template Grid - Larger with more items */}
       {displayTemplates.length > 0 ? (
         <div className="picker-grid">
-          {displayTemplates.map(template => (
+          {displayTemplates.map((template, index) => (
             <div
-              key={template.id}
+              key={`${template.id}-${index}`}
               className="picker-template-card"
               onClick={() => handleTemplateClick(template)}
             >

@@ -35,7 +35,7 @@ export default function useTemplateSubmission() {
       const registryEntry = {
         cid: metadataResult.cid,
         imageCid: imageResult.cid,
-        imageUrl: imageResult.isLocal ? imageResult.gateway : null, // Store data URL for local mode
+        imageUrl: imageResult.gateway || imageResult.url, // Store the gateway URL for faster loading
         name,
         category,
         submittedBy,
