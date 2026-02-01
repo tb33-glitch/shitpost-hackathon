@@ -1,46 +1,18 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
-import { LinkInput } from '../../components/Admin/LinkInput'
-import { ExtractionQueue } from '../../components/Admin/ExtractionQueue'
-import { ApprovedManager } from '../../components/Admin/ApprovedManager'
 import { ReportsManager } from '../../components/Admin/ReportsManager'
-import { CommunityManager } from '../../components/Admin/CommunityManager'
-import { addToRegistry, getLocalRegistry } from '../../utils/templateRegistry'
-import { importTemplate, importTemplatesBatch } from '../../utils/api'
+import { importTemplate, getCommunityTemplatesFromAPI, deleteTemplatesBatch, updateTemplate } from '../../utils/api'
 import { reloadCustomTemplates } from '../../config/memeTemplates'
 import '../../styles/admin.css'
 
-// Admin wallets - ONLY these addresses can access admin panel
-// Add your admin wallet public keys here
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+
+// Admin wallets
 const ADMIN_WALLETS = (import.meta.env.VITE_ADMIN_WALLETS || '')
   .split(',')
   .map(w => w.trim().toLowerCase())
   .filter(Boolean)
-
-const STORAGE_KEY = 'shitpost-admin-pipeline'
-
-// Load persisted state from localStorage
-function loadPersistedState() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved) {
-      return JSON.parse(saved)
-    }
-  } catch (e) {
-    console.error('Failed to load persisted state:', e)
-  }
-  return null
-}
-
-// Save state to localStorage
-function persistState(state) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-  } catch (e) {
-    console.error('Failed to persist state:', e)
-  }
-}
 
 export function CollectionPipeline() {
   const { publicKey, connected, signMessage } = useWallet()
@@ -49,291 +21,75 @@ export function CollectionPipeline() {
   const [authError, setAuthError] = useState('')
   const [isVerifying, setIsVerifying] = useState(false)
 
-  // Load persisted state on mount
-  const persistedState = loadPersistedState()
-
-  // Pipeline state
-  const [activeTab, setActiveTab] = useState('input') // input, queue, approved, community, reports
-  const [extractionQueue, setExtractionQueue] = useState([])
-  const [approvedItems, setApprovedItems] = useState(persistedState?.approvedItems || [])
-  const [extractionLogs, setExtractionLogs] = useState(persistedState?.logs || [])
-  const [syncStatus, setSyncStatus] = useState(null)
-
-  // Check if connected wallet is an admin
+  const [activeTab, setActiveTab] = useState('scraper')
   const walletAddress = publicKey?.toString()
   const isAdminWallet = walletAddress && ADMIN_WALLETS.includes(walletAddress.toLowerCase())
 
-  // Get pending reports count
-  const getPendingReportsCount = () => {
+  // Reports count
+  const [pendingReports, setPendingReports] = useState(() => {
     try {
       const reports = JSON.parse(localStorage.getItem('shitpost-reports') || '[]')
       return reports.filter(r => !r.status || r.status === 'pending').length
-    } catch {
-      return 0
-    }
-  }
-  const [pendingReports, setPendingReports] = useState(getPendingReportsCount)
+    } catch { return 0 }
+  })
 
-  // Refresh reports count when tab changes
   useEffect(() => {
-    if (activeTab === 'reports') {
-      setPendingReports(getPendingReportsCount())
-    }
-  }, [activeTab])
-
-  // Persist state changes
-  useEffect(() => {
-    persistState({
-      approvedItems,
-      logs: extractionLogs.slice(0, 500), // Keep last 500 logs
-    })
-  }, [approvedItems, extractionLogs])
-
-  // Reset auth when wallet disconnects
-  useEffect(() => {
-    if (!connected) {
-      setIsAuthenticated(false)
-    }
+    if (!connected) setIsAuthenticated(false)
   }, [connected])
 
-  // Verify admin access with wallet signature
   const handleVerifyAdmin = useCallback(async () => {
     if (!connected || !publicKey || !signMessage) {
       setAuthError('Please connect your wallet first')
       return
     }
-
     if (!isAdminWallet) {
       setAuthError('This wallet is not authorized for admin access')
       return
     }
-
     setIsVerifying(true)
     setAuthError('')
-
     try {
-      // Create a challenge message with timestamp to prevent replay attacks
       const timestamp = Date.now()
       const message = `shitpost.pro admin access\nWallet: ${walletAddress}\nTimestamp: ${timestamp}`
-
-      // Request signature
-      const encodedMessage = new TextEncoder().encode(message)
-      await signMessage(encodedMessage)
-
-      // Signature verified - grant access
+      await signMessage(new TextEncoder().encode(message))
       setIsAuthenticated(true)
     } catch (err) {
-      console.error('Admin verification failed:', err)
       setAuthError(err.message || 'Failed to verify wallet signature')
     } finally {
       setIsVerifying(false)
     }
   }, [connected, publicKey, signMessage, walletAddress, isAdminWallet])
 
-  // Define addLog first since other hooks depend on it
-  const addLog = useCallback((message, level = 'info') => {
-    setExtractionLogs(prev => [{
-      id: Date.now(),
-      message,
-      level,
-      timestamp: new Date().toISOString(),
-    }, ...prev].slice(0, 100)) // Keep last 100 logs
-  }, [])
-
-  // Auto-sync images to Supabase (downloads and re-uploads to Supabase Storage)
-  const autoSyncContent = useCallback(async (mediaItems, sourceUrl) => {
-    console.log('[autoSyncContent] Starting sync for', mediaItems.length, 'items to Supabase')
-
-    let syncedImages = 0
-    let failedImages = 0
-
-    // Filter to images only
-    const imageItems = mediaItems.filter(item => {
-      if (item.mediaUrl?.match(/\.(mp4|webm|mov)(\?.*)?$/i) || item.mediaType === 'video') {
-        addLog(`Skipping video: ${item.mediaUrl?.slice(0, 50)}...`)
-        return false
-      }
-      return true
-    })
-
-    if (imageItems.length === 0) {
-      addLog('No images to sync')
-      return
-    }
-
-    // Use batch import for efficiency
-    const templatesToImport = imageItems.map(item => ({
-      name: item.tags?.[0] || `template-${item.id}`,
-      sourceUrl: item.mediaUrl,
-      category: item.category || 'templates',
-      tags: item.tags || [],
-    }))
-
-    try {
-      addLog(`Importing ${templatesToImport.length} image(s) to Supabase...`)
-
-      const result = await importTemplatesBatch(templatesToImport, {
-        submittedBy: walletAddress || 'admin',
-        displayName: 'Admin',
-        isCurated: false,
-      })
-
-      syncedImages = result.imported
-      failedImages = result.failed
-
-      // Log individual results
-      result.results.forEach(r => {
-        if (r.success) {
-          addLog(`✓ Imported: ${r.name}`, 'success')
-        } else {
-          addLog(`✗ Failed: ${r.name} - ${r.error}`, 'error')
-        }
-      })
-
-      if (syncedImages > 0) {
-        // Reload templates cache to show new templates
-        await reloadCustomTemplates()
-        setSyncStatus(`Imported ${syncedImages} image(s) to Supabase Storage`)
-        setTimeout(() => setSyncStatus(null), 5000)
-      }
-
-      console.log('[autoSyncContent] Batch import complete:', { syncedImages, failedImages })
-    } catch (e) {
-      addLog(`✗ Batch import failed: ${e.message}`, 'error')
-      console.error('[autoSyncContent] Batch import error:', e)
-
-      // Fallback to localStorage if API fails
-      addLog('Falling back to localStorage...', 'warn')
-      for (const item of imageItems) {
-        try {
-          const entry = {
-            name: item.tags?.[0] || `template-${item.id}`,
-            category: item.category || 'templates',
-            imageCid: `admin-${item.id}`,
-            imageUrl: item.mediaUrl,
-            tags: item.tags || [],
-            submittedBy: walletAddress || 'admin',
-            displayName: 'Admin',
-            xp: 10,
-            submittedAt: new Date().toISOString(),
-            cid: `admin-approved-${item.id}`,
-            sourceUrl: sourceUrl,
-            isAdminApproved: true,
-          }
-          await addToRegistry(entry)
-          syncedImages++
-          addLog(`✓ Saved to localStorage: ${entry.name}`, 'success')
-        } catch (err) {
-          addLog(`✗ localStorage save failed: ${err.message}`, 'error')
-        }
-      }
-
-      if (syncedImages > 0) {
-        await reloadCustomTemplates()
-        setSyncStatus(`Saved ${syncedImages} image(s) to localStorage (API unavailable)`)
-        setTimeout(() => setSyncStatus(null), 5000)
-      }
-    }
-  }, [addLog, walletAddress])
-
-  const addToExtractionQueue = useCallback((urls) => {
-    const newItems = urls.map((url, index) => ({
-      id: `${Date.now()}-${index}`,
-      url,
-      status: 'pending',
-      type: detectUrlType(url),
-      addedAt: new Date().toISOString(),
-    }))
-    setExtractionQueue(prev => [...prev, ...newItems])
-    setActiveTab('queue')
-  }, [])
-
-  const handleExtractionComplete = useCallback(async (item, extractedMedia) => {
-    // Remove from extraction queue
-    setExtractionQueue(prev => prev.filter(i => i.id !== item.id))
-
-    // Auto-approve items directly (skip review step)
-    const approvedMedia = extractedMedia.map((media, index) => ({
-      id: `${item.id}-media-${index}`,
-      ...media,
-      sourceUrl: item.url,
-      sourceType: item.type,
-      extractedAt: new Date().toISOString(),
-      approvedAt: new Date().toISOString(),
-      status: 'approved',
-      category: 'templates',
-      tags: [],
-    }))
-    setApprovedItems(prev => [...prev, ...approvedMedia])
-
-    // Log the extraction
-    addLog(`Auto-approved ${extractedMedia.length} item(s) from ${item.url}`)
-
-    // Auto-sync images to template registry
-    await autoSyncContent(approvedMedia, item.url)
-
-    // Switch to approved tab so user can see the new items
-    setActiveTab('approved')
-  }, [addLog, autoSyncContent])
-
-  const handleExtractionError = useCallback((item, error) => {
-    setExtractionQueue(prev =>
-      prev.map(i => i.id === item.id ? { ...i, status: 'error', error: error.message } : i)
-    )
-    addLog(`Error extracting from ${item.url}: ${error.message}`, 'error')
-  }, [addLog])
-
-  // Show wallet connection / verification screen
   if (!isAuthenticated) {
     return (
       <div className="admin-login">
         <div className="admin-login-box">
           <h1>Admin Panel</h1>
           <p>Template management and content moderation</p>
-
           {ADMIN_WALLETS.length === 0 ? (
-            <div className="auth-error">
-              No admin wallets configured.<br />
-              Set VITE_ADMIN_WALLETS in your .env file.
-            </div>
+            <div className="auth-error">No admin wallets configured. Set VITE_ADMIN_WALLETS in .env</div>
           ) : !connected ? (
             <>
               <p>Connect an authorized admin wallet to continue.</p>
-              <button onClick={() => setVisible(true)}>
-                Connect Wallet
-              </button>
+              <button onClick={() => setVisible(true)}>Connect Wallet</button>
             </>
           ) : !isAdminWallet ? (
             <>
-              <p className="wallet-info">
-                Connected: {walletAddress?.slice(0, 4)}...{walletAddress?.slice(-4)}
-              </p>
-              <div className="auth-error">
-                This wallet is not authorized for admin access.
-              </div>
-              <button onClick={() => setVisible(true)}>
-                Switch Wallet
-              </button>
+              <p className="wallet-info">Connected: {walletAddress?.slice(0, 4)}...{walletAddress?.slice(-4)}</p>
+              <div className="auth-error">This wallet is not authorized for admin access.</div>
+              <button onClick={() => setVisible(true)}>Switch Wallet</button>
             </>
           ) : (
             <>
-              <p className="wallet-info">
-                Connected: {walletAddress?.slice(0, 4)}...{walletAddress?.slice(-4)}
-              </p>
+              <p className="wallet-info">Connected: {walletAddress?.slice(0, 4)}...{walletAddress?.slice(-4)}</p>
               <p>Sign a message to verify admin access.</p>
-              <button
-                onClick={handleVerifyAdmin}
-                disabled={isVerifying}
-              >
+              <button onClick={handleVerifyAdmin} disabled={isVerifying}>
                 {isVerifying ? 'Verifying...' : 'Verify Admin Access'}
               </button>
               {authError && <p className="auth-error">{authError}</p>}
             </>
           )}
-
-          <p className="back-link">
-            <a href="/">← Back to shitpost.pro</a>
-          </p>
+          <p className="back-link"><a href="/">← Back to shitpost.pro</a></p>
         </div>
       </div>
     )
@@ -344,110 +100,413 @@ export function CollectionPipeline() {
       <header className="admin-header">
         <h1>Admin Panel</h1>
         <nav className="admin-tabs">
-          <button
-            className={activeTab === 'input' ? 'active' : ''}
-            onClick={() => setActiveTab('input')}
-          >
+          <button className={activeTab === 'scraper' ? 'active' : ''} onClick={() => setActiveTab('scraper')}>
             Scraper
           </button>
-          <button
-            className={activeTab === 'queue' ? 'active' : ''}
-            onClick={() => setActiveTab('queue')}
-          >
-            Queue {extractionQueue.length > 0 && `(${extractionQueue.length})`}
-          </button>
-          <button
-            className={activeTab === 'approved' ? 'active' : ''}
-            onClick={() => setActiveTab('approved')}
-          >
-            Scraped {approvedItems.length > 0 && `(${approvedItems.length})`}
-          </button>
-          <button
-            className={activeTab === 'community' ? 'active' : ''}
-            onClick={() => setActiveTab('community')}
-          >
-            Community
+          <button className={activeTab === 'database' ? 'active' : ''} onClick={() => setActiveTab('database')}>
+            Database
           </button>
           <button
             className={activeTab === 'reports' ? 'active' : ''}
-            onClick={() => setActiveTab('reports')}
+            onClick={() => { setActiveTab('reports'); setPendingReports(0) }}
             style={pendingReports > 0 ? { background: '#dc3545', color: 'white' } : {}}
           >
             Reports {pendingReports > 0 && `(${pendingReports})`}
           </button>
         </nav>
-        <div className="admin-wallet-info">
-          {walletAddress?.slice(0, 4)}...{walletAddress?.slice(-4)}
-        </div>
+        <div className="admin-wallet-info">{walletAddress?.slice(0, 4)}...{walletAddress?.slice(-4)}</div>
         <a href="/" className="admin-back">Back to App</a>
       </header>
 
       <main className="admin-main">
-        {/* Sync status banner */}
-        {syncStatus && (
-          <div className="sync-status-banner">
-            {syncStatus}
-          </div>
-        )}
-
-        {activeTab === 'input' && (
-          <LinkInput onSubmit={addToExtractionQueue} />
-        )}
-
-        {activeTab === 'queue' && (
-          <ExtractionQueue
-            items={extractionQueue}
-            onExtractionComplete={handleExtractionComplete}
-            onExtractionError={handleExtractionError}
-            logs={extractionLogs}
-          />
-        )}
-
-        {activeTab === 'approved' && (
-          <ApprovedManager items={approvedItems} />
-        )}
-
-        {activeTab === 'community' && (
-          <CommunityManager />
-        )}
-
-        {activeTab === 'reports' && (
-          <ReportsManager />
-        )}
+        {activeTab === 'scraper' && <ScraperTab walletAddress={walletAddress} />}
+        {activeTab === 'database' && <DatabaseTab walletAddress={walletAddress} />}
+        {activeTab === 'reports' && <ReportsManager />}
       </main>
     </div>
   )
 }
 
-// URL type detection utility
-function detectUrlType(url) {
-  try {
-    const urlObj = new URL(url)
-    const hostname = urlObj.hostname.toLowerCase()
+// ===========================================
+// SCRAPER TAB - Import URLs directly to Supabase
+// ===========================================
+function ScraperTab({ walletAddress }) {
+  const [inputValue, setInputValue] = useState('')
+  const [isImporting, setIsImporting] = useState(false)
+  const [results, setResults] = useState([])
+  const [stats, setStats] = useState({ success: 0, failed: 0 })
 
-    if (hostname.includes('twitter.com') || hostname.includes('x.com')) {
-      return 'twitter'
-    }
-    if (hostname.includes('reddit.com') || hostname.includes('redd.it')) {
-      return 'reddit'
-    }
-    if (hostname.includes('imgur.com') || hostname.includes('i.imgur.com')) {
-      return 'imgur'
-    }
-    if (hostname.includes('youtube.com') || hostname.includes('youtu.be')) {
-      return 'youtube'
+  const parsedUrls = inputValue
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => {
+      try { new URL(line); return true } catch { return false }
+    })
+
+  const handleImport = async () => {
+    if (parsedUrls.length === 0) return
+
+    setIsImporting(true)
+    setResults([])
+    setStats({ success: 0, failed: 0 })
+
+    let success = 0
+    let failed = 0
+
+    for (const url of parsedUrls) {
+      try {
+        // First extract media from URL via scraper
+        const extractRes = await fetch(`${API_BASE_URL}/scraper/extract`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url }),
+        })
+
+        if (!extractRes.ok) throw new Error('Failed to extract')
+        const extractData = await extractRes.json()
+
+        if (!extractData.media || extractData.media.length === 0) {
+          throw new Error('No media found')
+        }
+
+        // Import each media item to Supabase
+        for (const media of extractData.media) {
+          if (media.mediaType === 'video') {
+            setResults(prev => [...prev, { url: media.mediaUrl, status: 'skipped', message: 'Video skipped' }])
+            continue
+          }
+
+          try {
+            const result = await importTemplate({
+              name: media.metadata?.title || `Import ${Date.now()}`,
+              sourceUrl: media.mediaUrl,
+              category: 'templates',
+              tags: [],
+              submittedBy: walletAddress || 'admin',
+              displayName: 'Admin',
+            })
+
+            setResults(prev => [...prev, {
+              url: media.mediaUrl,
+              status: 'success',
+              message: 'Imported to Supabase',
+              imageUrl: result.template?.image_url
+            }])
+            success++
+          } catch (err) {
+            setResults(prev => [...prev, { url: media.mediaUrl, status: 'error', message: err.message }])
+            failed++
+          }
+        }
+      } catch (err) {
+        setResults(prev => [...prev, { url, status: 'error', message: err.message }])
+        failed++
+      }
+
+      setStats({ success, failed })
     }
 
-    // Check for direct image URLs
-    const path = urlObj.pathname.toLowerCase()
-    if (/\.(jpg|jpeg|png|gif|webp|mp4|webm)(\?.*)?$/i.test(path)) {
-      return 'direct'
-    }
-
-    return 'unknown'
-  } catch {
-    return 'invalid'
+    setIsImporting(false)
+    setInputValue('')
+    await reloadCustomTemplates()
   }
+
+  return (
+    <div className="scraper-tab">
+      <div className="scraper-input-section">
+        <h2>Import URLs to Supabase</h2>
+        <p>Paste URLs (one per line) → Images are downloaded and stored permanently in Supabase</p>
+
+        <textarea
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          placeholder="https://x.com/user/status/123456789
+https://reddit.com/r/memes/comments/abc123
+https://i.imgur.com/xyz.jpg
+https://pbs.twimg.com/media/abc.jpg"
+          disabled={isImporting}
+          rows={6}
+        />
+
+        <div className="scraper-actions">
+          <button
+            onClick={handleImport}
+            disabled={parsedUrls.length === 0 || isImporting}
+            className="primary-btn"
+          >
+            {isImporting ? 'Importing...' : `Import ${parsedUrls.length} URL${parsedUrls.length !== 1 ? 's' : ''}`}
+          </button>
+          <button onClick={() => setInputValue('')} disabled={!inputValue || isImporting} className="secondary-btn">
+            Clear
+          </button>
+          <span className="url-count">{parsedUrls.length} valid URLs</span>
+        </div>
+
+        <div className="supported-sources">
+          <span className="badge success">Reddit</span>
+          <span className="badge success">Imgur</span>
+          <span className="badge success">Direct URLs</span>
+          <span className="badge warning">Twitter (copy image URL)</span>
+        </div>
+      </div>
+
+      {results.length > 0 && (
+        <div className="import-results">
+          <h3>Import Results ({stats.success} success, {stats.failed} failed)</h3>
+          <div className="results-list">
+            {results.map((r, i) => (
+              <div key={i} className={`result-item ${r.status}`}>
+                <span className="result-status">
+                  {r.status === 'success' ? '✓' : r.status === 'skipped' ? '⏭' : '✗'}
+                </span>
+                <span className="result-url">{r.url.slice(0, 60)}...</span>
+                <span className="result-message">{r.message}</span>
+                {r.imageUrl && (
+                  <img src={r.imageUrl} alt="" className="result-preview" />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ===========================================
+// DATABASE TAB - View/manage Supabase templates
+// ===========================================
+function DatabaseTab({ walletAddress }) {
+  const [templates, setTemplates] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedIds, setSelectedIds] = useState(new Set())
+  const [status, setStatus] = useState(null)
+  const [editingTemplate, setEditingTemplate] = useState(null)
+  const [editName, setEditName] = useState('')
+  const fileInputRef = useRef(null)
+
+  const loadTemplates = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const data = await getCommunityTemplatesFromAPI()
+      setTemplates(data.templates || [])
+    } catch (err) {
+      setStatus({ type: 'error', message: `Failed to load: ${err.message}` })
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { loadTemplates() }, [loadTemplates])
+
+  const filteredTemplates = templates.filter(t => {
+    if (!searchTerm) return true
+    const search = searchTerm.toLowerCase()
+    return t.name?.toLowerCase().includes(search) ||
+           t.tags?.some(tag => tag.toLowerCase().includes(search))
+  })
+
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) return
+    if (!confirm(`Delete ${selectedIds.size} template(s)? This will also remove images from storage.`)) return
+
+    setStatus({ type: 'info', message: 'Deleting...' })
+
+    try {
+      const result = await deleteTemplatesBatch(Array.from(selectedIds))
+      setStatus({ type: 'success', message: `Deleted ${result.deleted} template(s)${result.failed > 0 ? `, ${result.failed} failed` : ''}` })
+    } catch (err) {
+      setStatus({ type: 'error', message: `Delete failed: ${err.message}` })
+    }
+
+    setSelectedIds(new Set())
+    await loadTemplates()
+    await reloadCustomTemplates()
+  }
+
+  const handleEditTemplate = (template) => {
+    setEditingTemplate(template)
+    setEditName(template.name)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingTemplate || !editName.trim()) return
+
+    setStatus({ type: 'info', message: 'Saving...' })
+    try {
+      await updateTemplate(editingTemplate.id, { name: editName.trim() })
+      setStatus({ type: 'success', message: 'Template renamed' })
+      setEditingTemplate(null)
+      await loadTemplates()
+      await reloadCustomTemplates()
+    } catch (err) {
+      setStatus({ type: 'error', message: `Failed to rename: ${err.message}` })
+    }
+  }
+
+  const handleManualUpload = async (e) => {
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
+
+    setStatus({ type: 'info', message: `Uploading ${files.length} file(s)...` })
+    let uploaded = 0
+
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) continue
+
+      try {
+        const formData = new FormData()
+        formData.append('file', file, file.name)
+
+        // Direct upload to Supabase via templates/upload endpoint
+        const name = file.name.replace(/\.[^.]+$/, '')
+        const uploadRes = await fetch(
+          `${API_BASE_URL}/templates/upload?name=${encodeURIComponent(name)}&submitted_by=${encodeURIComponent(walletAddress || 'admin')}&display_name=Admin`,
+          {
+            method: 'POST',
+            body: formData,
+          }
+        )
+
+        if (!uploadRes.ok) {
+          const err = await uploadRes.json().catch(() => ({}))
+          throw new Error(err.message || err.error || 'Upload failed')
+        }
+
+        uploaded++
+      } catch (err) {
+        console.error('Upload failed:', file.name, err)
+        setStatus({ type: 'error', message: `Failed: ${file.name} - ${err.message}` })
+      }
+    }
+
+    if (uploaded > 0) {
+      setStatus({ type: 'success', message: `Uploaded ${uploaded} file(s)` })
+    }
+    e.target.value = ''
+    await loadTemplates()
+    await reloadCustomTemplates()
+  }
+
+  return (
+    <div className="database-tab">
+      <div className="database-header">
+        <h2>Supabase Templates ({templates.length})</h2>
+        <div className="database-actions">
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
+          <button onClick={() => fileInputRef.current?.click()} className="primary-btn">
+            Upload Images
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleManualUpload}
+            style={{ display: 'none' }}
+          />
+          <button onClick={loadTemplates} disabled={isLoading} className="secondary-btn">
+            {isLoading ? 'Loading...' : 'Refresh'}
+          </button>
+          <button
+            onClick={handleDeleteSelected}
+            disabled={selectedIds.size === 0}
+            className="danger-btn"
+          >
+            Delete ({selectedIds.size})
+          </button>
+        </div>
+      </div>
+
+      {status && (
+        <div className={`status-banner ${status.type}`}>
+          {status.message}
+          <button onClick={() => setStatus(null)}>×</button>
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="loading">Loading templates...</div>
+      ) : templates.length === 0 ? (
+        <div className="empty-state">
+          <p>No templates in database</p>
+          <p>Use the Scraper tab to import templates</p>
+        </div>
+      ) : (
+        <div className="template-grid">
+          {filteredTemplates.map(t => (
+            <div
+              key={t.id}
+              className={`template-card ${selectedIds.has(t.id) ? 'selected' : ''}`}
+              onClick={() => toggleSelect(t.id)}
+            >
+              <div className="template-checkbox">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(t.id)}
+                  onChange={() => toggleSelect(t.id)}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+              <button
+                className="template-edit-btn"
+                onClick={(e) => { e.stopPropagation(); handleEditTemplate(t) }}
+                title="Edit name"
+              >
+                ✏️
+              </button>
+              <img src={t.image_url} alt={t.name} />
+              <div className="template-info">
+                <div className="template-name">{t.name}</div>
+                <div className="template-meta">
+                  {t.source_type === 'migration' && <span className="badge curated">Curated</span>}
+                  {t.source_type === 'scraper' && <span className="badge scraped">Scraped</span>}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {editingTemplate && (
+        <div className="edit-modal-overlay" onClick={() => setEditingTemplate(null)}>
+          <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Edit Template</h3>
+            <img src={editingTemplate.image_url} alt={editingTemplate.name} className="edit-preview" />
+            <label>
+              Name:
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSaveEdit()}
+                autoFocus
+              />
+            </label>
+            <div className="edit-modal-actions">
+              <button onClick={() => setEditingTemplate(null)} className="secondary-btn">Cancel</button>
+              <button onClick={handleSaveEdit} className="primary-btn" disabled={!editName.trim()}>Save</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default CollectionPipeline

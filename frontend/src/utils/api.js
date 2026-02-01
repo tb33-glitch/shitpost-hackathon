@@ -195,20 +195,38 @@ export async function getTemplateLeaderboard() {
 /**
  * Delete a template (admin only)
  * @param {string} id - Template ID to delete
- * @param {string} adminKey - Admin key for authentication
  * @returns {Promise<{success: boolean}>}
  */
-export async function deleteTemplate(id, adminKey) {
+export async function deleteTemplate(id) {
   const response = await fetch(`${API_BASE_URL}/templates/${id}`, {
     method: 'DELETE',
-    headers: {
-      'X-Admin-Key': adminKey,
-    },
   })
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Failed to delete template' }))
     throw new Error(error.error || `Failed to delete template (${response.status})`)
+  }
+
+  return response.json()
+}
+
+/**
+ * Batch delete templates
+ * @param {Array<string>} ids - Template IDs to delete
+ * @returns {Promise<{success: boolean, deleted: number, failed: number}>}
+ */
+export async function deleteTemplatesBatch(ids) {
+  const response = await fetch(`${API_BASE_URL}/templates/delete-batch`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ ids }),
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Failed to delete templates' }))
+    throw new Error(error.error || `Failed to delete templates (${response.status})`)
   }
 
   return response.json()
@@ -277,6 +295,29 @@ export async function importTemplatesBatch(templates, options = {}) {
   return response.json()
 }
 
+/**
+ * Update a template's metadata (name, category, tags)
+ * @param {string} id - Template ID to update
+ * @param {object} updates - Fields to update
+ * @returns {Promise<{success: boolean, template: object}>}
+ */
+export async function updateTemplate(id, updates) {
+  const response = await fetch(`${API_BASE_URL}/templates/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(updates),
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Failed to update template' }))
+    throw new Error(error.error || `Failed to update template (${response.status})`)
+  }
+
+  return response.json()
+}
+
 export default {
   uploadImage,
   uploadMetadata,
@@ -287,6 +328,8 @@ export default {
   submitCommunityTemplate,
   getTemplateLeaderboard,
   deleteTemplate,
+  deleteTemplatesBatch,
   importTemplate,
   importTemplatesBatch,
+  updateTemplate,
 }

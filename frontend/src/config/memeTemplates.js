@@ -518,7 +518,8 @@ export const getTemplateById = (id) => {
   return MEME_TEMPLATES.find(t => t.id === id)
 }
 
-// Load custom templates from admin-saved metadata.json and community registry
+// Load custom templates from local metadata.json and localStorage registry
+// Note: Supabase templates are loaded via templateRegistry.js getCommunityTemplates()
 let customTemplates = []
 let customTemplatesLoaded = false
 
@@ -527,7 +528,7 @@ export const loadCustomTemplates = async () => {
 
   const loaded = []
 
-  // Load from local metadata.json first (admin-curated templates)
+  // Load from local metadata.json (for local dev assets)
   try {
     const response = await fetch('/templates/metadata.json')
     if (response.ok) {
@@ -594,13 +595,11 @@ export const loadCustomTemplates = async () => {
     // Admin templates not found - expected in dev
   }
 
-  // Load community-submitted templates from localStorage registry
+  // Load community-submitted templates from localStorage registry (legacy support)
   try {
     const registryData = localStorage.getItem('shitpost-template-registry')
-    console.log('[TemplatePicker] Registry data:', registryData ? 'found' : 'not found')
     if (registryData) {
       const registry = JSON.parse(registryData)
-      console.log('[TemplatePicker] Registry templates count:', registry.templates?.length || 0)
       const PINATA_GATEWAY = import.meta.env.VITE_PINATA_GATEWAY || 'gateway.pinata.cloud'
 
       if (registry.templates && Array.isArray(registry.templates)) {
@@ -612,22 +611,16 @@ export const loadCustomTemplates = async () => {
 
           // Skip templates with 3+ downvotes (net score of -3 or worse)
           if (netVotes <= -3) {
-            console.log('[TemplatePicker] Skipping downvoted template:', entry.name)
             return
           }
 
           // Handle both IPFS URLs and local data URLs
           let imageUrl
           if (entry.imageUrl) {
-            // Local mode - data URL stored directly
             imageUrl = entry.imageUrl
-            console.log('[TemplatePicker] Loading template with imageUrl:', entry.name)
           } else if (entry.imageCid?.startsWith('local-')) {
-            // Legacy local mode - skip broken entries
-            console.log('[TemplatePicker] Skipping legacy local template:', entry.name)
             return
           } else {
-            // IPFS mode
             imageUrl = `https://${PINATA_GATEWAY}/ipfs/${entry.imageCid}`
           }
 
@@ -682,12 +675,9 @@ function getDefaultTextZonesForCategory(category) {
 
 // Force reload of custom templates
 export const reloadCustomTemplates = async () => {
-  console.log('[reloadCustomTemplates] Resetting cache, localStorage:', localStorage.getItem('shitpost-template-registry')?.slice(0, 100) || 'EMPTY')
   customTemplatesLoaded = false
   customTemplates = []
-  const result = await loadCustomTemplates()
-  console.log('[reloadCustomTemplates] Loaded', result.length, 'templates')
-  return result
+  return await loadCustomTemplates()
 }
 
 // Get all templates including custom ones

@@ -53,6 +53,10 @@ export default defineConfig({
         target: 'http://localhost:3001',
         changeOrigin: true,
       },
+      '/api/templates': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
     },
   },
 })

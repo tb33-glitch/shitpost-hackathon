@@ -484,7 +484,7 @@ export default async function templatesRoutes(fastify, options) {
     }
   })
 
-  // Admin: Update template status
+  // Admin: Update template (name, category, tags)
   fastify.patch('/:id', {
     config: {
       rateLimit: {
@@ -492,20 +492,31 @@ export default async function templatesRoutes(fastify, options) {
         timeWindow: '1 minute',
       },
     },
+    schema: {
+      body: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', minLength: 1, maxLength: 100 },
+          category: { type: 'string', maxLength: 50 },
+          tags: { type: 'array', items: { type: 'string' } },
+          status: { type: 'string', enum: ['pending', 'approved', 'rejected'] },
+        },
+      },
+    },
   }, async (request, reply) => {
     const db = getSupabase()
     const { id } = request.params
-    const adminKey = request.headers['x-admin-key']
-
-    if (adminKey !== process.env.ADMIN_KEY) {
-      return reply.status(403).send({ error: 'Unauthorized' })
-    }
 
     if (!db) {
       return reply.status(503).send({ error: 'Database not configured' })
     }
 
     const { status, name, category, tags } = request.body
+
+    // Require at least one field to update
+    if (!status && !name && !category && !tags) {
+      return reply.status(400).send({ error: 'No fields to update' })
+    }
 
     try {
       const updates = {}
@@ -524,6 +535,7 @@ export default async function templatesRoutes(fastify, options) {
 
       if (error) throw error
 
+      fastify.log.info({ id, updates }, 'Template updated')
       return { success: true, template: data }
     } catch (err) {
       fastify.log.error(err, 'Failed to update template')
@@ -531,28 +543,48 @@ export default async function templatesRoutes(fastify, options) {
     }
   })
 
-  // Admin: Delete template
+  // Admin: Delete template (also removes from storage)
   fastify.delete('/:id', {
     config: {
       rateLimit: {
-        max: 10,
+        max: 30,
         timeWindow: '1 minute',
       },
     },
   }, async (request, reply) => {
     const db = getSupabase()
     const { id } = request.params
-    const adminKey = request.headers['x-admin-key']
-
-    if (adminKey !== process.env.ADMIN_KEY) {
-      return reply.status(403).send({ error: 'Unauthorized' })
-    }
 
     if (!db) {
       return reply.status(503).send({ error: 'Database not configured' })
     }
 
     try {
+      // First, get the template to find storage_path
+      const { data: template, error: fetchError } = await db
+        .from('community_templates')
+        .select('storage_path')
+        .eq('id', id)
+        .single()
+
+      if (fetchError) {
+        fastify.log.warn({ id, error: fetchError }, 'Template not found')
+      }
+
+      // Delete from Supabase Storage if storage_path exists
+      if (template?.storage_path) {
+        const { error: storageError } = await db.storage
+          .from('templates')
+          .remove([template.storage_path])
+
+        if (storageError) {
+          fastify.log.warn({ id, path: template.storage_path, error: storageError }, 'Failed to delete from storage')
+        } else {
+          fastify.log.info({ path: template.storage_path }, 'Deleted from storage')
+        }
+      }
+
+      // Delete from database
       const { error } = await db
         .from('community_templates')
         .delete()
@@ -566,6 +598,66 @@ export default async function templatesRoutes(fastify, options) {
       fastify.log.error(err, 'Failed to delete template')
       return reply.status(500).send({ error: 'Failed to delete template' })
     }
+  })
+
+  // Batch delete templates
+  fastify.post('/delete-batch', {
+    config: {
+      rateLimit: {
+        max: 10,
+        timeWindow: '1 minute',
+      },
+    },
+    schema: {
+      body: {
+        type: 'object',
+        required: ['ids'],
+        properties: {
+          ids: { type: 'array', items: { type: 'string' }, maxItems: 50 },
+        },
+      },
+    },
+  }, async (request, reply) => {
+    const db = getSupabase()
+    const { ids } = request.body
+
+    if (!db) {
+      return reply.status(503).send({ error: 'Database not configured' })
+    }
+
+    let deleted = 0
+    let failed = 0
+
+    for (const id of ids) {
+      try {
+        // Get storage path
+        const { data: template } = await db
+          .from('community_templates')
+          .select('storage_path')
+          .eq('id', id)
+          .single()
+
+        // Delete from storage
+        if (template?.storage_path) {
+          await db.storage.from('templates').remove([template.storage_path])
+        }
+
+        // Delete from database
+        const { error } = await db
+          .from('community_templates')
+          .delete()
+          .eq('id', id)
+
+        if (error) throw error
+        deleted++
+      } catch (err) {
+        fastify.log.error({ id, error: err }, 'Failed to delete template')
+        failed++
+      }
+    }
+
+    fastify.log.info({ deleted, failed }, 'Batch delete complete')
+    return { success: true, deleted, failed }
   })
 
   // Get XP leaderboard
@@ -619,6 +711,110 @@ export default async function templatesRoutes(fastify, options) {
     } catch (err) {
       fastify.log.error(err, 'Failed to fetch leaderboard')
       return reply.status(500).send({ error: 'Failed to fetch leaderboard' })
+    }
+  })
+
+  // Direct file upload to Supabase Storage
+  fastify.post('/upload', {
+    config: {
+      rateLimit: {
+        max: 20,
+        timeWindow: '1 minute',
+      },
+    },
+  }, async (request, reply) => {
+    const db = getSupabase()
+
+    if (!db) {
+      return reply.status(503).send({ error: 'Database not configured' })
+    }
+
+    try {
+      const data = await request.file()
+
+      if (!data) {
+        return reply.status(400).send({ error: 'No file uploaded' })
+      }
+
+      const buffer = await data.toBuffer()
+      const contentType = data.mimetype || 'image/jpeg'
+
+      // Validate it's an image
+      if (!contentType.startsWith('image/')) {
+        return reply.status(400).send({ error: 'Only image files are allowed' })
+      }
+
+      // Check file size (max 10MB)
+      if (buffer.length > 10 * 1024 * 1024) {
+        return reply.status(400).send({ error: 'Image too large (max 10MB)' })
+      }
+
+      // Get extension from mimetype
+      let ext = 'jpeg'
+      if (contentType.includes('png')) ext = 'png'
+      else if (contentType.includes('gif')) ext = 'gif'
+      else if (contentType.includes('webp')) ext = 'webp'
+
+      // Generate unique filename
+      const filename = `${randomUUID()}.${ext}`
+      const storagePath = `uploads/${filename}`
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await db.storage
+        .from('templates')
+        .upload(storagePath, buffer, {
+          contentType,
+          upsert: false,
+        })
+
+      if (uploadError) {
+        throw new Error(`Storage upload failed: ${uploadError.message}`)
+      }
+
+      // Get public URL
+      const { data: urlData } = db.storage
+        .from('templates')
+        .getPublicUrl(storagePath)
+
+      // Parse name from filename or use query param
+      const originalName = data.filename || 'Untitled'
+      const name = request.query.name || originalName.replace(/\.[^.]+$/, '')
+      const submittedBy = request.query.submitted_by || 'admin'
+      const displayName = request.query.display_name || 'Admin'
+
+      // Save to database
+      const { data: template, error: dbError } = await db
+        .from('community_templates')
+        .insert({
+          name,
+          image_url: urlData.publicUrl,
+          storage_path: storagePath,
+          category: 'templates',
+          tags: [],
+          submitted_by: submittedBy,
+          display_name: displayName,
+          source_type: 'upload',
+          status: 'approved',
+          xp: 10,
+        })
+        .select()
+        .single()
+
+      if (dbError) throw dbError
+
+      fastify.log.info({ id: template.id, name, storagePath }, 'Template uploaded directly')
+
+      return {
+        success: true,
+        template,
+        message: 'Template uploaded successfully',
+      }
+    } catch (err) {
+      fastify.log.error(err, 'Failed to upload template')
+      return reply.status(500).send({
+        error: 'Failed to upload template',
+        message: err.message,
+      })
     }
   })
 }

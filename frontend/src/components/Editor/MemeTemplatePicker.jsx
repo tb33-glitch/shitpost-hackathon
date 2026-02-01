@@ -16,7 +16,11 @@ function getProxiedImageUrl(url) {
   if (url.startsWith('data:') || url.startsWith('blob:') || url.startsWith('/api/')) {
     return url
   }
-  // Proxy external URLs
+  // Don't proxy Supabase URLs - they have CORS enabled
+  if (url.includes('.supabase.co/')) {
+    return url
+  }
+  // Proxy other external URLs
   if (url.startsWith('http')) {
     return `/api/memes/proxy-image?url=${encodeURIComponent(url)}`
   }
@@ -294,11 +298,6 @@ export default function MemeTemplatePicker({ onSelectTemplate, onClose }) {
                 </div>
               </div>
               <div className="template-name">{template.name}</div>
-              {template.isCommunity && template.submittedBy && (
-                <div className="template-submitter">
-                  by {template.displayName || `${template.submittedBy.slice(0, 4)}...`}
-                </div>
-              )}
             </div>
           ))}
         </div>

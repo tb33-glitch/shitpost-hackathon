@@ -187,60 +187,39 @@ export async function syncRegistryFromIPFS() {
 
 /**
  * Get all community templates in a format compatible with the template picker
+ * Primary source: Supabase API (all templates should be there now)
  */
 export async function getCommunityTemplates() {
-  console.log('[getCommunityTemplates] Starting...')
   const templates = []
 
-  // Load admin-curated templates from metadata.json
+  // Load from Supabase API (primary and only source for community templates)
   try {
-    const response = await fetch('/templates/metadata.json')
-    if (response.ok) {
-      const metadata = await response.json()
-      if (metadata.templates) {
-        metadata.templates.forEach((item, index) => {
-          templates.push({
-            id: `admin-template-${index}`,
-            name: item.name || item.file.replace(/\.[^.]+$/, ''),
-            category: 'community',
-            image: `/templates/templates/${item.file}`,
-            aspectRatio: 1,
-            textZones: getDefaultTextZones('templates'),
-            tags: item.tags || [],
-            isCustom: true,
-            isCommunity: true,
-          })
+    const data = await api.getCommunityTemplatesFromAPI()
+
+    if (data.templates && Array.isArray(data.templates)) {
+      data.templates.forEach((t) => {
+        templates.push({
+          id: `supabase-${t.id}`,
+          name: t.name,
+          category: 'community',
+          image: t.image_url,
+          aspectRatio: 1,
+          textZones: getDefaultTextZones(t.category || 'templates'),
+          tags: t.tags || [],
+          isCustom: true,
+          isCommunity: true,
+          submittedBy: t.submitted_by,
+          displayName: t.display_name,
+          xp: t.xp || 10,
+          submittedAt: t.created_at,
+          sourceType: t.source_type,
         })
-      }
+      })
     }
   } catch (e) {
-    console.warn('[getCommunityTemplates] Failed to load metadata.json:', e)
+    console.warn('[getCommunityTemplates] Failed to load from Supabase:', e.message)
   }
 
-  // Also load user-submitted templates from localStorage
-  const registry = getLocalRegistry()
-  console.log('[getCommunityTemplates] Registry has', registry.templates?.length || 0, 'templates')
-  registry.templates.forEach((entry, index) => {
-    console.log('[getCommunityTemplates] Adding template:', entry.name, 'imageUrl:', entry.imageUrl?.slice(0, 50))
-    templates.push({
-      id: `community-${entry.cid}-${index}`,
-      name: entry.name,
-      category: entry.category === 'templates' ? 'community' : entry.category,
-      image: entry.imageUrl || (entry.imageCid?.startsWith('local-') ? entry.imageCid : `https://${PINATA_GATEWAY}/ipfs/${entry.imageCid}`),
-      aspectRatio: 1,
-      textZones: getDefaultTextZones(entry.category),
-      tags: entry.tags || [],
-      isCustom: true,
-      isCommunity: true,
-      submittedBy: entry.submittedBy,
-      displayName: entry.displayName,
-      xp: entry.xp,
-      submittedAt: entry.submittedAt,
-      cid: entry.cid,
-    })
-  })
-
-  console.log('[getCommunityTemplates] Returning', templates.length, 'total templates')
   return templates
 }
 
