@@ -27,14 +27,29 @@ export default function useBackgroundRemoval() {
       } else if (imageSrc.startsWith('blob:')) {
         const response = await fetch(imageSrc)
         imageBlob = await response.blob()
-      } else {
-        // Fetch external URL via CORS proxy
-        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(imageSrc)}`
-        const response = await fetch(proxyUrl)
+      } else if (imageSrc.startsWith('/') || imageSrc.startsWith('./') || imageSrc.startsWith('../')) {
+        // Local URL - fetch directly
+        const response = await fetch(imageSrc)
         if (!response.ok) {
-          throw new Error(`Failed to fetch image: ${response.status}`)
+          throw new Error(`Failed to fetch local image: ${response.status}`)
         }
         imageBlob = await response.blob()
+      } else {
+        // Fetch external URL via backend proxy (more reliable than public CORS proxies)
+        const proxyUrl = `/api/memes/proxy-image?url=${encodeURIComponent(imageSrc)}`
+        const response = await fetch(proxyUrl)
+        if (!response.ok) {
+          // Fallback to corsproxy.io if backend proxy fails
+          console.warn('[BackgroundRemoval] Backend proxy failed, trying corsproxy.io')
+          const corsProxyUrl = `https://corsproxy.io/?${encodeURIComponent(imageSrc)}`
+          const corsResponse = await fetch(corsProxyUrl)
+          if (!corsResponse.ok) {
+            throw new Error(`Failed to fetch image: ${corsResponse.status}`)
+          }
+          imageBlob = await corsResponse.blob()
+        } else {
+          imageBlob = await response.blob()
+        }
       }
 
       // Process the image with AI

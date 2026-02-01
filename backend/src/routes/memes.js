@@ -181,6 +181,10 @@ export default async function memesRoutes(fastify, options) {
       'i.imgflip.com',
       'api.memegen.link',
       'gateway.pinata.cloud',
+      'dd.dexscreener.com',
+      'img.dexscreener.com',
+      'assets.dexscreener.com',
+      'dexscreener.com',
     ]
 
     // Allowed content types for images
