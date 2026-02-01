@@ -1,8 +1,7 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { MemeTemplatePicker } from '../Editor'
 import StickerPicker from '../Canvas/StickerPicker'
-import VideoLibrary from './VideoLibrary'
 import { ConnectModal } from '../Wallet'
 import './LeftToolbar.css'
 
@@ -52,7 +51,6 @@ export default function LeftToolbar({
   const [showStickers, setShowStickers] = useState(false)
   const [showBgColors, setShowBgColors] = useState(false)
   const [showDrawColors, setShowDrawColors] = useState(false)
-  const [showVideoLibrary, setShowVideoLibrary] = useState(false)
   const [showWalletModal, setShowWalletModal] = useState(false)
   const fileInputRef = useRef(null)
   const videoInputRef = useRef(null)
@@ -134,25 +132,8 @@ export default function LeftToolbar({
     setShowStickers(false)
     setShowBgColors(false)
     setShowDrawColors(false)
-    setShowVideoLibrary(false)
   }
 
-  // Handle video selection from library
-  const handleVideoFromLibrary = useCallback((url, videoData) => {
-    // Load video to get duration and dimensions
-    const video = document.createElement('video')
-    video.preload = 'metadata'
-    video.onloadedmetadata = () => {
-      const duration = video.duration
-      const aspectRatio = video.videoWidth / video.videoHeight
-      onAddVideo(url, duration, aspectRatio, videoData.name)
-    }
-    video.onerror = () => {
-      alert('Failed to load video from library')
-      URL.revokeObjectURL(url)
-    }
-    video.src = url
-  }, [onAddVideo])
 
   const handleTemplateSelect = (template) => {
     // Check if template is a video
@@ -272,17 +253,6 @@ export default function LeftToolbar({
               onChange={handleVideoUpload}
               style={{ display: 'none' }}
             />
-            {/* Video Library - hidden on mobile */}
-            <button
-              className="tool-btn video-btn"
-              onClick={() => {
-                closeAllPickers()
-                setShowVideoLibrary(!showVideoLibrary)
-              }}
-              data-tooltip="Video Library"
-            >
-              <span className="tool-icon">📚</span>
-            </button>
           </>
         )}
       </div>
@@ -402,14 +372,6 @@ export default function LeftToolbar({
         </div>
       )}
 
-      {showVideoLibrary && (
-        <div className="toolbar-popup video-library-popup">
-          <VideoLibrary
-            onSelectVideo={handleVideoFromLibrary}
-            onClose={() => setShowVideoLibrary(false)}
-          />
-        </div>
-      )}
 
       {showBgColors && (
         <div className="color-picker-popup">
