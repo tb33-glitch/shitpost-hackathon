@@ -14,6 +14,7 @@ export default function LeftToolbar({
   onAddImage,
   onAddText,
   onAddSticker,
+  onAddShape,
   onAddVideo,
   isDrawingMode,
   onToggleDrawingMode,
@@ -49,6 +50,7 @@ export default function LeftToolbar({
 }) {
   const [showTemplates, setShowTemplates] = useState(false)
   const [showStickers, setShowStickers] = useState(false)
+  const [showShapes, setShowShapes] = useState(false)
   const [showBgColors, setShowBgColors] = useState(false)
   const [showDrawColors, setShowDrawColors] = useState(false)
   const [showWalletModal, setShowWalletModal] = useState(false)
@@ -130,6 +132,7 @@ export default function LeftToolbar({
   const closeAllPickers = () => {
     setShowTemplates(false)
     setShowStickers(false)
+    setShowShapes(false)
     setShowBgColors(false)
     setShowDrawColors(false)
   }
@@ -232,6 +235,20 @@ export default function LeftToolbar({
         >
           <span className="tool-icon">⭐</span>
         </button>
+
+        {/* Add Shape */}
+        {onAddShape && (
+          <button
+            className="tool-btn"
+            onClick={() => {
+              closeAllPickers()
+              setShowShapes(!showShapes)
+            }}
+            data-tooltip="Shape"
+          >
+            <span className="tool-icon">▢</span>
+          </button>
+        )}
 
         {/* Upload Video - hidden on mobile */}
         {onAddVideo && (
@@ -372,6 +389,33 @@ export default function LeftToolbar({
         </div>
       )}
 
+      {showShapes && (
+        <div className="shape-picker-popup">
+          <div className="color-picker-header">Add Shape</div>
+          <div className="shape-grid">
+            <button
+              className="shape-option"
+              onClick={() => {
+                onAddShape('rectangle')
+                setShowShapes(false)
+              }}
+            >
+              <span className="shape-preview shape-rectangle" />
+              <span className="shape-label">Rectangle</span>
+            </button>
+            <button
+              className="shape-option"
+              onClick={() => {
+                onAddShape('circle')
+                setShowShapes(false)
+              }}
+            >
+              <span className="shape-preview shape-circle" />
+              <span className="shape-label">Circle</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {showBgColors && (
         <div className="color-picker-popup">

@@ -27,6 +27,7 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
     addText,
     addSticker,
     addVideo,
+    addShape,
     updateObject,
     updateObjectWithHistory,
     deleteSelected,
@@ -49,6 +50,8 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
   const [drawingColor, setDrawingColor] = useState('#000000')
   const [clearDrawingSignal, setClearDrawingSignal] = useState(0)
   const [isCropMode, setIsCropMode] = useState(false)
+  const [isEyedropperMode, setIsEyedropperMode] = useState(false)
+  const [eyedropperTarget, setEyedropperTarget] = useState(null) // 'fill', 'stroke', 'textColor', 'textStroke', 'background', 'drawing'
   const [showExportModal, setShowExportModal] = useState(false)
   const [showSubmitModal, setShowSubmitModal] = useState(false)
   const [showMobileSheet, setShowMobileSheet] = useState(false)
@@ -429,6 +432,41 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
             }
           }
         }
+      } else if (obj.type === OBJECT_TYPES.SHAPE) {
+        // Draw shape (rectangle or circle)
+        ctx.globalAlpha = obj.opacity ?? 1
+
+        if (obj.shapeType === 'rectangle') {
+          if (obj.fillColor && obj.fillColor !== 'transparent') {
+            ctx.fillStyle = obj.fillColor
+            ctx.fillRect(obj.x, obj.y, obj.width, obj.height)
+          }
+          if (obj.strokeWidth > 0 && obj.strokeColor) {
+            ctx.strokeStyle = obj.strokeColor
+            ctx.lineWidth = obj.strokeWidth
+            ctx.strokeRect(obj.x, obj.y, obj.width, obj.height)
+          }
+        } else if (obj.shapeType === 'circle') {
+          ctx.beginPath()
+          ctx.ellipse(
+            obj.x + obj.width / 2,
+            obj.y + obj.height / 2,
+            obj.width / 2,
+            obj.height / 2,
+            0, 0, Math.PI * 2
+          )
+          if (obj.fillColor && obj.fillColor !== 'transparent') {
+            ctx.fillStyle = obj.fillColor
+            ctx.fill()
+          }
+          if (obj.strokeWidth > 0 && obj.strokeColor) {
+            ctx.strokeStyle = obj.strokeColor
+            ctx.lineWidth = obj.strokeWidth
+            ctx.stroke()
+          }
+        }
+
+        ctx.globalAlpha = 1
       }
 
       ctx.restore()
@@ -637,6 +675,41 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
     }
   }, [removeImageBackground, updateObject])
 
+  // Handle color picked from eyedropper
+  const handleColorPicked = useCallback((color) => {
+    if (!eyedropperTarget) return
+
+    if (eyedropperTarget === 'fill' && selectedId) {
+      updateObject(selectedId, { fillColor: color })
+    } else if (eyedropperTarget === 'stroke' && selectedId) {
+      updateObject(selectedId, { strokeColor: color })
+    } else if (eyedropperTarget === 'textColor' && selectedId) {
+      updateObject(selectedId, { color: color })
+    } else if (eyedropperTarget === 'textStroke' && selectedId) {
+      updateObject(selectedId, { strokeColor: color })
+    } else if (eyedropperTarget === 'background') {
+      setBackgroundColor(color)
+    } else if (eyedropperTarget === 'drawing') {
+      setDrawingColor(color)
+    }
+
+    // Exit eyedropper mode after picking
+    setIsEyedropperMode(false)
+    setEyedropperTarget(null)
+  }, [eyedropperTarget, selectedId, updateObject, setBackgroundColor])
+
+  // Start eyedropper mode for a specific target
+  const startEyedropper = useCallback((target) => {
+    setEyedropperTarget(target)
+    setIsEyedropperMode(true)
+  }, [])
+
+  // Cancel eyedropper mode
+  const cancelEyedropper = useCallback(() => {
+    setIsEyedropperMode(false)
+    setEyedropperTarget(null)
+  }, [])
+
   const selectedObject = getSelectedObject()
 
   const overlayObjects = objects.filter(obj =>
@@ -715,6 +788,7 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
           onAddImage={addImage}
           onAddText={addText}
           onAddSticker={addSticker}
+          onAddShape={addShape}
           onAddVideo={addVideo}
           isDrawingMode={isDrawingMode}
           onToggleDrawingMode={() => setIsDrawingMode(!isDrawingMode)}
@@ -773,6 +847,8 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
               videoRefs={videoRefs}
               onVideoElementReady={handleVideoElementReady}
               onEditText={handleEditText}
+              isEyedropperMode={isEyedropperMode}
+              onColorPicked={handleColorPicked}
             />
           </div>
 
@@ -817,6 +893,10 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
           isRemovingBackground={isRemovingBackground}
           removeBackgroundProgress={removeBackgroundProgress}
           autoFocusTextInput={autoFocusTextInput}
+          isEyedropperMode={isEyedropperMode}
+          eyedropperTarget={eyedropperTarget}
+          onStartEyedropper={startEyedropper}
+          onCancelEyedropper={cancelEyedropper}
         />
       </div>
 

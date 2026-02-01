@@ -8,6 +8,10 @@
   touch-action: none; /* Prevent browser touch behaviors for canvas interaction */
 }
 
+.object-canvas-container.eyedropper-mode {
+  cursor: crosshair;
+}
+
 .object-canvas-main {
   display: block;
   /* Use auto for smooth text rendering, or crisp-edges for sharper lines */

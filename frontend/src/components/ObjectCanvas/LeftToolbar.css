@@ -226,6 +226,64 @@
   box-shadow: 0 0 4px #0054e3;
 }
 
+/* Shape Picker Popup */
+.shape-picker-popup {
+  position: absolute;
+  left: 85px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #ece9d8;
+  border: 2px solid #0054e3;
+  border-radius: 4px;
+  padding: 8px;
+  z-index: 2000;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.shape-grid {
+  display: flex;
+  gap: 8px;
+}
+
+.shape-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: linear-gradient(180deg, #ffffff 0%, #ece9d8 100%);
+  border: 1px solid #aca899;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.shape-option:hover {
+  background: linear-gradient(180deg, #e3f0ff 0%, #cce4f7 100%);
+  border-color: #316ac5;
+}
+
+.shape-preview {
+  width: 40px;
+  height: 40px;
+  border: 2px solid #333;
+  background: #fff;
+}
+
+.shape-preview.shape-rectangle {
+  border-radius: 2px;
+}
+
+.shape-preview.shape-circle {
+  border-radius: 50%;
+}
+
+.shape-label {
+  font-size: 11px;
+  font-family: 'Tahoma', sans-serif;
+  color: #333;
+}
+
 /* Mobile actions - hidden on desktop */
 .mobile-actions {
   display: none;
@@ -383,6 +441,32 @@
   .color-option {
     width: 32px;
     height: 32px;
+  }
+
+  /* Shape picker on mobile */
+  .shape-picker-popup {
+    position: fixed !important;
+    left: 8px !important;
+    right: 8px !important;
+    bottom: 70px !important;
+    top: auto !important;
+    transform: none !important;
+    border-radius: 12px;
+  }
+
+  .shape-grid {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .shape-option {
+    padding: 12px 20px;
+  }
+
+  .shape-preview {
+    width: 48px;
+    height: 48px;
   }
 
   /* Mobile actions - always visible */

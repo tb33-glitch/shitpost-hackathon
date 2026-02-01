@@ -29,6 +29,9 @@ export default function ObjectCanvas({
   onVideoElementReady,
   // Double-click to edit text
   onEditText,
+  // Eyedropper mode
+  isEyedropperMode = false,
+  onColorPicked,
 }) {
   // Scale factor for display
   const DISPLAY_SCALE = zoom
@@ -223,6 +226,21 @@ export default function ObjectCanvas({
 
     const coords = getCanvasCoords(e)
     if (!coords) return
+
+    // Eyedropper mode - pick color from canvas
+    if (isEyedropperMode && onColorPicked) {
+      const canvas = mainCanvasRef.current
+      if (canvas) {
+        const ctx = canvas.getContext('2d')
+        const pixel = ctx.getImageData(Math.round(coords.x), Math.round(coords.y), 1, 1).data
+        const hex = '#' + [pixel[0], pixel[1], pixel[2]]
+          .map(c => c.toString(16).padStart(2, '0'))
+          .join('')
+          .toUpperCase()
+        onColorPicked(hex)
+      }
+      return
+    }
 
     // Check for crop handle click first (when in crop mode)
     if (isCropMode && selectedId) {
@@ -724,6 +742,46 @@ export default function ObjectCanvas({
             }
           }
         }
+      } else if (obj.type === OBJECT_TYPES.SHAPE) {
+        // Draw shape (rectangle or circle)
+        ctx.globalAlpha = obj.opacity ?? 1
+
+        if (obj.shapeType === 'rectangle') {
+          // Fill rectangle
+          if (obj.fillColor && obj.fillColor !== 'transparent') {
+            ctx.fillStyle = obj.fillColor
+            ctx.fillRect(obj.x, obj.y, obj.width, obj.height)
+          }
+          // Stroke rectangle
+          if (obj.strokeWidth > 0 && obj.strokeColor) {
+            ctx.strokeStyle = obj.strokeColor
+            ctx.lineWidth = obj.strokeWidth
+            ctx.strokeRect(obj.x, obj.y, obj.width, obj.height)
+          }
+        } else if (obj.shapeType === 'circle') {
+          // Draw ellipse (circle that can be stretched)
+          ctx.beginPath()
+          ctx.ellipse(
+            obj.x + obj.width / 2,   // centerX
+            obj.y + obj.height / 2,  // centerY
+            obj.width / 2,           // radiusX
+            obj.height / 2,          // radiusY
+            0, 0, Math.PI * 2
+          )
+          // Fill circle
+          if (obj.fillColor && obj.fillColor !== 'transparent') {
+            ctx.fillStyle = obj.fillColor
+            ctx.fill()
+          }
+          // Stroke circle
+          if (obj.strokeWidth > 0 && obj.strokeColor) {
+            ctx.strokeStyle = obj.strokeColor
+            ctx.lineWidth = obj.strokeWidth
+            ctx.stroke()
+          }
+        }
+
+        ctx.globalAlpha = 1
       }
 
       ctx.restore()
@@ -809,6 +867,7 @@ export default function ObjectCanvas({
 
   // Determine cursor based on state
   const getCursor = () => {
+    if (isEyedropperMode) return 'crosshair'
     if (isDrawingMode) return 'crosshair'
     if (dragState) return 'move'
     if (resizeState) {

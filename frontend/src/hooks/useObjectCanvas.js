@@ -6,6 +6,7 @@ export const OBJECT_TYPES = {
   TEXT: 'text',
   STICKER: 'sticker',
   VIDEO: 'video',
+  SHAPE: 'shape',
 }
 
 // Convert external image URL to data URL to avoid CORS/tainted canvas issues
@@ -219,6 +220,26 @@ const createVideoObject = (src, duration, aspectRatio = 16/9, x = 0, y = 0) => {
   }
 }
 
+// Create a new shape object
+const createShapeObject = (shapeType = 'rectangle', x = 0, y = 0, size = 300) => {
+  return {
+    id: generateId(),
+    type: OBJECT_TYPES.SHAPE,
+    x,
+    y,
+    width: size,
+    height: size,
+    rotation: 0,
+    locked: false,
+    // Shape-specific properties
+    shapeType, // 'rectangle' or 'circle'
+    fillColor: '#FFFFFF',
+    strokeColor: '#000000',
+    strokeWidth: 3,
+    opacity: 1,
+  }
+}
+
 export default function useObjectCanvas() {
   // All objects on the canvas (ordered by z-index, first = bottom)
   const [objects, setObjects] = useState([])
@@ -355,6 +376,20 @@ export default function useObjectCanvas() {
     obj.originalSrc = src
     // Insert video at the beginning so it's behind other objects
     setObjects(prev => [obj, ...prev])
+    setSelectedId(obj.id)
+  }, [saveToHistory])
+
+  // Add a shape
+  const addShape = useCallback((shapeType = 'rectangle') => {
+    saveToHistory()
+    const size = 300
+    const obj = createShapeObject(
+      shapeType,
+      (CANVAS_WIDTH - size) / 2,
+      (CANVAS_HEIGHT - size) / 2,
+      size
+    )
+    setObjects(prev => [...prev, obj])
     setSelectedId(obj.id)
   }, [saveToHistory])
 
@@ -562,6 +597,7 @@ export default function useObjectCanvas() {
     addText,
     addSticker,
     addVideo,
+    addShape,
     getVideoObject,
     updateObject,
     updateObjectWithHistory,
