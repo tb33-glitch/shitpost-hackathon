@@ -337,11 +337,12 @@ export default function useObjectCanvas() {
   const addVideo = useCallback(async (src, duration, aspectRatio) => {
     saveToHistory()
 
-    // Check if external URL and proxy it
+    // Check if external URL and proxy it (but not Supabase URLs - they have CORS enabled)
     let videoSrc = src
     const isExternalUrl = src.startsWith('http') && !src.startsWith(window.location.origin)
+    const isSupabaseUrl = src.includes('.supabase.co/')
 
-    if (isExternalUrl) {
+    if (isExternalUrl && !isSupabaseUrl) {
       console.log('[useObjectCanvas] Proxying external video:', src.substring(0, 50) + '...')
       // Use CORS proxy for video
       videoSrc = `https://corsproxy.io/?${encodeURIComponent(src)}`

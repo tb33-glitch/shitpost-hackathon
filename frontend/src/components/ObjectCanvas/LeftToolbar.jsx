@@ -155,7 +155,24 @@ export default function LeftToolbar({
   }, [onAddVideo])
 
   const handleTemplateSelect = (template) => {
-    onAddImage(template)
+    // Check if template is a video
+    if (template.isVideo || template.mediaType === 'video') {
+      // Load video to get duration and dimensions
+      const video = document.createElement('video')
+      video.preload = 'metadata'
+      video.crossOrigin = 'anonymous'
+      video.onloadedmetadata = () => {
+        const duration = video.duration
+        const aspectRatio = video.videoWidth / video.videoHeight
+        onAddVideo(template.image, duration, aspectRatio, template.name)
+      }
+      video.onerror = () => {
+        alert('Failed to load video template')
+      }
+      video.src = template.image
+    } else {
+      onAddImage(template)
+    }
     setShowTemplates(false)
   }
 

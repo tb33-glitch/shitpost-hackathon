@@ -213,6 +213,9 @@ export async function getCommunityTemplates() {
           xp: t.xp || 10,
           submittedAt: t.created_at,
           sourceType: t.source_type,
+          mediaType: t.media_type || 'image',
+          isVideo: t.media_type === 'video',
+          duration: t.duration,
         })
       })
     }

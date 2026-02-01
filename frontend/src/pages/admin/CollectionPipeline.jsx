@@ -361,7 +361,17 @@ function DatabaseTab({ walletAddress }) {
     let uploaded = 0
 
     for (const file of files) {
-      if (!file.type.startsWith('image/')) continue
+      const isImage = file.type.startsWith('image/')
+      const isVideo = file.type.startsWith('video/')
+
+      if (!isImage && !isVideo) continue
+
+      // Check file size limits
+      const maxSize = isVideo ? 25 * 1024 * 1024 : 10 * 1024 * 1024
+      if (file.size > maxSize) {
+        setStatus({ type: 'error', message: `${file.name} too large (max ${isVideo ? '25MB' : '10MB'})` })
+        continue
+      }
 
       try {
         const formData = new FormData()
@@ -383,6 +393,7 @@ function DatabaseTab({ walletAddress }) {
         }
 
         uploaded++
+        setStatus({ type: 'info', message: `Uploaded ${uploaded}/${files.length}...` })
       } catch (err) {
         console.error('Upload failed:', file.name, err)
         setStatus({ type: 'error', message: `Failed: ${file.name} - ${err.message}` })
@@ -410,12 +421,12 @@ function DatabaseTab({ walletAddress }) {
             className="search-input"
           />
           <button onClick={() => fileInputRef.current?.click()} className="primary-btn">
-            Upload Images
+            Upload Files
           </button>
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/*,video/*"
             multiple
             onChange={handleManualUpload}
             style={{ display: 'none' }}
@@ -470,7 +481,14 @@ function DatabaseTab({ walletAddress }) {
               >
                 ✏️
               </button>
-              <img src={t.image_url} alt={t.name} />
+              {t.media_type === 'video' ? (
+                <div className="template-video-wrapper">
+                  <video src={t.image_url} muted preload="metadata" />
+                  <div className="video-indicator">▶</div>
+                </div>
+              ) : (
+                <img src={t.image_url} alt={t.name} />
+              )}
               <div className="template-info">
                 <div className="template-name">{t.name}</div>
                 <div className="template-meta">

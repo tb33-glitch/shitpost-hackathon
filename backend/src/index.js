@@ -111,7 +111,7 @@ await fastify.register(rateLimit, {
 // Register multipart for file uploads
 await fastify.register(multipart, {
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB max
+    fileSize: 25 * 1024 * 1024, // 25MB max (for videos)
     files: 1, // Only 1 file at a time
   },
 })

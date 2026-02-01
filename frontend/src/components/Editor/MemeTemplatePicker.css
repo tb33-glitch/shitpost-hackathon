@@ -213,10 +213,37 @@
   justify-content: center;
 }
 
-.template-preview img {
+.template-preview img,
+.template-preview video {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.template-preview {
+  position: relative;
+}
+
+.video-play-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.picker-template-card:hover .video-play-indicator {
+  opacity: 0.5;
 }
 
 .template-preview-fallback {

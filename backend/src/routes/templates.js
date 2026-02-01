@@ -714,7 +714,7 @@ export default async function templatesRoutes(fastify, options) {
     }
   })
 
-  // Direct file upload to Supabase Storage
+  // Direct file upload to Supabase Storage (images and videos)
   fastify.post('/upload', {
     config: {
       rateLimit: {
@@ -737,27 +737,40 @@ export default async function templatesRoutes(fastify, options) {
       }
 
       const buffer = await data.toBuffer()
-      const contentType = data.mimetype || 'image/jpeg'
+      const contentType = data.mimetype || 'application/octet-stream'
 
-      // Validate it's an image
-      if (!contentType.startsWith('image/')) {
-        return reply.status(400).send({ error: 'Only image files are allowed' })
+      // Determine media type
+      const isVideo = contentType.startsWith('video/')
+      const isImage = contentType.startsWith('image/')
+
+      if (!isVideo && !isImage) {
+        return reply.status(400).send({ error: 'Only image and video files are allowed' })
       }
 
-      // Check file size (max 10MB)
-      if (buffer.length > 10 * 1024 * 1024) {
-        return reply.status(400).send({ error: 'Image too large (max 10MB)' })
+      // Size limits: 10MB for images, 25MB for videos
+      const maxSize = isVideo ? 25 * 1024 * 1024 : 10 * 1024 * 1024
+      if (buffer.length > maxSize) {
+        return reply.status(400).send({
+          error: `File too large (max ${isVideo ? '25MB' : '10MB'} for ${isVideo ? 'videos' : 'images'})`
+        })
       }
 
       // Get extension from mimetype
-      let ext = 'jpeg'
-      if (contentType.includes('png')) ext = 'png'
-      else if (contentType.includes('gif')) ext = 'gif'
-      else if (contentType.includes('webp')) ext = 'webp'
+      let ext = 'bin'
+      if (isImage) {
+        if (contentType.includes('png')) ext = 'png'
+        else if (contentType.includes('gif')) ext = 'gif'
+        else if (contentType.includes('webp')) ext = 'webp'
+        else ext = 'jpeg'
+      } else if (isVideo) {
+        if (contentType.includes('webm')) ext = 'webm'
+        else if (contentType.includes('quicktime')) ext = 'mov'
+        else ext = 'mp4'
+      }
 
-      // Generate unique filename
+      // Generate unique filename with appropriate folder
       const filename = `${randomUUID()}.${ext}`
-      const storagePath = `uploads/${filename}`
+      const storagePath = isVideo ? `videos/${filename}` : `uploads/${filename}`
 
       // Upload to Supabase Storage
       const { error: uploadError } = await db.storage
@@ -794,6 +807,7 @@ export default async function templatesRoutes(fastify, options) {
           submitted_by: submittedBy,
           display_name: displayName,
           source_type: 'upload',
+          media_type: isVideo ? 'video' : 'image',
           status: 'approved',
           xp: 10,
         })
@@ -802,12 +816,12 @@ export default async function templatesRoutes(fastify, options) {
 
       if (dbError) throw dbError
 
-      fastify.log.info({ id: template.id, name, storagePath }, 'Template uploaded directly')
+      fastify.log.info({ id: template.id, name, storagePath, mediaType: isVideo ? 'video' : 'image' }, 'Template uploaded')
 
       return {
         success: true,
         template,
-        message: 'Template uploaded successfully',
+        message: `${isVideo ? 'Video' : 'Image'} uploaded successfully`,
       }
     } catch (err) {
       fastify.log.error(err, 'Failed to upload template')

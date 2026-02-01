@@ -282,17 +282,36 @@ export default function MemeTemplatePicker({ onSelectTemplate, onClose }) {
               onClick={() => handleTemplateClick(template)}
             >
               <div className="template-preview">
-                <img
-                  src={template.image}
-                  alt={template.name}
-                  loading="lazy"
-                  onError={(e) => {
-                    e.target.style.display = 'none'
-                    if (e.target.nextSibling) {
-                      e.target.nextSibling.style.display = 'flex'
-                    }
-                  }}
-                />
+                {template.isVideo ? (
+                  <>
+                    <video
+                      src={template.image}
+                      muted
+                      preload="metadata"
+                      onMouseEnter={(e) => e.target.play().catch(() => {})}
+                      onMouseLeave={(e) => { e.target.pause(); e.target.currentTime = 0 }}
+                      onError={(e) => {
+                        e.target.style.display = 'none'
+                        if (e.target.nextSibling?.nextSibling) {
+                          e.target.nextSibling.nextSibling.style.display = 'flex'
+                        }
+                      }}
+                    />
+                    <div className="video-play-indicator">▶</div>
+                  </>
+                ) : (
+                  <img
+                    src={template.image}
+                    alt={template.name}
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.style.display = 'none'
+                      if (e.target.nextSibling) {
+                        e.target.nextSibling.style.display = 'flex'
+                      }
+                    }}
+                  />
+                )}
                 <div className="template-preview-fallback" style={{ display: 'none' }}>
                   {template.name.charAt(0)}
                 </div>

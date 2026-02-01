@@ -854,7 +854,7 @@ export default function ObjectCanvas({
             }
           }}
           src={obj.src}
-          crossOrigin="anonymous"
+          crossOrigin={obj.src?.includes('.supabase.co/') ? undefined : 'anonymous'}
           style={{ display: 'none' }}
           muted={isMuted}
           playsInline
@@ -868,6 +868,9 @@ export default function ObjectCanvas({
           onCanPlay={() => {
             // Fallback trigger for re-render
             setVideoLoadedTrigger(prev => prev + 1)
+          }}
+          onError={(e) => {
+            console.error('[ObjectCanvas] Video load error:', obj.src, e.target.error)
           }}
         />
       ))}
