@@ -7,6 +7,7 @@ import { ApprovedManager } from '../../components/Admin/ApprovedManager'
 import { ReportsManager } from '../../components/Admin/ReportsManager'
 import { CommunityManager } from '../../components/Admin/CommunityManager'
 import { addToRegistry, getLocalRegistry } from '../../utils/templateRegistry'
+import { importTemplate, importTemplatesBatch } from '../../utils/api'
 import { reloadCustomTemplates } from '../../config/memeTemplates'
 import '../../styles/admin.css'
 
@@ -139,64 +140,101 @@ export function CollectionPipeline() {
     }, ...prev].slice(0, 100)) // Keep last 100 logs
   }, [])
 
-  // Auto-sync images to template registry
+  // Auto-sync images to Supabase (downloads and re-uploads to Supabase Storage)
   const autoSyncContent = useCallback(async (mediaItems, sourceUrl) => {
-    console.log('[autoSyncContent] Starting sync for', mediaItems.length, 'items')
-    const registry = getLocalRegistry()
-    console.log('[autoSyncContent] Current registry has', registry.templates?.length || 0, 'templates')
-    const existingImageUrls = new Set(registry.templates.map(t => t.imageUrl))
+    console.log('[autoSyncContent] Starting sync for', mediaItems.length, 'items to Supabase')
 
     let syncedImages = 0
+    let failedImages = 0
 
-    for (const item of mediaItems) {
-      // Skip videos - only sync images
+    // Filter to images only
+    const imageItems = mediaItems.filter(item => {
       if (item.mediaUrl?.match(/\.(mp4|webm|mov)(\?.*)?$/i) || item.mediaType === 'video') {
         addLog(`Skipping video: ${item.mediaUrl?.slice(0, 50)}...`)
-        continue
+        return false
       }
+      return true
+    })
 
-      // Skip if already in registry
-      if (existingImageUrls.has(item.mediaUrl)) {
-        addLog(`Image already in registry: ${item.mediaUrl.slice(0, 50)}...`)
-        continue
-      }
+    if (imageItems.length === 0) {
+      addLog('No images to sync')
+      return
+    }
 
-      try {
-        const entry = {
-          name: item.tags?.[0] || `template-${item.id}`,
-          category: item.category || 'templates',
-          imageCid: `admin-${item.id}`,
-          imageUrl: item.mediaUrl,
-          tags: item.tags || [],
-          submittedBy: 'admin',
-          displayName: 'Admin',
-          xp: 10,
-          submittedAt: new Date().toISOString(),
-          cid: `admin-approved-${item.id}`,
-          sourceUrl: sourceUrl,
-          isAdminApproved: true,
+    // Use batch import for efficiency
+    const templatesToImport = imageItems.map(item => ({
+      name: item.tags?.[0] || `template-${item.id}`,
+      sourceUrl: item.mediaUrl,
+      category: item.category || 'templates',
+      tags: item.tags || [],
+    }))
+
+    try {
+      addLog(`Importing ${templatesToImport.length} image(s) to Supabase...`)
+
+      const result = await importTemplatesBatch(templatesToImport, {
+        submittedBy: walletAddress || 'admin',
+        displayName: 'Admin',
+        isCurated: false,
+      })
+
+      syncedImages = result.imported
+      failedImages = result.failed
+
+      // Log individual results
+      result.results.forEach(r => {
+        if (r.success) {
+          addLog(`✓ Imported: ${r.name}`, 'success')
+        } else {
+          addLog(`✗ Failed: ${r.name} - ${r.error}`, 'error')
         }
+      })
 
-        await addToRegistry(entry)
-        syncedImages++
-        addLog(`✓ Image synced to templates`, 'success')
-      } catch (e) {
-        addLog(`✗ Image sync failed: ${e.message}`, 'error')
+      if (syncedImages > 0) {
+        // Reload templates cache to show new templates
+        await reloadCustomTemplates()
+        setSyncStatus(`Imported ${syncedImages} image(s) to Supabase Storage`)
+        setTimeout(() => setSyncStatus(null), 5000)
+      }
+
+      console.log('[autoSyncContent] Batch import complete:', { syncedImages, failedImages })
+    } catch (e) {
+      addLog(`✗ Batch import failed: ${e.message}`, 'error')
+      console.error('[autoSyncContent] Batch import error:', e)
+
+      // Fallback to localStorage if API fails
+      addLog('Falling back to localStorage...', 'warn')
+      for (const item of imageItems) {
+        try {
+          const entry = {
+            name: item.tags?.[0] || `template-${item.id}`,
+            category: item.category || 'templates',
+            imageCid: `admin-${item.id}`,
+            imageUrl: item.mediaUrl,
+            tags: item.tags || [],
+            submittedBy: walletAddress || 'admin',
+            displayName: 'Admin',
+            xp: 10,
+            submittedAt: new Date().toISOString(),
+            cid: `admin-approved-${item.id}`,
+            sourceUrl: sourceUrl,
+            isAdminApproved: true,
+          }
+          await addToRegistry(entry)
+          syncedImages++
+          addLog(`✓ Saved to localStorage: ${entry.name}`, 'success')
+        } catch (err) {
+          addLog(`✗ localStorage save failed: ${err.message}`, 'error')
+        }
+      }
+
+      if (syncedImages > 0) {
+        await reloadCustomTemplates()
+        setSyncStatus(`Saved ${syncedImages} image(s) to localStorage (API unavailable)`)
+        setTimeout(() => setSyncStatus(null), 5000)
       }
     }
-
-    // Reload templates cache
-    if (syncedImages > 0) {
-      await reloadCustomTemplates()
-      const updatedRegistry = getLocalRegistry()
-      console.log('[autoSyncContent] After sync, registry has', updatedRegistry.templates?.length || 0, 'templates')
-      console.log('[autoSyncContent] Registry contents:', updatedRegistry.templates)
-      setSyncStatus(`Synced ${syncedImages} image(s) to templates`)
-      setTimeout(() => setSyncStatus(null), 5000)
-    } else {
-      console.log('[autoSyncContent] No images synced (all skipped or failed)')
-    }
-  }, [addLog])
+  }, [addLog, walletAddress])
 
   const addToExtractionQueue = useCallback((urls) => {
     const newItems = urls.map((url, index) => ({

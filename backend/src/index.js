@@ -13,6 +13,7 @@ import solanaRoutes from './routes/solana.js'
 import memesRoutes from './routes/memes.js'
 import scraperRoutes from './routes/scraper.js'
 import leaderboardRoutes from './routes/leaderboard.js'
+import templatesRoutes from './routes/templates.js'
 
 const PORT = process.env.PORT || 3001
 const HOST = process.env.HOST || '0.0.0.0'
@@ -73,7 +74,7 @@ await fastify.register(cors, {
     fastify.log.warn(`Blocked CORS request from origin: ${origin}`)
     return callback(new Error('Not allowed by CORS'), false)
   },
-  methods: ['GET', 'POST', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Admin-Key'],
   credentials: true,
 })
@@ -138,6 +139,9 @@ await fastify.register(scraperRoutes, { prefix: '/api/scraper' })
 
 // Register Leaderboard routes under /api/leaderboard prefix
 await fastify.register(leaderboardRoutes, { prefix: '/api/leaderboard' })
+
+// Register Community Templates routes under /api/templates prefix
+await fastify.register(templatesRoutes, { prefix: '/api/templates' })
 
 // Global error handler
 fastify.setErrorHandler((error, request, reply) => {
