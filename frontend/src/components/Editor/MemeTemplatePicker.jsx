@@ -27,9 +27,16 @@ function getProxiedImageUrl(url) {
   return url
 }
 
+const MEDIA_FILTERS = {
+  ALL: 'all',
+  IMAGES: 'images',
+  VIDEOS: 'videos',
+}
+
 export default function MemeTemplatePicker({ onSelectTemplate, onClose }) {
   const [activeTab, setActiveTab] = useState(TABS.ALL)
   const [searchQuery, setSearchQuery] = useState('')
+  const [mediaFilter, setMediaFilter] = useState(MEDIA_FILTERS.ALL)
   const [allTemplates, setAllTemplates] = useState([])
   const [hotTemplates, setHotTemplates] = useState([])
   const [communityTemplates, setCommunityTemplates] = useState([])
@@ -121,6 +128,10 @@ export default function MemeTemplatePicker({ onSelectTemplate, onClose }) {
     return zones
   }
 
+  // Count images and videos in community templates
+  const communityImageCount = communityTemplates.filter(t => !t.isVideo).length
+  const communityVideoCount = communityTemplates.filter(t => t.isVideo).length
+
   // Get templates for current tab
   const getCurrentTemplates = () => {
     let templates
@@ -134,6 +145,15 @@ export default function MemeTemplatePicker({ onSelectTemplate, onClose }) {
       case TABS.ALL:
       default:
         templates = allTemplates
+    }
+
+    // Apply media filter (only for Community tab)
+    if (activeTab === TABS.COMMUNITY && mediaFilter !== MEDIA_FILTERS.ALL) {
+      if (mediaFilter === MEDIA_FILTERS.IMAGES) {
+        templates = templates.filter(t => !t.isVideo)
+      } else if (mediaFilter === MEDIA_FILTERS.VIDEOS) {
+        templates = templates.filter(t => t.isVideo)
+      }
     }
 
     // Filter by search if query exists
@@ -256,6 +276,30 @@ export default function MemeTemplatePicker({ onSelectTemplate, onClose }) {
           Debug
         </button>
       </div>
+
+      {/* Media type filters - only show on Community tab */}
+      {activeTab === TABS.COMMUNITY && (
+        <div className="picker-filters">
+          <button
+            className={`picker-filter ${mediaFilter === MEDIA_FILTERS.ALL ? 'active' : ''}`}
+            onClick={() => setMediaFilter(MEDIA_FILTERS.ALL)}
+          >
+            All ({communityTemplates.length})
+          </button>
+          <button
+            className={`picker-filter ${mediaFilter === MEDIA_FILTERS.IMAGES ? 'active' : ''}`}
+            onClick={() => setMediaFilter(MEDIA_FILTERS.IMAGES)}
+          >
+            Images ({communityImageCount})
+          </button>
+          <button
+            className={`picker-filter ${mediaFilter === MEDIA_FILTERS.VIDEOS ? 'active' : ''}`}
+            onClick={() => setMediaFilter(MEDIA_FILTERS.VIDEOS)}
+          >
+            Videos ({communityVideoCount})
+          </button>
+        </div>
+      )}
 
       {/* Status bar */}
       <div className="picker-status">

@@ -143,6 +143,39 @@
   border-bottom-color: #0053E0;
 }
 
+/* Media Type Filters */
+.picker-filters {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #F5F4EA;
+  border-bottom: 1px solid #ACA899;
+}
+
+.picker-filter {
+  padding: 4px 12px;
+  background: #ECE9D8;
+  border: 1px solid #ACA899;
+  border-radius: 12px;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.picker-filter:hover {
+  background: #E3F0FF;
+  border-color: #7F9DB9;
+  color: #333;
+}
+
+.picker-filter.active {
+  background: #0053E0;
+  border-color: #0053E0;
+  color: white;
+}
+
 /* Status Bar */
 .picker-status {
   padding: 6px 12px;
