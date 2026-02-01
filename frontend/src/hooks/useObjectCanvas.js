@@ -91,6 +91,8 @@ const createImageObject = (template, x = 0, y = 0) => {
     x = (CANVAS_WIDTH - width) / 2
     y = (CANVAS_HEIGHT - height) / 2
   } else if (template.aspectRatio) {
+    // FIT mode: scale to fit inside canvas maintaining aspect ratio
+    // Image is fully visible, background color shows on sides if needed
     if (template.aspectRatio > 1) {
       // Wider than tall - fit to width
       width = CANVAS_WIDTH

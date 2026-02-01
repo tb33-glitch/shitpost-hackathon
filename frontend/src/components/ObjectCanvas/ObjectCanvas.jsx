@@ -664,7 +664,7 @@ export default function ObjectCanvas({
           ctx.globalAlpha = 1
         }
       } else if (obj.type === OBJECT_TYPES.TEXT) {
-        // Draw text
+        // Draw text with multiline support
         ctx.font = `bold ${obj.fontSize}px "${obj.fontFamily}", sans-serif`
         ctx.textAlign = obj.align || 'center'
         ctx.textBaseline = 'middle'
@@ -672,19 +672,28 @@ export default function ObjectCanvas({
         const textX = obj.align === 'left' ? obj.x :
                      obj.align === 'right' ? obj.x + obj.width :
                      obj.x + obj.width / 2
-        const textY = obj.y + obj.height / 2
 
-        // Stroke
-        if (obj.strokeWidth > 0) {
-          ctx.strokeStyle = obj.strokeColor
-          ctx.lineWidth = obj.strokeWidth
-          ctx.lineJoin = 'round'
-          ctx.strokeText(obj.text, textX, textY)
-        }
+        // Split text by newlines for multiline support
+        const lines = obj.text.split('\n')
+        const lineHeight = obj.fontSize * 1.2
+        const totalHeight = lines.length * lineHeight
+        const startY = obj.y + obj.height / 2 - totalHeight / 2 + lineHeight / 2
 
-        // Fill
-        ctx.fillStyle = obj.color
-        ctx.fillText(obj.text, textX, textY)
+        lines.forEach((line, index) => {
+          const lineY = startY + index * lineHeight
+
+          // Stroke
+          if (obj.strokeWidth > 0) {
+            ctx.strokeStyle = obj.strokeColor
+            ctx.lineWidth = obj.strokeWidth
+            ctx.lineJoin = 'round'
+            ctx.strokeText(line, textX, lineY)
+          }
+
+          // Fill
+          ctx.fillStyle = obj.color
+          ctx.fillText(line, textX, lineY)
+        })
       } else if (obj.type === OBJECT_TYPES.STICKER) {
         // Draw sticker (emoji)
         if (obj.sticker && obj.sticker.emoji) {

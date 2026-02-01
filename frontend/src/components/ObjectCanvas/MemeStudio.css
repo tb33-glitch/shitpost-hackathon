@@ -102,6 +102,28 @@
   border-color: #316ac5;
 }
 
+.top-btn.watermark {
+  background: linear-gradient(180deg, #f5f5f5 0%, #e0e0e0 100%);
+  color: #666;
+  border: 1px solid #aaa;
+}
+
+.top-btn.watermark:hover {
+  background: linear-gradient(180deg, #fff 0%, #f0f0f0 100%);
+  border-color: #888;
+}
+
+.top-btn.watermark.active {
+  background: linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 100%);
+  color: #2e7d32;
+  border-color: #81c784;
+}
+
+.top-btn.watermark.locked {
+  opacity: 0.8;
+  color: #999;
+}
+
 /* Main Content Area */
 .studio-main {
   display: flex;

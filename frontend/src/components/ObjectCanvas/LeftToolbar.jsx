@@ -41,6 +41,12 @@ export default function LeftToolbar({
   onClose,
   // Submit template
   onSubmit,
+  // Watermark control
+  showWatermark,
+  onToggleWatermark,
+  hasTokenAccess,
+  tokenBalance,
+  minTokensRequired,
 }) {
   const [showTemplates, setShowTemplates] = useState(false)
   const [showStickers, setShowStickers] = useState(false)
@@ -466,6 +472,23 @@ export default function LeftToolbar({
             data-tooltip="Submit"
           >
             <span className="tool-icon">⬆️</span>
+          </button>
+        )}
+        {/* Watermark toggle - only shown if token gating is available */}
+        {onToggleWatermark && (
+          <button
+            className={`tool-btn watermark-btn ${!showWatermark && hasTokenAccess ? 'active' : ''} ${!hasTokenAccess ? 'locked' : ''}`}
+            onClick={() => {
+              closeAllPickers()
+              if (hasTokenAccess) {
+                onToggleWatermark()
+              } else {
+                alert(`Hold ${minTokensRequired?.toLocaleString() || '1,000'}+ $SHITPOST tokens to remove watermark.\n\nYour balance: ${tokenBalance?.toLocaleString() || 0}`)
+              }
+            }}
+            data-tooltip={hasTokenAccess ? (showWatermark ? "Remove Mark" : "Add Mark") : `Hold ${minTokensRequired?.toLocaleString() || '1K'} $SHITPOST`}
+          >
+            <span className="tool-icon">{showWatermark ? '©' : '✓'}</span>
           </button>
         )}
         {onExport && (

@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "lastUpdated": "2026-01-22T00:00:00.000Z",
+  "lastUpdated": "2026-01-31T00:00:00.000Z",
   "templates": [
     {
       "file": "big balls.jpeg",
@@ -111,6 +111,356 @@
       "file": "why do i feel amazing.jpeg",
       "name": "Why Do I Feel Amazing",
       "tags": ["happy", "good", "reaction", "positive"]
+    },
+    {
+      "file": "big brain v square peg.jpg",
+      "name": "Big Brain vs Square Peg",
+      "tags": ["wojak", "brain", "thinking", "comparison"]
+    },
+    {
+      "file": "big brain wojak.jpg",
+      "name": "Big Brain Wojak",
+      "tags": ["wojak", "brain", "smart", "galaxy"]
+    },
+    {
+      "file": "bob ross crypto.jpg",
+      "name": "Bob Ross Crypto",
+      "tags": ["crypto", "bob ross", "painting", "wholesome"]
+    },
+    {
+      "file": "chad approaching npc.jpg",
+      "name": "Chad Approaching NPC",
+      "tags": ["wojak", "chad", "npc", "based"]
+    },
+    {
+      "file": "dad fbi.jpg",
+      "name": "Dad FBI",
+      "tags": ["fbi", "dad", "funny", "reaction"]
+    },
+    {
+      "file": "dank dog.jpg",
+      "name": "Dank Dog",
+      "tags": ["dank", "dog", "funny", "reaction"]
+    },
+    {
+      "file": "dank dom.jpg",
+      "name": "Dank Dom",
+      "tags": ["dank", "funny", "reaction"]
+    },
+    {
+      "file": "dank elmo.jpg",
+      "name": "Dank Elmo",
+      "tags": ["dank", "elmo", "sesame", "funny"]
+    },
+    {
+      "file": "dank flirting.jpg",
+      "name": "Dank Flirting",
+      "tags": ["dank", "flirting", "dating", "funny"]
+    },
+    {
+      "file": "dank hank.jpg",
+      "name": "Dank Hank",
+      "tags": ["dank", "hank", "king of the hill", "funny"]
+    },
+    {
+      "file": "dank mr krabs.jpg",
+      "name": "Dank Mr Krabs",
+      "tags": ["dank", "spongebob", "mr krabs", "money"]
+    },
+    {
+      "file": "dank patrick.jpg",
+      "name": "Dank Patrick",
+      "tags": ["dank", "spongebob", "patrick", "funny"]
+    },
+    {
+      "file": "dank shaggy.jpg",
+      "name": "Dank Shaggy",
+      "tags": ["dank", "shaggy", "scooby doo", "funny"]
+    },
+    {
+      "file": "dank sponge.jpg",
+      "name": "Dank Sponge",
+      "tags": ["dank", "spongebob", "funny", "reaction"]
+    },
+    {
+      "file": "dank squrl.jpg",
+      "name": "Dank Squrl",
+      "tags": ["dank", "squirrel", "funny", "reaction"]
+    },
+    {
+      "file": "dank thomas 2.jpg",
+      "name": "Dank Thomas 2",
+      "tags": ["dank", "thomas", "train", "funny"]
+    },
+    {
+      "file": "dank thomas.jpg",
+      "name": "Dank Thomas",
+      "tags": ["dank", "thomas", "train", "cursed"]
+    },
+    {
+      "file": "dank toad.jpg",
+      "name": "Dank Toad",
+      "tags": ["dank", "toad", "mario", "funny"]
+    },
+    {
+      "file": "dr pepe .png",
+      "name": "Dr Pepe",
+      "tags": ["pepe", "doctor", "medical", "reaction"]
+    },
+    {
+      "file": "fbi breach.jpg",
+      "name": "FBI Breach",
+      "tags": ["fbi", "breach", "raid", "funny"]
+    },
+    {
+      "file": "fbi chillin.jpg",
+      "name": "FBI Chillin",
+      "tags": ["fbi", "chill", "watching", "surveillance"]
+    },
+    {
+      "file": "fbi open up.jpg",
+      "name": "FBI Open Up",
+      "tags": ["fbi", "raid", "door", "funny"]
+    },
+    {
+      "file": "fbi pengu.jpg",
+      "name": "FBI Pengu",
+      "tags": ["fbi", "penguin", "cute", "funny"]
+    },
+    {
+      "file": "fbi roblox.png",
+      "name": "FBI Roblox",
+      "tags": ["fbi", "roblox", "gaming", "funny"]
+    },
+    {
+      "file": "fbi van.png",
+      "name": "FBI Van",
+      "tags": ["fbi", "van", "surveillance", "paranoid"]
+    },
+    {
+      "file": "fbi veggies.jpg",
+      "name": "FBI Veggies",
+      "tags": ["fbi", "vegetables", "healthy", "funny"]
+    },
+    {
+      "file": "hanging pepe.jpg",
+      "name": "Hanging Pepe",
+      "tags": ["pepe", "sad", "dark", "reaction"]
+    },
+    {
+      "file": "headphones off fbi.webp",
+      "name": "Headphones Off FBI",
+      "tags": ["fbi", "headphones", "listening", "reaction"]
+    },
+    {
+      "file": "hooded wojak.jpg",
+      "name": "Hooded Wojak",
+      "tags": ["wojak", "hood", "mysterious", "reaction"]
+    },
+    {
+      "file": "hope injection.webp",
+      "name": "Hope Injection",
+      "tags": ["hopium", "injection", "crypto", "copium"]
+    },
+    {
+      "file": "hopium.jpg",
+      "name": "Hopium",
+      "tags": ["hopium", "crypto", "copium", "wojak"]
+    },
+    {
+      "file": "i love this show crypto.jpg",
+      "name": "I Love This Show Crypto",
+      "tags": ["crypto", "tv", "watching", "popcorn"]
+    },
+    {
+      "file": "is the bullrun in the room rn crypto.webp",
+      "name": "Is The Bullrun In The Room",
+      "tags": ["crypto", "bullrun", "copium", "waiting"]
+    },
+    {
+      "file": "lock in meme.jpeg",
+      "name": "Lock In",
+      "tags": ["lock in", "focus", "grind", "sigma"]
+    },
+    {
+      "file": "Mad Max Dumpster.jpeg",
+      "name": "Mad Max Dumpster",
+      "tags": ["mad max", "dumpster fire", "chaos", "apocalypse"]
+    },
+    {
+      "file": "manifesting pepe.jpg",
+      "name": "Manifesting Pepe",
+      "tags": ["pepe", "manifesting", "spiritual", "hopium"]
+    },
+    {
+      "file": "mcdicks wojak.jpg",
+      "name": "McDonalds Wojak",
+      "tags": ["wojak", "mcdonalds", "wagie", "work"]
+    },
+    {
+      "file": "my parents in thier 30s.webp",
+      "name": "My Parents In Their 30s",
+      "tags": ["parents", "comparison", "zoomer", "boomer"]
+    },
+    {
+      "file": "npc brainlet.webp",
+      "name": "NPC Brainlet",
+      "tags": ["npc", "brainlet", "wojak", "dumb"]
+    },
+    {
+      "file": "npc chip update.webp",
+      "name": "NPC Chip Update",
+      "tags": ["npc", "chip", "programming", "wojak"]
+    },
+    {
+      "file": "npc crowd.jpg",
+      "name": "NPC Crowd",
+      "tags": ["npc", "crowd", "sheep", "wojak"]
+    },
+    {
+      "file": "npc wojak conversion.jpg",
+      "name": "NPC Wojak Conversion",
+      "tags": ["npc", "wojak", "conversion", "redpill"]
+    },
+    {
+      "file": "pepe copium.webp",
+      "name": "Pepe Copium",
+      "tags": ["pepe", "copium", "cope", "crypto"]
+    },
+    {
+      "file": "pepe falls.jpg",
+      "name": "Pepe Falls",
+      "tags": ["pepe", "falling", "sad", "fail"]
+    },
+    {
+      "file": "pepe mcdicks.webp",
+      "name": "Pepe McDonalds",
+      "tags": ["pepe", "mcdonalds", "wagie", "work"]
+    },
+    {
+      "file": "pepe punch.jpg",
+      "name": "Pepe Punch",
+      "tags": ["pepe", "punch", "angry", "fighting"]
+    },
+    {
+      "file": "pepe reading.jpg",
+      "name": "Pepe Reading",
+      "tags": ["pepe", "reading", "book", "smart"]
+    },
+    {
+      "file": "pepe saves wojak.webp",
+      "name": "Pepe Saves Wojak",
+      "tags": ["pepe", "wojak", "saving", "wholesome"]
+    },
+    {
+      "file": "pepe saviour.png",
+      "name": "Pepe Saviour",
+      "tags": ["pepe", "saviour", "hero", "wholesome"]
+    },
+    {
+      "file": "pepe scream.webp",
+      "name": "Pepe Scream",
+      "tags": ["pepe", "scream", "panic", "reaction"]
+    },
+    {
+      "file": "pepe shotgun.jpg",
+      "name": "Pepe Shotgun",
+      "tags": ["pepe", "shotgun", "angry", "threatening"]
+    },
+    {
+      "file": "pepe versus npc template.jpg",
+      "name": "Pepe vs NPC Template",
+      "tags": ["pepe", "npc", "versus", "template"]
+    },
+    {
+      "file": "pepe with sign.jpg",
+      "name": "Pepe With Sign",
+      "tags": ["pepe", "sign", "message", "template"]
+    },
+    {
+      "file": "sad pepe.jpg",
+      "name": "Sad Pepe",
+      "tags": ["pepe", "sad", "crying", "feels"]
+    },
+    {
+      "file": "sad wojak.png",
+      "name": "Sad Wojak",
+      "tags": ["wojak", "sad", "crying", "feels"]
+    },
+    {
+      "file": "slow down too dank.jpg",
+      "name": "Slow Down Too Dank",
+      "tags": ["dank", "slow down", "funny", "reaction"]
+    },
+    {
+      "file": "smug pepe.jpg",
+      "name": "Smug Pepe",
+      "tags": ["pepe", "smug", "confident", "based"]
+    },
+    {
+      "file": "soyjak pointing.webp",
+      "name": "Soyjak Pointing",
+      "tags": ["soyjak", "pointing", "wojak", "reaction"]
+    },
+    {
+      "file": "that would be dank.jpg",
+      "name": "That Would Be Dank",
+      "tags": ["dank", "office space", "funny", "reaction"]
+    },
+    {
+      "file": "they dont know.webp",
+      "name": "They Don't Know",
+      "tags": ["party", "lonely", "wojak", "sad"]
+    },
+    {
+      "file": "vacuumjak.webp",
+      "name": "Vacuumjak",
+      "tags": ["wojak", "vacuum", "brain", "funny"]
+    },
+    {
+      "file": "war wojak.webp",
+      "name": "War Wojak",
+      "tags": ["wojak", "war", "soldier", "ptsd"]
+    },
+    {
+      "file": "we got him.png",
+      "name": "We Got Him",
+      "tags": ["fbi", "caught", "gotcha", "reaction"]
+    },
+    {
+      "file": "wen lambo crypto.jpg",
+      "name": "Wen Lambo",
+      "tags": ["crypto", "lambo", "moon", "hopium"]
+    },
+    {
+      "file": "white monster wojak.png",
+      "name": "White Monster Wojak",
+      "tags": ["wojak", "monster", "boomer", "energy drink"]
+    },
+    {
+      "file": "wojak graph.png",
+      "name": "Wojak Graph",
+      "tags": ["wojak", "graph", "crypto", "charts"]
+    },
+    {
+      "file": "wojak nostalgia.jpg",
+      "name": "Wojak Nostalgia",
+      "tags": ["wojak", "nostalgia", "sad", "feels"]
+    },
+    {
+      "file": "wojak trump.jpg",
+      "name": "Wojak Trump",
+      "tags": ["wojak", "trump", "politics", "reaction"]
+    },
+    {
+      "file": "zoomer crying.png",
+      "name": "Zoomer Crying",
+      "tags": ["zoomer", "crying", "wojak", "sad"]
+    },
+    {
+      "file": "DumpsterFire2.webp",
+      "name": "Dumpster Fire",
+      "tags": ["dumpster fire", "chaos", "everything is fine", "reaction"]
     }
   ],
   "stickers": [],

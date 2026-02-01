@@ -189,29 +189,55 @@ export async function syncRegistryFromIPFS() {
  * Get all community templates in a format compatible with the template picker
  */
 export async function getCommunityTemplates() {
-  // Skip IPFS sync for now - just use local registry
-  // await syncRegistryFromIPFS()
+  const templates = []
 
+  // Load admin-curated templates from metadata.json
+  try {
+    const response = await fetch('/templates/metadata.json')
+    if (response.ok) {
+      const metadata = await response.json()
+      if (metadata.templates) {
+        metadata.templates.forEach((item, index) => {
+          templates.push({
+            id: `admin-template-${index}`,
+            name: item.name || item.file.replace(/\.[^.]+$/, ''),
+            category: 'community',
+            image: `/templates/templates/${item.file}`,
+            aspectRatio: 1,
+            textZones: getDefaultTextZones('templates'),
+            tags: item.tags || [],
+            isCustom: true,
+            isCommunity: true,
+          })
+        })
+      }
+    }
+  } catch (e) {
+    console.warn('[getCommunityTemplates] Failed to load metadata.json:', e)
+  }
+
+  // Also load user-submitted templates from localStorage
   const registry = getLocalRegistry()
+  registry.templates.forEach((entry, index) => {
+    templates.push({
+      id: `community-${entry.cid}-${index}`,
+      name: entry.name,
+      category: entry.category === 'templates' ? 'community' : entry.category,
+      image: entry.imageUrl || (entry.imageCid?.startsWith('local-') ? entry.imageCid : `https://${PINATA_GATEWAY}/ipfs/${entry.imageCid}`),
+      aspectRatio: 1,
+      textZones: getDefaultTextZones(entry.category),
+      tags: entry.tags || [],
+      isCustom: true,
+      isCommunity: true,
+      submittedBy: entry.submittedBy,
+      displayName: entry.displayName,
+      xp: entry.xp,
+      submittedAt: entry.submittedAt,
+      cid: entry.cid,
+    })
+  })
 
-  // Convert registry entries to template format
-  return registry.templates.map((entry, index) => ({
-    id: `community-${entry.cid}-${index}`,
-    name: entry.name,
-    category: entry.category === 'templates' ? 'community' : entry.category,
-    // Handle both IPFS and local data URLs
-    image: entry.imageUrl || (entry.imageCid?.startsWith('local-') ? entry.imageCid : `https://${PINATA_GATEWAY}/ipfs/${entry.imageCid}`),
-    aspectRatio: 1,
-    textZones: getDefaultTextZones(entry.category),
-    tags: entry.tags || [],
-    isCustom: true,
-    isCommunity: true,
-    submittedBy: entry.submittedBy,
-    displayName: entry.displayName,
-    xp: entry.xp,
-    submittedAt: entry.submittedAt,
-    cid: entry.cid,
-  }))
+  return templates
 }
 
 /**

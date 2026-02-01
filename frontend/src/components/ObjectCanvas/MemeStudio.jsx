@@ -4,6 +4,7 @@ import useVideoPlayback from '../../hooks/useVideoPlayback'
 import useVideoExport from '../../hooks/useVideoExport'
 import useTemplateSubmission from '../../hooks/useTemplateSubmission'
 import useBackgroundRemoval from '../../hooks/useBackgroundRemoval'
+import useTokenGate from '../../hooks/useTokenGate'
 import { reloadCustomTemplates } from '../../config/memeTemplates'
 import ObjectCanvas from './ObjectCanvas'
 import LeftToolbar from './LeftToolbar'
@@ -72,6 +73,10 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
 
   // Background removal
   const { removeImageBackground, isProcessing: isRemovingBackground, progress: removeBackgroundProgress } = useBackgroundRemoval()
+
+  // Token gate for premium features (watermark removal)
+  const { hasAccess: hasTokenAccess, tokenBalance, minRequired: minTokensRequired } = useTokenGate()
+  const [showWatermark, setShowWatermark] = useState(true)
 
   // Callback for when video element is ready
   const handleVideoElementReady = useCallback((videoEl) => {
@@ -252,24 +257,30 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
   }, [selectObject])
 
   const drawWatermark = useCallback((ctx, canvasWidth, canvasHeight) => {
+    // Fine signature style watermark
     const text = 'shitpost.pro'
-    const fontSize = Math.round(canvasHeight * 0.03)
-    const padding = Math.round(canvasWidth * 0.02)
+    const fontSize = Math.round(canvasHeight * 0.022) // Smaller, more subtle
+    const padding = Math.round(canvasWidth * 0.015)
 
     ctx.save()
-    ctx.font = `italic bold ${fontSize}px "Inter", sans-serif`
+
+    // Use a script/handwriting style font with thin weight
+    ctx.font = `italic 300 ${fontSize}px "Georgia", "Times New Roman", serif`
     ctx.textAlign = 'right'
     ctx.textBaseline = 'bottom'
 
     const x = canvasWidth - padding
     const y = canvasHeight - padding
 
-    ctx.globalAlpha = 0.5
+    // Subtle thin stroke for visibility on any background
+    ctx.globalAlpha = 0.4
     ctx.strokeStyle = '#000000'
-    ctx.lineWidth = 3
+    ctx.lineWidth = 1
     ctx.lineJoin = 'round'
     ctx.strokeText(text, x, y)
 
+    // Semi-transparent white fill
+    ctx.globalAlpha = 0.6
     ctx.fillStyle = '#FFFFFF'
     ctx.fillText(text, x, y)
 
@@ -365,22 +376,34 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
           ctx.globalAlpha = 1
         }
       } else if (obj.type === OBJECT_TYPES.TEXT) {
+        // Draw text with multiline support
         ctx.font = `bold ${obj.fontSize}px "${obj.fontFamily}", sans-serif`
         ctx.textAlign = obj.align || 'center'
         ctx.textBaseline = 'middle'
 
-        const textX = obj.x + obj.width / 2
-        const textY = obj.y + obj.height / 2
+        const textX = obj.align === 'left' ? obj.x :
+                     obj.align === 'right' ? obj.x + obj.width :
+                     obj.x + obj.width / 2
 
-        if (obj.strokeWidth > 0) {
-          ctx.strokeStyle = obj.strokeColor
-          ctx.lineWidth = obj.strokeWidth
-          ctx.lineJoin = 'round'
-          ctx.strokeText(obj.text, textX, textY)
-        }
+        // Split text by newlines for multiline support
+        const lines = obj.text.split('\n')
+        const lineHeight = obj.fontSize * 1.2
+        const totalHeight = lines.length * lineHeight
+        const startY = obj.y + obj.height / 2 - totalHeight / 2 + lineHeight / 2
 
-        ctx.fillStyle = obj.color
-        ctx.fillText(obj.text, textX, textY)
+        lines.forEach((line, index) => {
+          const lineY = startY + index * lineHeight
+
+          if (obj.strokeWidth > 0) {
+            ctx.strokeStyle = obj.strokeColor
+            ctx.lineWidth = obj.strokeWidth
+            ctx.lineJoin = 'round'
+            ctx.strokeText(line, textX, lineY)
+          }
+
+          ctx.fillStyle = obj.color
+          ctx.fillText(line, textX, lineY)
+        })
       } else if (obj.type === OBJECT_TYPES.STICKER && obj.sticker) {
         // Draw sticker (emoji)
         if (obj.sticker.emoji) {
@@ -433,7 +456,9 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
       const ctx = canvas.getContext('2d')
 
       const videoEl = videoObject ? videoRefs.current[videoObject.id] : null
-      await renderObjectsToCanvas(ctx, videoEl, videoPlayback.currentTime)
+      // Respect watermark toggle (only if user has token access can they remove it)
+      const includeWatermark = showWatermark || !hasTokenAccess
+      await renderObjectsToCanvas(ctx, videoEl, videoPlayback.currentTime, includeWatermark)
 
       const dataUrl = canvas.toDataURL('image/png')
       const link = document.createElement('a')
@@ -443,7 +468,7 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
     } catch (err) {
       console.error('[Export] Failed:', err)
     }
-  }, [renderObjectsToCanvas, videoObject, videoPlayback.currentTime])
+  }, [renderObjectsToCanvas, videoObject, videoPlayback.currentTime, showWatermark, hasTokenAccess])
 
   const handleExportVideo = useCallback(async (options) => {
     if (!videoObject) return
@@ -456,8 +481,10 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
 
     videoPlayback.pause()
 
+    // Respect watermark toggle for video export
+    const includeWatermark = showWatermark || !hasTokenAccess
     const renderFrame = async (ctx, time) => {
-      await renderObjectsToCanvas(ctx, videoEl, time)
+      await renderObjectsToCanvas(ctx, videoEl, time, includeWatermark)
     }
 
     try {
@@ -521,7 +548,9 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
       const ctx = canvas.getContext('2d')
 
       const videoEl = videoObject ? videoRefs.current[videoObject.id] : null
-      await renderObjectsToCanvas(ctx, videoEl, videoPlayback.currentTime)
+      // Respect watermark toggle
+      const includeWatermark = showWatermark || !hasTokenAccess
+      await renderObjectsToCanvas(ctx, videoEl, videoPlayback.currentTime, includeWatermark)
 
       canvas.toBlob(async (blob) => {
         try {
@@ -542,7 +571,7 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
     } catch (err) {
       console.error('[Copy] Failed to render canvas:', err)
     }
-  }, [renderObjectsToCanvas, videoObject, videoPlayback.currentTime])
+  }, [renderObjectsToCanvas, videoObject, videoPlayback.currentTime, showWatermark, hasTokenAccess])
 
   // Keep ref updated for keyboard shortcut
   useEffect(() => {
@@ -640,6 +669,20 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
           </button>
         </div>
         <div className="top-bar-right" data-onboarding="export-buttons">
+          {/* Watermark toggle - token gated */}
+          <button
+            className={`top-btn watermark ${!showWatermark && hasTokenAccess ? 'active' : ''} ${!hasTokenAccess ? 'locked' : ''}`}
+            onClick={() => {
+              if (hasTokenAccess) {
+                setShowWatermark(!showWatermark)
+              } else {
+                alert(`Hold ${minTokensRequired?.toLocaleString() || '1,000'}+ $SHITPOST tokens to remove watermark.\n\nYour balance: ${tokenBalance?.toLocaleString() || 0}`)
+              }
+            }}
+            title={hasTokenAccess ? (showWatermark ? "Remove Watermark" : "Add Watermark") : `Hold ${minTokensRequired?.toLocaleString() || '1,000'} $SHITPOST to unlock`}
+          >
+            © Watermark
+          </button>
           <button
             className="top-btn submit"
             onClick={handleOpenSubmitModal}
@@ -695,6 +738,11 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
           canRedo={canRedo}
           onClose={onClose}
           onSubmit={handleOpenSubmitModal}
+          showWatermark={showWatermark}
+          onToggleWatermark={() => setShowWatermark(!showWatermark)}
+          hasTokenAccess={hasTokenAccess}
+          tokenBalance={tokenBalance}
+          minTokensRequired={minTokensRequired}
         />
 
         <div className="canvas-area-container" data-onboarding="canvas-area">

@@ -236,8 +236,16 @@
   display: none;
 }
 
+/* Desktop-only elements hidden on mobile */
+.desktop-only {
+  display: block;
+}
+
 /* Mobile Responsive Styles */
 @media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
   .mobile-close-btn {
     display: flex !important;
     background: linear-gradient(180deg, #ff6b6b 0%, #c92a2a 100%) !important;
@@ -435,4 +443,42 @@
   .mobile-actions .tool-btn.disabled {
     opacity: 0.4;
   }
+
+  .mobile-actions .watermark-btn {
+    background: linear-gradient(180deg, #607d8b 0%, #455a64 100%);
+    border-color: #37474f;
+  }
+
+  .mobile-actions .watermark-btn.active {
+    background: linear-gradient(180deg, #4caf50 0%, #388e3c 100%);
+    border-color: #2e7d32;
+  }
+
+  .mobile-actions .watermark-btn.locked {
+    background: linear-gradient(180deg, #9e9e9e 0%, #757575 100%);
+    border-color: #616161;
+    opacity: 0.7;
+  }
+}
+
+/* Watermark button styles */
+.watermark-btn {
+  position: relative;
+}
+
+.watermark-btn.active {
+  background: linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 100%);
+  border-color: #81c784;
+}
+
+.watermark-btn.locked {
+  opacity: 0.7;
+}
+
+.watermark-btn.locked::before {
+  content: '🔒';
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  font-size: 10px;
 }
