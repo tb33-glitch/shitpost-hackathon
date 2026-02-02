@@ -27,7 +27,7 @@ export default function DinoGame({ isActive, onJump }) {
   const gameRef = useRef({
     state: 'waiting',
     score: 0,
-    highScore: parseInt(localStorage.getItem('dinoHighScore') || '0'),
+    highScore: 0, // Will be fetched from leaderboard
     poop: { y: GAME_HEIGHT - GROUND_HEIGHT - POOP_SIZE, vy: 0 },
     obstacles: [],
     gameSpeed: GAME_SPEED_INITIAL,
@@ -42,9 +42,30 @@ export default function DinoGame({ isActive, onJump }) {
 
   const game = gameRef.current
 
+  // Fetch leaderboard and sync high score on mount
   useEffect(() => {
     fetchLeaderboard()
+    fetchHighScore()
   }, [])
+
+  // Fetch the global high score from Supabase
+  const fetchHighScore = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('leaderboard')
+        .select('score')
+        .order('score', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (!error && data) {
+        game.highScore = data.score
+        forceUpdate(n => n + 1)
+      }
+    } catch (e) {
+      console.error('Failed to fetch high score:', e)
+    }
+  }
 
   // Focus input when initials screen shows
   useEffect(() => {
@@ -99,6 +120,7 @@ export default function DinoGame({ isActive, onJump }) {
         setSubmitResult({ rank, isTopTen: rank <= 10 })
         setShowInitialsInput(false)
         fetchLeaderboard()
+        fetchHighScore() // Refresh global high score
       }
     } catch (e) {
       console.error('Failed to submit score:', e)
@@ -214,11 +236,6 @@ export default function DinoGame({ isActive, onJump }) {
           game.state = 'gameover'
           game.finalScore = game.score
           game.playTime = Math.round((Date.now() - game.startTime) / 1000)
-          const newHighScore = Math.max(game.highScore, game.score)
-          if (newHighScore > game.highScore) {
-            game.highScore = newHighScore
-            localStorage.setItem('dinoHighScore', String(newHighScore))
-          }
           // Show initials input if score >= 100
           if (game.score >= 100) {
             setShowInitialsInput(true)
