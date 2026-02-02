@@ -91,7 +91,7 @@ export default function DSLanding() {
     {
       icon: '💩',
       label: 'WTF is this?',
-      description: 'Meme creation studio.\nMint NFTs on Solana.\nLaunching soon.',
+      description: 'Meme creation studio.\nMint NFTs on Solana.\nBurn them with Sacred Waste.\nLaunching soon.',
       action: null,
     },
     {
