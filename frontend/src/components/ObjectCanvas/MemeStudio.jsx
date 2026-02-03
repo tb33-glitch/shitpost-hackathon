@@ -519,10 +519,115 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
 
     videoPlayback.pause()
 
+    // Pre-cache all images before export to avoid async loading during render
+    console.log('[VideoExport] Pre-caching images...')
+    const imageCache = new Map()
+    const imageObjects = objects.filter(obj => obj.type === OBJECT_TYPES.IMAGE)
+
+    await Promise.all(imageObjects.map(obj => {
+      return new Promise((resolve) => {
+        const img = new Image()
+        const isDataOrBlob = obj.src.startsWith('data:') || obj.src.startsWith('blob:')
+        if (!isDataOrBlob) {
+          img.crossOrigin = 'anonymous'
+        }
+        img.onload = () => {
+          imageCache.set(obj.id, img)
+          resolve()
+        }
+        img.onerror = () => {
+          console.warn('[VideoExport] Failed to pre-cache image:', obj.src.substring(0, 50))
+          resolve()
+        }
+        img.src = obj.src
+      })
+    }))
+    console.log('[VideoExport] Pre-cached', imageCache.size, 'images')
+
     // Respect watermark toggle for video export
     const includeWatermark = showWatermark || !hasTokenAccess
-    const renderFrame = async (ctx, time) => {
-      await renderObjectsToCanvas(ctx, videoEl, time, includeWatermark)
+
+    // Synchronous render function using pre-cached images
+    const renderFrame = (ctx, time) => {
+      ctx.fillStyle = backgroundColor
+      ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+
+      for (const obj of objects) {
+        ctx.save()
+
+        // Check visibility for video overlays
+        if (obj.type === OBJECT_TYPES.TEXT || obj.type === OBJECT_TYPES.STICKER) {
+          const showFrom = obj.showFrom ?? 0
+          const showUntil = obj.showUntil ?? (videoObject?.duration ?? Infinity)
+          if (time < showFrom || time > showUntil) {
+            ctx.restore()
+            continue
+          }
+        }
+
+        const cx = obj.x + obj.width / 2
+        const cy = obj.y + obj.height / 2
+        ctx.translate(cx, cy)
+        ctx.rotate((obj.rotation || 0) * Math.PI / 180)
+        ctx.translate(-cx, -cy)
+
+        if (obj.type === OBJECT_TYPES.VIDEO && videoEl) {
+          ctx.globalAlpha = obj.opacity ?? 1
+          ctx.drawImage(videoEl, obj.x, obj.y, obj.width, obj.height)
+          ctx.globalAlpha = 1
+        } else if (obj.type === OBJECT_TYPES.IMAGE) {
+          const img = imageCache.get(obj.id)
+          if (img) {
+            ctx.globalAlpha = obj.opacity ?? 1
+            ctx.drawImage(img, obj.x, obj.y, obj.width, obj.height)
+            ctx.globalAlpha = 1
+          }
+        } else if (obj.type === OBJECT_TYPES.TEXT) {
+          ctx.font = `bold ${obj.fontSize}px "${obj.fontFamily}", sans-serif`
+          ctx.textAlign = obj.align || 'center'
+          ctx.textBaseline = 'middle'
+          const textX = obj.align === 'left' ? obj.x : obj.align === 'right' ? obj.x + obj.width : obj.x + obj.width / 2
+          const lines = obj.text.split('\n')
+          const lineHeight = obj.fontSize * 1.2
+          const totalHeight = lines.length * lineHeight
+          const startY = obj.y + obj.height / 2 - totalHeight / 2 + lineHeight / 2
+          lines.forEach((line, index) => {
+            const lineY = startY + index * lineHeight
+            if (obj.strokeWidth > 0) {
+              ctx.strokeStyle = obj.strokeColor
+              ctx.lineWidth = obj.strokeWidth
+              ctx.lineJoin = 'round'
+              ctx.strokeText(line, textX, lineY)
+            }
+            ctx.fillStyle = obj.color
+            ctx.fillText(line, textX, lineY)
+          })
+        } else if (obj.type === OBJECT_TYPES.STICKER && obj.sticker?.emoji) {
+          const fontSize = Math.min(obj.width, obj.height)
+          ctx.font = `${fontSize}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText(obj.sticker.emoji, obj.x + obj.width / 2, obj.y + obj.height / 2)
+        }
+
+        ctx.restore()
+      }
+
+      // Draw watermark if needed
+      if (includeWatermark) {
+        ctx.save()
+        ctx.globalAlpha = 0.7
+        ctx.font = 'bold 24px Arial'
+        ctx.fillStyle = '#ffffff'
+        ctx.strokeStyle = '#000000'
+        ctx.lineWidth = 2
+        ctx.textAlign = 'right'
+        ctx.textBaseline = 'bottom'
+        const text = 'shitpost.tv'
+        ctx.strokeText(text, CANVAS_WIDTH - 20, CANVAS_HEIGHT - 20)
+        ctx.fillText(text, CANVAS_WIDTH - 20, CANVAS_HEIGHT - 20)
+        ctx.restore()
+      }
     }
 
     try {

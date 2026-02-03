@@ -320,18 +320,14 @@ export async function updateTemplate(id, updates) {
 
 /**
  * Get a proxied URL for media files (videos/images from Supabase)
- * This allows cross-origin media to be used in canvas without tainting
+ * Note: Supabase Storage has CORS enabled by default, so we don't need to proxy those URLs.
+ * Only external non-Supabase URLs would need proxying.
  * @param {string} url - Original media URL
- * @returns {string} Proxied URL or original if not from Supabase
+ * @returns {string} Original URL (Supabase has CORS enabled)
  */
 export function getProxiedMediaUrl(url) {
-  if (!url) return url
-
-  // Only proxy Supabase storage URLs
-  if (url.includes('.supabase.co/storage/')) {
-    return `${API_BASE_URL}/templates/media-proxy?url=${encodeURIComponent(url)}`
-  }
-
+  // Supabase Storage URLs have CORS enabled, no need to proxy
+  // Just return the original URL
   return url
 }
 

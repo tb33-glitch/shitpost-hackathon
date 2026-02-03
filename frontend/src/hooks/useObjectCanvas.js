@@ -26,25 +26,30 @@ const imageToDataURL = async (url) => {
     return url
   }
 
-  try {
-    // Use a CORS proxy for external images
-    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`
+  // Check if it's a Supabase URL (has CORS enabled, no proxy needed)
+  const isSupabaseUrl = url.includes('.supabase.co/')
 
-    const response = await fetch(proxyUrl)
-    if (!response.ok) {
-      console.warn('[imageToDataURL] Proxy fetch failed, trying direct:', url)
-      // Try direct fetch as fallback
-      const directResponse = await fetch(url)
-      if (!directResponse.ok) {
-        throw new Error(`Failed to fetch image: ${response.status}`)
+  try {
+    let response
+
+    if (isSupabaseUrl) {
+      // Supabase has CORS enabled, fetch directly
+      console.log('[imageToDataURL] Fetching Supabase image directly:', url.substring(0, 60))
+      response = await fetch(url)
+    } else {
+      // Use a CORS proxy for other external images
+      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`
+      response = await fetch(proxyUrl)
+
+      if (!response.ok) {
+        console.warn('[imageToDataURL] Proxy fetch failed, trying direct:', url)
+        // Try direct fetch as fallback
+        response = await fetch(url)
       }
-      const blob = await directResponse.blob()
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onloadend = () => resolve(reader.result)
-        reader.onerror = reject
-        reader.readAsDataURL(blob)
-      })
+    }
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.status}`)
     }
 
     const blob = await response.blob()

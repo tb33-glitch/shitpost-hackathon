@@ -178,7 +178,6 @@ export default function useVideoExport() {
       // Real-time render loop
       await new Promise((resolve, reject) => {
         let animFrameId = null
-        let lastDataTime = Date.now()
 
         const renderLoop = () => {
           if (cancelRef.current) {
@@ -194,8 +193,11 @@ export default function useVideoExport() {
           const progressPercent = Math.min(90, (elapsed / duration) * 90)
           setProgress(progressPercent)
 
-          // Render current frame with overlays
-          renderFrame(ctx, currentTime)
+          // Only render if video has frame data available (readyState >= 2)
+          if (videoElement.readyState >= 2) {
+            // Render current frame (now synchronous with pre-cached images)
+            renderFrame(ctx, currentTime)
+          }
 
           // Check if we've reached the end
           if (currentTime >= trimEnd - 0.05 || videoElement.ended) {
