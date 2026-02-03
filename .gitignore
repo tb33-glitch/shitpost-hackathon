@@ -32,3 +32,6 @@ contracts/solana/target/
 contracts/solana/test-ledger/
 *-keypair.json
 *.so
+
+# Private context (dev notes, session logs)
+PRIVATE_CONTEXT.md
