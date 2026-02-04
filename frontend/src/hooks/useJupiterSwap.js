@@ -9,21 +9,13 @@ const JUPITER_SWAP_API = 'https://lite-api.jup.ag/swap/v1/swap'
 // SOL mint address
 export const SOL_MINT = 'So11111111111111111111111111111111111111112'
 
-// Platform fee configuration (0.5% fee on SOL swaps only)
-// Fee account must be a wSOL token account (ATA) owned by the treasury wallet
-// To set up:
-// 1. Set VITE_SOLANA_FEE_ACCOUNT in .env to your treasury's wSOL ATA address
-// 2. Ensure the treasury wallet has wrapped some SOL to create the wSOL account
-//
-// IMPORTANT: wSOL fee account only works when SOL is part of the swap pair
-// For non-SOL pairs, we skip fees (would need separate token accounts for each)
-// Fee configuration
-// - SELL fees (Token → SOL): Jupiter handles via feeAccount (wSOL)
-// - BUY fees (SOL → Token): We transfer SOL to treasury before swap
-const FEE_ACCOUNT = import.meta.env.VITE_SOLANA_FEE_ACCOUNT || '' // wSOL ATA for sell fees
-const TREASURY_WALLET = import.meta.env.VITE_TREASURY_ADDRESS_SOLANA || '6tj7iWbyTmwcEg1R8gLmqNkJUxXBkRDcFZMYV4pEqtJn' // SOL wallet for buy fees
-const FEE_ENABLED = true // Enable fee collection
-const PLATFORM_FEE_BPS = 50 // 0.5% fee (50 basis points)
+// Platform fee configuration (0.5% = 50 basis points)
+// Fees are collected via direct SOL transfers (no wSOL account needed):
+// - BUY (SOL → Token): Fee transferred to treasury BEFORE swap
+// - SELL (Token → SOL): Fee transferred to treasury AFTER swap
+const TREASURY_WALLET = import.meta.env.VITE_TREASURY_ADDRESS_SOLANA || '6tj7iWbyTmwcEg1R8gLmqNkJUxXBkRDcFZMYV4pEqtJn'
+const FEE_ENABLED = true
+const PLATFORM_FEE_BPS = 50 // 0.5% fee
 
 /**
  * Check if this is a BUY (input is SOL, output is token)
@@ -77,7 +69,7 @@ export default function useJupiterSwap() {
       const isSell = isSellOrder(outputMint)
 
       // For BUYS: We take fee from input SOL, so quote for reduced amount
-      // For SELLS: Jupiter takes fee from output SOL via feeAccount
+      // For SELLS: We take fee from output SOL after swap (no Jupiter platformFee)
       let quoteAmount = amount.toString()
       let buyFeeAmount = 0
 
@@ -92,8 +84,7 @@ export default function useJupiterSwap() {
         outputMint,
         amount: quoteAmount,
         slippageBps: slippageBps.toString(),
-        // Only use platformFeeBps for sells (Jupiter handles the fee)
-        ...(FEE_ENABLED && isSell && FEE_ACCOUNT && { platformFeeBps: PLATFORM_FEE_BPS.toString() }),
+        // No platformFeeBps - we handle fees via direct SOL transfer
       })
 
       const response = await fetch(`${JUPITER_QUOTE_API}?${params}`)
@@ -174,7 +165,7 @@ export default function useJupiterSwap() {
     setError(null)
 
     try {
-      // For BUYS: Transfer fee to treasury first
+      // For BUYS: Transfer fee to treasury BEFORE swap
       if (FEE_ENABLED && isBuy && buyFeeAmount > 0) {
         console.log('[Jupiter Swap] Transferring buy fee:', buyFeeAmount / LAMPORTS_PER_SOL, 'SOL to treasury')
 
@@ -200,10 +191,13 @@ export default function useJupiterSwap() {
         console.log('[Jupiter Swap] Fee transfer confirmed')
       }
 
-      // For SELLS: Use Jupiter's feeAccount (if configured)
-      const useFeeAccount = FEE_ENABLED && isSell && FEE_ACCOUNT
+      // Calculate sell fee (will be transferred after swap)
+      const sellFeeAmount = (FEE_ENABLED && isSell) ? calculateFee(quoteResponse.outAmount) : 0
+      if (sellFeeAmount > 0) {
+        console.log('[Jupiter Swap] Will collect sell fee after swap:', sellFeeAmount / LAMPORTS_PER_SOL, 'SOL')
+      }
 
-      // Get the swap transaction from Jupiter
+      // Get the swap transaction from Jupiter (no feeAccount - we handle fees ourselves)
       const swapResponse = await fetch(JUPITER_SWAP_API, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -211,7 +205,6 @@ export default function useJupiterSwap() {
           quoteResponse,
           userPublicKey: wallet.publicKey.toString(),
           wrapAndUnwrapSol: true,
-          ...(useFeeAccount && { feeAccount: FEE_ACCOUNT }),
         }),
       })
 
@@ -258,6 +251,32 @@ export default function useJupiterSwap() {
         },
         'confirmed'
       )
+
+      // For SELLS: Transfer fee to treasury AFTER swap
+      if (FEE_ENABLED && isSell && sellFeeAmount > 0) {
+        console.log('[Jupiter Swap] Transferring sell fee:', sellFeeAmount / LAMPORTS_PER_SOL, 'SOL to treasury')
+
+        const feeTransaction = new Transaction().add(
+          SystemProgram.transfer({
+            fromPubkey: wallet.publicKey,
+            toPubkey: new PublicKey(TREASURY_WALLET),
+            lamports: sellFeeAmount,
+          })
+        )
+
+        feeTransaction.feePayer = wallet.publicKey
+        feeTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
+
+        const signedFeeTx = await wallet.signTransaction(feeTransaction)
+        const feeTxid = await connection.sendRawTransaction(signedFeeTx.serialize(), {
+          skipPreflight: false,
+          preflightCommitment: 'confirmed',
+        })
+
+        console.log('[Jupiter Swap] Sell fee transfer sent:', feeTxid)
+        await connection.confirmTransaction(feeTxid, 'confirmed')
+        console.log('[Jupiter Swap] Sell fee transfer confirmed')
+      }
 
       return txid
     } catch (err) {
