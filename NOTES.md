@@ -1,5 +1,27 @@
 # Notes
 
+## Completed (Feb 4)
+
+### Coin Explorer Search Fix ✅
+- [x] Search by address now returns **single result** (deduped by mint address)
+- [x] Fixed field name mismatch (`marketCap` → `market_cap`) in search results
+- [x] Added missing price change fields (5m, 1h, 6h, 24h) to search results
+- [x] Uses DexScreener token endpoint for address lookups (more reliable)
+- [x] Name/symbol searches dedupe by mint, keeping highest liquidity pair
+
+### Live PnL Tracker ✅
+- [x] **PnL now updates in real-time** (every 5 seconds)
+- [x] Fetches live token price from DexScreener API
+- [x] Fixed timing issue where position wasn't loading before PnL calculation
+- [x] Switched from CoinGecko to DexScreener for SOL price (avoids CORS/rate limits)
+- [x] PnL syncs with DexScreener chart embedded in UI
+
+### Buyback
+- [x] Buyback script running in watch mode (checks every 60s)
+- [x] Treasury balance: ~0.01 SOL (needs more fees to trigger buyback)
+
+---
+
 ## Completed (Feb 3)
 
 ### Fee Collection & Buyback ✅
@@ -45,18 +67,12 @@
 
 ---
 
-## Left Off (Feb 3 - 8pm)
+## Left Off (Feb 4)
 
-### In Progress: Backend Deployment
-- Need to deploy backend to Railway (or Render)
-- User logged into Railway CLI
-- Next steps:
-  ```bash
-  cd /Users/tylerbeattie/Desktop/shitpost-hackathon/backend
-  railway init
-  railway up
-  ```
-- Then set env vars in Railway dashboard (copy from `backend/.env`)
+### Current State
+- Frontend running locally on `localhost:5175`
+- Backend running locally on `localhost:3001`
+- Buyback script running in watch mode (local)
 
 ### Pending Before Production
 - [ ] Deploy backend to Railway/Render
@@ -64,4 +80,4 @@
 - [ ] Update frontend `VITE_API_URL` to point to deployed backend
 - [ ] Move Helius API key to backend (currently exposed in frontend)
 - [ ] Server-side position storage (optional)
-- [ ] Run buyback on server (currently local PM2)
+- [ ] Run buyback on server (currently local)
