@@ -18,6 +18,13 @@ import '@solana/wallet-adapter-react-ui/styles.css'
 // Default to mainnet public RPC (may be rate limited - recommend setting VITE_SOLANA_RPC_URL)
 const solanaEndpoint = import.meta.env.VITE_SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com'
 
+// Debug: Log connection info on startup
+console.log('[Solana Config]', {
+  rpcUrl: solanaEndpoint,
+  network: import.meta.env.VITE_SOLANA_NETWORK || 'not set (defaulting to devnet)',
+  feeAccount: import.meta.env.VITE_SOLANA_FEE_ACCOUNT || 'not set',
+})
+
 // Solana wallets
 const solanaWallets = [
   new PhantomWalletAdapter(),

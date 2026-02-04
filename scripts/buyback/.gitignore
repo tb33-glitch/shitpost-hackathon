@@ -1,0 +1,15 @@
+# Environment (contains keypair paths)
+.env
+.env.*
+
+# Keypairs (should never be in repo)
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+
+# Node
+node_modules/
+
+# Logs
+*.log

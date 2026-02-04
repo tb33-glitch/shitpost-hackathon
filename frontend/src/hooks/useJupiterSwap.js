@@ -9,16 +9,26 @@ const JUPITER_SWAP_API = 'https://lite-api.jup.ag/swap/v1/swap'
 // SOL mint address
 export const SOL_MINT = 'So11111111111111111111111111111111111111112'
 
-// Platform fee configuration (0.5% fee on all swaps)
+// Platform fee configuration (0.5% fee on SOL swaps only)
 // Fee account must be a wSOL token account (ATA) owned by the treasury wallet
 // To set up:
 // 1. Set VITE_SOLANA_FEE_ACCOUNT in .env to your treasury's wSOL ATA address
 // 2. Ensure the treasury wallet has wrapped some SOL to create the wSOL account
 //
-// Fee account is the wSOL Associated Token Account for the treasury
+// IMPORTANT: wSOL fee account only works when SOL is part of the swap pair
+// For non-SOL pairs, we skip fees (would need separate token accounts for each)
 const FEE_ACCOUNT = import.meta.env.VITE_SOLANA_FEE_ACCOUNT || ''
-const FEE_ENABLED = !!FEE_ACCOUNT // Auto-enable when fee account is configured
+// TEMPORARILY DISABLED FOR DEBUGGING - set to true to re-enable
+const FEE_ENABLED = false // !!FEE_ACCOUNT
 const PLATFORM_FEE_BPS = 50 // 0.5% fee (50 basis points)
+
+/**
+ * Check if SOL is part of the swap pair
+ * Fee collection only works when input or output is native SOL
+ */
+function isSOLPair(inputMint, outputMint) {
+  return inputMint === SOL_MINT || outputMint === SOL_MINT
+}
 
 /**
  * Hook for Jupiter swap API
@@ -47,12 +57,15 @@ export default function useJupiterSwap() {
     setError(null)
 
     try {
+      // Only apply platform fee when SOL is part of the swap (wSOL fee account constraint)
+      const canCollectFee = FEE_ENABLED && isSOLPair(inputMint, outputMint)
+
       const params = new URLSearchParams({
         inputMint,
         outputMint,
         amount: amount.toString(),
         slippageBps: slippageBps.toString(),
-        ...(FEE_ENABLED && { platformFeeBps: PLATFORM_FEE_BPS.toString() }),
+        ...(canCollectFee && { platformFeeBps: PLATFORM_FEE_BPS.toString() }),
       })
 
       const response = await fetch(`${JUPITER_QUOTE_API}?${params}`)
@@ -97,10 +110,31 @@ export default function useJupiterSwap() {
       return null
     }
 
+    // Debug: Log wallet and connection info
+    console.log('[Jupiter Swap] Debug info:', {
+      walletPublicKey: wallet.publicKey?.toString(),
+      rpcEndpoint: connection?.rpcEndpoint,
+      inputMint: quoteResponse.inputMint,
+      outputMint: quoteResponse.outputMint,
+      inAmount: quoteResponse.inAmount,
+      outAmount: quoteResponse.outAmount,
+    })
+
+    // Fetch and log SOL balance
+    try {
+      const balance = await connection.getBalance(wallet.publicKey)
+      console.log('[Jupiter Swap] Wallet SOL balance:', balance / 1e9, 'SOL')
+    } catch (e) {
+      console.error('[Jupiter Swap] Failed to fetch balance:', e)
+    }
+
     setIsSwapping(true)
     setError(null)
 
     try {
+      // Only apply fee account when SOL is part of the swap (wSOL fee account constraint)
+      const canCollectFee = FEE_ENABLED && isSOLPair(quoteResponse.inputMint, quoteResponse.outputMint)
+
       // Get the swap transaction from Jupiter
       const swapResponse = await fetch(JUPITER_SWAP_API, {
         method: 'POST',
@@ -109,7 +143,7 @@ export default function useJupiterSwap() {
           quoteResponse,
           userPublicKey: wallet.publicKey.toString(),
           wrapAndUnwrapSol: true,
-          ...(FEE_ENABLED && { feeAccount: FEE_ACCOUNT }),
+          ...(canCollectFee && { feeAccount: FEE_ACCOUNT }),
         }),
       })
 

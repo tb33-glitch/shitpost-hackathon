@@ -99,6 +99,31 @@ export async function getSignatureStatuses(signatures) {
 }
 
 /**
+ * Get token account balance
+ * @param {string} tokenAccount - Base58 encoded token account address
+ * @returns {Promise<{amount: string, decimals: number, uiAmount: number}>}
+ */
+export async function getTokenAccountBalance(tokenAccount) {
+  const result = await rpcCall('getTokenAccountBalance', [tokenAccount])
+  return result.value
+}
+
+/**
+ * Get token accounts by owner
+ * @param {string} owner - Base58 encoded owner public key
+ * @param {string} mint - Base58 encoded mint address
+ * @returns {Promise<Array>} - Array of token accounts
+ */
+export async function getTokenAccountsByOwner(owner, mint) {
+  const result = await rpcCall('getTokenAccountsByOwner', [
+    owner,
+    { mint },
+    { encoding: 'jsonParsed' }
+  ])
+  return result.value
+}
+
+/**
  * Check RPC health
  * @returns {Promise<boolean>} - True if healthy
  */
