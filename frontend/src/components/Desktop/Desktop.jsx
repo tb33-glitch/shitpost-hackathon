@@ -13,7 +13,6 @@ import App from '../../App'
 import useSolanaNFTs from '../../hooks/useSolanaNFTs'
 import { Window } from '../Windows98'
 import { CoinExplorer } from '../CoinExplorer'
-import Portfolio from '../Portfolio'
 import BurnTicker from '../BurnTicker'
 import { ConnectModal } from '../Wallet'
 
@@ -39,15 +38,6 @@ const WINDOW_CONFIGS = {
     height: 700,
     minWidth: 800,
     minHeight: 600,
-  },
-  portfolio: {
-    title: 'Portfolio Tracker',
-    icon: '📊',
-    component: 'portfolio',
-    width: 650,
-    height: 450,
-    minWidth: 550,
-    minHeight: 350,
   },
 }
 
@@ -89,13 +79,6 @@ export default function Desktop() {
       isMinimized: false,
       zIndex: 0,
       position: { x: 80, y: 60 },
-      size: { width: null, height: null },
-    },
-    portfolio: {
-      isOpen: false,
-      isMinimized: false,
-      zIndex: 0,
-      position: { x: 150, y: 100 },
       size: { width: null, height: null },
     },
   })
@@ -511,15 +494,6 @@ export default function Desktop() {
             onMaximize={() => maximizeWindow(windowId)}
           />
         )
-      case 'portfolio':
-        return (
-          <Portfolio
-            onClose={() => closeWindow(windowId)}
-            onMinimize={() => minimizeWindow(windowId)}
-            onMaximize={() => maximizeWindow(windowId)}
-            isDesktopMode={true}
-          />
-        )
       default:
         return null
     }
@@ -547,13 +521,6 @@ export default function Desktop() {
           label="Coin Explorer"
           onClick={() => openWindow('coinExplorer')}
           isActive={windows.coinExplorer?.isOpen && !windows.coinExplorer?.isMinimized}
-        />
-
-        <DesktopIcon
-          icon="📊"
-          label="Portfolio"
-          onClick={() => openWindow('portfolio')}
-          isActive={windows.portfolio?.isOpen && !windows.portfolio?.isMinimized}
         />
 
         <DesktopIcon

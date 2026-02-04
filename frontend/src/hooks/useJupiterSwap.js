@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { VersionedTransaction } from '@solana/web3.js'
+import { VersionedTransaction, Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
 
 // Jupiter API endpoints (lite-api is public, no API key required)
 // Note: lite-api.jup.ag will be deprecated Jan 31, 2026 - migrate to api.jup.ag with API key
@@ -17,17 +17,33 @@ export const SOL_MINT = 'So11111111111111111111111111111111111111112'
 //
 // IMPORTANT: wSOL fee account only works when SOL is part of the swap pair
 // For non-SOL pairs, we skip fees (would need separate token accounts for each)
-const FEE_ACCOUNT = import.meta.env.VITE_SOLANA_FEE_ACCOUNT || ''
-// TEMPORARILY DISABLED FOR DEBUGGING - set to true to re-enable
-const FEE_ENABLED = false // !!FEE_ACCOUNT
+// Fee configuration
+// - SELL fees (Token → SOL): Jupiter handles via feeAccount (wSOL)
+// - BUY fees (SOL → Token): We transfer SOL to treasury before swap
+const FEE_ACCOUNT = import.meta.env.VITE_SOLANA_FEE_ACCOUNT || '' // wSOL ATA for sell fees
+const TREASURY_WALLET = import.meta.env.VITE_TREASURY_ADDRESS_SOLANA || '6tj7iWbyTmwcEg1R8gLmqNkJUxXBkRDcFZMYV4pEqtJn' // SOL wallet for buy fees
+const FEE_ENABLED = true // Enable fee collection
 const PLATFORM_FEE_BPS = 50 // 0.5% fee (50 basis points)
 
 /**
- * Check if SOL is part of the swap pair
- * Fee collection only works when input or output is native SOL
+ * Check if this is a BUY (input is SOL, output is token)
  */
-function isSOLPair(inputMint, outputMint) {
-  return inputMint === SOL_MINT || outputMint === SOL_MINT
+function isBuyOrder(inputMint) {
+  return inputMint === SOL_MINT
+}
+
+/**
+ * Check if this is a SELL (input is token, output is SOL)
+ */
+function isSellOrder(outputMint) {
+  return outputMint === SOL_MINT
+}
+
+/**
+ * Calculate fee amount in lamports
+ */
+function calculateFee(amountLamports) {
+  return Math.floor(Number(amountLamports) * PLATFORM_FEE_BPS / 10000)
 }
 
 /**
@@ -57,15 +73,27 @@ export default function useJupiterSwap() {
     setError(null)
 
     try {
-      // Only apply platform fee when SOL is part of the swap (wSOL fee account constraint)
-      const canCollectFee = FEE_ENABLED && isSOLPair(inputMint, outputMint)
+      const isBuy = isBuyOrder(inputMint)
+      const isSell = isSellOrder(outputMint)
+
+      // For BUYS: We take fee from input SOL, so quote for reduced amount
+      // For SELLS: Jupiter takes fee from output SOL via feeAccount
+      let quoteAmount = amount.toString()
+      let buyFeeAmount = 0
+
+      if (FEE_ENABLED && isBuy) {
+        buyFeeAmount = calculateFee(amount)
+        quoteAmount = (Number(amount) - buyFeeAmount).toString()
+        console.log('[Jupiter] Buy fee:', buyFeeAmount / LAMPORTS_PER_SOL, 'SOL')
+      }
 
       const params = new URLSearchParams({
         inputMint,
         outputMint,
-        amount: amount.toString(),
+        amount: quoteAmount,
         slippageBps: slippageBps.toString(),
-        ...(canCollectFee && { platformFeeBps: PLATFORM_FEE_BPS.toString() }),
+        // Only use platformFeeBps for sells (Jupiter handles the fee)
+        ...(FEE_ENABLED && isSell && FEE_ACCOUNT && { platformFeeBps: PLATFORM_FEE_BPS.toString() }),
       })
 
       const response = await fetch(`${JUPITER_QUOTE_API}?${params}`)
@@ -80,6 +108,13 @@ export default function useJupiterSwap() {
       }
 
       const quoteData = await response.json()
+
+      // Attach fee info to quote for display and execution
+      quoteData._buyFeeAmount = buyFeeAmount
+      quoteData._originalAmount = amount
+      quoteData._isBuy = isBuy
+      quoteData._isSell = isSell
+
       setQuote(quoteData)
       return quoteData
     } catch (err) {
@@ -110,6 +145,10 @@ export default function useJupiterSwap() {
       return null
     }
 
+    const isBuy = quoteResponse._isBuy
+    const isSell = quoteResponse._isSell
+    const buyFeeAmount = quoteResponse._buyFeeAmount || 0
+
     // Debug: Log wallet and connection info
     console.log('[Jupiter Swap] Debug info:', {
       walletPublicKey: wallet.publicKey?.toString(),
@@ -118,6 +157,9 @@ export default function useJupiterSwap() {
       outputMint: quoteResponse.outputMint,
       inAmount: quoteResponse.inAmount,
       outAmount: quoteResponse.outAmount,
+      isBuy,
+      isSell,
+      buyFeeAmount,
     })
 
     // Fetch and log SOL balance
@@ -132,8 +174,34 @@ export default function useJupiterSwap() {
     setError(null)
 
     try {
-      // Only apply fee account when SOL is part of the swap (wSOL fee account constraint)
-      const canCollectFee = FEE_ENABLED && isSOLPair(quoteResponse.inputMint, quoteResponse.outputMint)
+      // For BUYS: Transfer fee to treasury first
+      if (FEE_ENABLED && isBuy && buyFeeAmount > 0) {
+        console.log('[Jupiter Swap] Transferring buy fee:', buyFeeAmount / LAMPORTS_PER_SOL, 'SOL to treasury')
+
+        const feeTransaction = new Transaction().add(
+          SystemProgram.transfer({
+            fromPubkey: wallet.publicKey,
+            toPubkey: new PublicKey(TREASURY_WALLET),
+            lamports: buyFeeAmount,
+          })
+        )
+
+        feeTransaction.feePayer = wallet.publicKey
+        feeTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
+
+        const signedFeeTx = await wallet.signTransaction(feeTransaction)
+        const feeTxid = await connection.sendRawTransaction(signedFeeTx.serialize(), {
+          skipPreflight: false,
+          preflightCommitment: 'confirmed',
+        })
+
+        console.log('[Jupiter Swap] Fee transfer sent:', feeTxid)
+        await connection.confirmTransaction(feeTxid, 'confirmed')
+        console.log('[Jupiter Swap] Fee transfer confirmed')
+      }
+
+      // For SELLS: Use Jupiter's feeAccount (if configured)
+      const useFeeAccount = FEE_ENABLED && isSell && FEE_ACCOUNT
 
       // Get the swap transaction from Jupiter
       const swapResponse = await fetch(JUPITER_SWAP_API, {
@@ -143,7 +211,7 @@ export default function useJupiterSwap() {
           quoteResponse,
           userPublicKey: wallet.publicKey.toString(),
           wrapAndUnwrapSol: true,
-          ...(canCollectFee && { feeAccount: FEE_ACCOUNT }),
+          ...(useFeeAccount && { feeAccount: FEE_ACCOUNT }),
         }),
       })
 
