@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useWallet, useConnection } from '@solana/wallet-adapter-react'
 import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import { ConnectButton } from '../Wallet'
@@ -51,37 +51,79 @@ export default function CoinDetail({ coin, onBack, onMakeMeme }) {
   const { quote, isLoadingQuote, isSwapping, error, getQuote, executeSwap, reset } = useJupiterSwap()
 
   // Position tracking hook
-  const { recordBuy, recordSell, getPosition, calculatePnL } = usePositions()
+  const { recordBuy, recordSell, getPosition, calculatePnL, positions } = usePositions()
 
   // Get current position for this coin (for cost basis tracking)
-  const position = getPosition(coin.mint)
+  // Re-check whenever positions object changes (handles async load from localStorage)
+  const position = positions[coin.mint] || null
 
   // Calculate PnL if we have a position or token balance
   const [positionPnL, setPositionPnL] = useState(null)
 
+  // Cache SOL price to avoid rate limiting
+  const solPriceRef = useRef({ price: 95, lastFetch: 0 })
+
+  // Fetch live price and calculate PnL
   useEffect(() => {
-    // Calculate PnL if we have either a tracked position or actual token balance
-    const hasHoldings = position || tokenBalance > 0
+    const hasPosition = position && position.avgCostPerToken > 0
+    const actualBalance = tokenBalance ?? position?.totalAmount ?? 0
+    const hasHoldings = actualBalance > 0
 
-    if (hasHoldings && coin.price) {
-      // Get SOL price to convert token price to SOL
-      const fetchSolPrice = async () => {
-        try {
-          const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd')
-          const data = await res.json()
-          const solPrice = data.solana?.usd || 150
-          const currentPriceSol = coin.price / solPrice
+    if (!hasHoldings || !coin.mint) {
+      setPositionPnL(null)
+      return
+    }
 
-          // Use actual wallet balance for calculations
-          const actualBalance = tokenBalance ?? position?.totalAmount ?? 0
-          const currentValueSol = actualBalance * currentPriceSol
+    // Fetch fresh price data from DexScreener
+    const fetchPriceAndCalculate = async () => {
+      try {
+        // Fetch current token price from DexScreener (fresh data)
+        const dexRes = await fetch(`https://api.dexscreener.com/tokens/v1/solana/${coin.mint}`)
+        const dexData = await dexRes.json()
 
-          // Calculate cost basis from actual balance × avg cost per token
-          // This gives accurate PnL even if user has different balance than tracked
-          const avgCostPerToken = position?.avgCostPerToken ?? currentPriceSol
+        // Get SOL price from DexScreener (SOL/USDC pair) - avoids CoinGecko rate limits
+        const now = Date.now()
+        if (now - solPriceRef.current.lastFetch > 30000) {
+          try {
+            // Use DexScreener to get SOL price via a major SOL/USDC pair
+            const solRes = await fetch('https://api.dexscreener.com/tokens/v1/solana/So11111111111111111111111111111111111111112')
+            if (solRes.ok) {
+              const solPairs = await solRes.json()
+              if (Array.isArray(solPairs) && solPairs.length > 0) {
+                // Find USDC pair with highest liquidity
+                const usdcPair = solPairs
+                  .filter(p => p.quoteToken?.symbol === 'USDC' || p.quoteToken?.symbol === 'USDT')
+                  .sort((a, b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))[0]
+                if (usdcPair?.priceUsd) {
+                  solPriceRef.current = {
+                    price: parseFloat(usdcPair.priceUsd),
+                    lastFetch: now
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('[PnL] SOL price fetch failed, using cached:', solPriceRef.current.price)
+          }
+        }
+        const solPrice = solPriceRef.current.price
+
+        // Get the best pair (highest liquidity)
+        let currentPriceUsd = coin.price || 0
+        if (Array.isArray(dexData) && dexData.length > 0) {
+          const bestPair = dexData.reduce((best, pair) =>
+            (pair.liquidity?.usd || 0) > (best.liquidity?.usd || 0) ? pair : best
+          , dexData[0])
+          currentPriceUsd = parseFloat(bestPair.priceUsd) || currentPriceUsd
+        }
+
+        const currentPriceSol = currentPriceUsd / solPrice
+        const currentValueSol = actualBalance * currentPriceSol
+
+        if (hasPosition) {
+          const avgCostPerToken = position.avgCostPerToken
           const costBasisSol = actualBalance * avgCostPerToken
-
-          const pnlSol = costBasisSol > 0 ? currentValueSol - costBasisSol : 0
+          const pnlSol = currentValueSol - costBasisSol
           const pnlPercent = costBasisSol > 0 ? (pnlSol / costBasisSol) * 100 : 0
 
           setPositionPnL({
@@ -90,17 +132,33 @@ export default function CoinDetail({ coin, onBack, onMakeMeme }) {
             pnlSol,
             pnlPercent,
             avgCostPerToken,
-            currentPricePerToken: currentPriceSol
+            currentPricePerToken: currentPriceSol,
+            hasTrackedPosition: true
           })
-        } catch (err) {
-          console.error('[PnL] Failed to calculate:', err)
+        } else {
+          // User has tokens but no tracked position
+          setPositionPnL({
+            currentValueSol,
+            costBasisSol: null,
+            pnlSol: null,
+            pnlPercent: null,
+            avgCostPerToken: null,
+            currentPricePerToken: currentPriceSol,
+            hasTrackedPosition: false
+          })
         }
+      } catch (err) {
+        console.error('[PnL] Failed to fetch price:', err)
       }
-      fetchSolPrice()
-    } else {
-      setPositionPnL(null)
     }
-  }, [position, tokenBalance, coin.price, coin.mint, calculatePnL])
+
+    // Fetch immediately
+    fetchPriceAndCalculate()
+
+    // Refresh every 5 seconds for live updates
+    const interval = setInterval(fetchPriceAndCalculate, 5000)
+    return () => clearInterval(interval)
+  }, [position, tokenBalance, coin.mint, coin.price, positions])
 
   // Fetch SOL and token balance when wallet connects (using backend RPC proxy)
   const fetchBalance = useCallback(async () => {
@@ -482,30 +540,45 @@ export default function CoinDetail({ coin, onBack, onMakeMeme }) {
             </div>
 
             {/* Position PnL Display - shows when user has tracked position OR token balance */}
-            {(position || tokenBalance > 0) && positionPnL && (
-              <div className={`position-pnl-card ${positionPnL.pnlSol >= 0 ? 'positive' : 'negative'}`}>
+            {positionPnL && (
+              <div className={`position-pnl-card ${positionPnL.pnlSol !== null && positionPnL.pnlSol >= 0 ? 'positive' : positionPnL.pnlSol !== null ? 'negative' : ''}`}>
                 <div className="pnl-header">
                   <span className="pnl-label">Your Position</span>
-                  <span className={`pnl-value ${positionPnL.pnlSol >= 0 ? 'positive' : 'negative'}`}>
-                    {positionPnL.pnlSol >= 0 ? '+' : ''}{positionPnL.pnlSol.toFixed(4)} SOL
-                    <span className="pnl-percent">
-                      ({positionPnL.pnlPercent >= 0 ? '+' : ''}{positionPnL.pnlPercent.toFixed(1)}%)
+                  {positionPnL.hasTrackedPosition && positionPnL.pnlSol !== null ? (
+                    <span className={`pnl-value ${positionPnL.pnlSol >= 0 ? 'positive' : 'negative'}`}>
+                      {positionPnL.pnlSol >= 0 ? '+' : ''}{positionPnL.pnlSol.toFixed(4)} SOL
+                      <span className="pnl-percent">
+                        ({positionPnL.pnlPercent >= 0 ? '+' : ''}{positionPnL.pnlPercent.toFixed(1)}%)
+                      </span>
                     </span>
-                  </span>
+                  ) : (
+                    <span className="pnl-value neutral">
+                      {positionPnL.currentValueSol?.toFixed(4) || '0'} SOL
+                    </span>
+                  )}
                 </div>
                 <div className="pnl-details">
                   <div className="pnl-detail">
                     <span>Holding</span>
                     <span>{(tokenBalance ?? position?.totalAmount ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} {coin.symbol}</span>
                   </div>
-                  <div className="pnl-detail">
-                    <span>Avg Cost</span>
-                    <span>{positionPnL.avgCostPerToken?.toFixed(8) || '—'} SOL</span>
-                  </div>
-                  <div className="pnl-detail">
-                    <span>Current</span>
-                    <span>{positionPnL.currentPricePerToken?.toFixed(8) || '—'} SOL</span>
-                  </div>
+                  {positionPnL.hasTrackedPosition && positionPnL.avgCostPerToken ? (
+                    <>
+                      <div className="pnl-detail">
+                        <span>Avg Cost</span>
+                        <span>{positionPnL.avgCostPerToken.toFixed(8)} SOL</span>
+                      </div>
+                      <div className="pnl-detail">
+                        <span>Current</span>
+                        <span>{positionPnL.currentPricePerToken?.toFixed(8) || '—'} SOL</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="pnl-detail">
+                      <span>Value</span>
+                      <span>{positionPnL.currentValueSol?.toFixed(4) || '—'} SOL</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

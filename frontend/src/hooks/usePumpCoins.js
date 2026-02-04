@@ -384,7 +384,7 @@ export default function usePumpCoins(dataSource = DATA_SOURCES.TRENDING, sortOpt
     return [...pinned, ...regular]
   }, [coins, sortOption])
 
-  // Search coins (uses pump.fun search + local filter)
+  // Search coins (uses DexScreener + pump.fun + local filter)
   const searchCoins = useCallback(async (query) => {
     if (!query || query.trim() === '') {
       return sortedCoins()
@@ -392,21 +392,106 @@ export default function usePumpCoins(dataSource = DATA_SOURCES.TRENDING, sortOpt
 
     const lowerQuery = query.toLowerCase().trim()
 
-    // Check if it's a mint address
-    const isAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(lowerQuery)
+    // Check if it's a mint address (base58 format)
+    const isAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(query.trim())
 
     if (isAddress) {
-      // Search pump.fun by mint
-      const results = await pumpSearch(lowerQuery)
-      if (results && results.length > 0) {
-        return enrichWithDexScreener(results)
+      // Direct lookup by mint address - try pump.fun first
+      try {
+        const token = await fetchTokenByMint(query.trim())
+        if (token) {
+          return enrichWithDexScreener([token])
+        }
+      } catch (err) {
+        console.warn('[Search] Mint lookup failed:', err)
       }
+
+      // Fallback to DexScreener for address lookup (graduated tokens not on pump.fun)
+      try {
+        const dexResponse = await fetch(`https://api.dexscreener.com/tokens/v1/solana/${query.trim()}`)
+        if (dexResponse.ok) {
+          const pairs = await dexResponse.json()
+          if (Array.isArray(pairs) && pairs.length > 0) {
+            // Get the pair with highest liquidity
+            const bestPair = pairs.reduce((best, pair) =>
+              (pair.liquidity?.usd || 0) > (best.liquidity?.usd || 0) ? pair : best
+            , pairs[0])
+
+            return [{
+              mint: bestPair.baseToken?.address,
+              name: bestPair.baseToken?.name || 'Unknown',
+              symbol: bestPair.baseToken?.symbol || '???',
+              price: parseFloat(bestPair.priceUsd) || 0,
+              priceChange5m: bestPair.priceChange?.m5 || 0,
+              priceChange1h: bestPair.priceChange?.h1 || 0,
+              priceChange6h: bestPair.priceChange?.h6 || 0,
+              priceChange24h: bestPair.priceChange?.h24 || 0,
+              volume24h: bestPair.volume?.h24 || 0,
+              market_cap: bestPair.marketCap || bestPair.fdv || 0,
+              liquidity: bestPair.liquidity?.usd || 0,
+              image_uri: bestPair.info?.imageUrl || getDexScreenerImage(bestPair.baseToken?.address),
+              pairAddress: bestPair.pairAddress,
+              dexId: bestPair.dexId,
+              created_timestamp: bestPair.pairCreatedAt || Date.now(),
+              source: 'dexscreener',
+            }]
+          }
+        }
+      } catch (err) {
+        console.warn('[Search] DexScreener address lookup failed:', err)
+      }
+
+      return [] // Address not found
     }
 
-    // Try pump.fun search first
-    const pumpResults = await pumpSearch(query, 30)
-    if (pumpResults && pumpResults.length > 0) {
-      return enrichWithDexScreener(pumpResults)
+    // Name/symbol search - use DexScreener search API
+    try {
+      const dexResponse = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(query)}`)
+      if (dexResponse.ok) {
+        const dexData = await dexResponse.json()
+        // Filter for Solana pairs only
+        const solanaPairs = (dexData.pairs || [])
+          .filter(pair => pair.chainId === 'solana')
+
+        if (solanaPairs.length > 0) {
+          // Dedupe by mint address, keeping the pair with highest liquidity
+          const tokenMap = new Map()
+          solanaPairs.forEach(pair => {
+            const mint = pair.baseToken?.address
+            if (!mint) return
+            const existing = tokenMap.get(mint)
+            if (!existing || (pair.liquidity?.usd || 0) > (existing.liquidity?.usd || 0)) {
+              tokenMap.set(mint, pair)
+            }
+          })
+
+          // Convert to our format (use snake_case to match CoinCard)
+          const results = Array.from(tokenMap.values()).slice(0, 30).map(pair => ({
+            mint: pair.baseToken?.address,
+            name: pair.baseToken?.name || 'Unknown',
+            symbol: pair.baseToken?.symbol || '???',
+            price: parseFloat(pair.priceUsd) || 0,
+            priceChange5m: pair.priceChange?.m5 || 0,
+            priceChange1h: pair.priceChange?.h1 || 0,
+            priceChange6h: pair.priceChange?.h6 || 0,
+            priceChange24h: pair.priceChange?.h24 || 0,
+            volume24h: pair.volume?.h24 || 0,
+            market_cap: pair.marketCap || pair.fdv || 0,
+            liquidity: pair.liquidity?.usd || 0,
+            image_uri: pair.info?.imageUrl || getDexScreenerImage(pair.baseToken?.address),
+            pairAddress: pair.pairAddress,
+            dexId: pair.dexId,
+            created_timestamp: pair.pairCreatedAt || Date.now(),
+            source: 'dexscreener-search',
+          }))
+
+          if (results.length > 0) {
+            return results
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[Search] DexScreener search failed:', err)
     }
 
     // Fallback to local filter
