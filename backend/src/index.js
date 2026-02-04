@@ -30,6 +30,8 @@ const ALLOWED_ORIGINS = [
   'http://127.0.0.1:3000',
   'https://shitpost.pro',
   'https://www.shitpost.pro',
+  'https://test.shitpost.pro',
+  'https://frontend-lqqchyqfm-tylers-projects-56d96582.vercel.app',
 ]
 
 // Add production domain if configured
