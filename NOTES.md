@@ -35,8 +35,33 @@
 
 ### Infrastructure
 - [x] Using Helius RPC for mainnet (fixes 403 errors from public RPC)
+- [x] PM2 buyback running locally: `pm2 start "npx tsx jupiter-buyback.ts --watch" --name shitpost-buyback`
+- [x] Frontend deployed to Vercel: `https://frontend-lqqchyqfm-tylers-projects-56d96582.vercel.app`
+- [x] CORS updated to allow test domains
 
-### Pending
-- [ ] Server-side position storage (for cross-device persistence)
-- [ ] Production deployment (API key security, CORS, builds)
-- [ ] Run buyback in watch mode on server for auto-buyback
+### Current $SHITPOST Holdings
+- Treasury: `6tj7iWbyTmwcEg1R8gLmqNkJUxXBkRDcFZMYV4pEqtJn`
+- Balance: ~11.8M $SHITPOST tokens
+
+---
+
+## Left Off (Feb 3 - 8pm)
+
+### In Progress: Backend Deployment
+- Need to deploy backend to Railway (or Render)
+- User logged into Railway CLI
+- Next steps:
+  ```bash
+  cd /Users/tylerbeattie/Desktop/shitpost-hackathon/backend
+  railway init
+  railway up
+  ```
+- Then set env vars in Railway dashboard (copy from `backend/.env`)
+
+### Pending Before Production
+- [ ] Deploy backend to Railway/Render
+- [ ] Set custom domain `test.shitpost.pro` in Vercel
+- [ ] Update frontend `VITE_API_URL` to point to deployed backend
+- [ ] Move Helius API key to backend (currently exposed in frontend)
+- [ ] Server-side position storage (optional)
+- [ ] Run buyback on server (currently local PM2)
