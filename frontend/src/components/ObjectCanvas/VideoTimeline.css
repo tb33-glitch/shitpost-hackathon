@@ -1,27 +1,30 @@
 .video-timeline {
   background: #1a1a1a;
   border-top: 1px solid #333;
-  padding: 12px 16px;
+  padding: 6px 8px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
+  position: sticky;
+  bottom: 0;
+  z-index: 100;
 }
 
 /* Playback controls */
 .timeline-controls {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
 .timeline-btn {
   background: #2a2a2a;
   border: 1px solid #444;
-  border-radius: 6px;
-  padding: 8px 12px;
+  border-radius: 3px;
+  padding: 4px 6px;
   color: white;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 10px;
   transition: background 0.2s, transform 0.1s;
 }
 
@@ -34,36 +37,36 @@
 }
 
 .timeline-btn.play-btn {
-  padding: 8px 16px;
-  font-size: 20px;
+  padding: 4px 8px;
+  font-size: 12px;
 }
 
 .timeline-time {
-  margin-left: 12px;
+  margin-left: 6px;
   font-family: 'SF Mono', Monaco, monospace;
-  font-size: 14px;
+  font-size: 9px;
   color: #ccc;
 }
 
 .time-separator {
-  margin: 0 4px;
+  margin: 0 2px;
   color: #666;
 }
 
 .playback-rate {
   margin-left: auto;
   display: flex;
-  gap: 4px;
+  gap: 2px;
 }
 
 .rate-btn {
   background: #2a2a2a;
   border: 1px solid #444;
-  border-radius: 4px;
-  padding: 4px 8px;
+  border-radius: 2px;
+  padding: 2px 4px;
   color: #aaa;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 8px;
   transition: all 0.2s;
 }
 
@@ -81,9 +84,9 @@
 /* Timeline track */
 .timeline-track {
   position: relative;
-  height: 40px;
+  height: 20px;
   background: #333;
-  border-radius: 4px;
+  border-radius: 2px;
   cursor: pointer;
   overflow: visible;
 }
@@ -99,11 +102,11 @@
 
 .trim-before {
   left: 0;
-  border-radius: 4px 0 0 4px;
+  border-radius: 2px 0 0 2px;
 }
 
 .trim-after {
-  border-radius: 0 4px 4px 0;
+  border-radius: 0 2px 2px 0;
 }
 
 /* Active region */
@@ -118,9 +121,9 @@
 /* Trim handles */
 .trim-handle {
   position: absolute;
-  top: -4px;
-  width: 12px;
-  height: calc(100% + 8px);
+  top: -2px;
+  width: 6px;
+  height: calc(100% + 4px);
   cursor: ew-resize;
   z-index: 10;
   display: flex;
@@ -137,10 +140,10 @@
 }
 
 .trim-handle-bar {
-  width: 4px;
+  width: 2px;
   height: 100%;
   background: #ffaa00;
-  border-radius: 2px;
+  border-radius: 1px;
   transition: background 0.2s;
 }
 
@@ -151,7 +154,7 @@
 /* Scrubber (playhead) */
 .scrubber {
   position: absolute;
-  top: -6px;
+  top: -3px;
   transform: translateX(-50%);
   cursor: grab;
   z-index: 20;
@@ -162,46 +165,46 @@
 }
 
 .scrubber-head {
-  width: 14px;
-  height: 14px;
+  width: 8px;
+  height: 8px;
   background: #ff3366;
-  border: 2px solid white;
+  border: 1px solid white;
   border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .scrubber-line {
   position: absolute;
-  top: 14px;
+  top: 8px;
   left: 50%;
   transform: translateX(-50%);
-  width: 2px;
-  height: 38px;
+  width: 1px;
+  height: 18px;
   background: #ff3366;
   pointer-events: none;
 }
 
 /* Overlay tracks */
 .overlay-tracks {
-  margin-top: 8px;
-  padding-top: 8px;
+  margin-top: 4px;
+  padding-top: 4px;
   border-top: 1px solid #333;
 }
 
 .overlay-tracks-label {
-  font-size: 11px;
+  font-size: 8px;
   color: #888;
-  margin-bottom: 6px;
+  margin-bottom: 3px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .overlay-track {
   position: relative;
-  height: 24px;
+  height: 12px;
   background: #2a2a2a;
-  border-radius: 3px;
-  margin-bottom: 4px;
+  border-radius: 2px;
+  margin-bottom: 2px;
   cursor: pointer;
   transition: background 0.2s;
 }
@@ -217,23 +220,23 @@
 
 .overlay-bar {
   position: absolute;
-  top: 2px;
-  height: 20px;
+  top: 1px;
+  height: 10px;
   background: linear-gradient(to right, #9933ff, #6633cc);
-  border-radius: 2px;
+  border-radius: 1px;
   display: flex;
   align-items: center;
-  min-width: 30px;
+  min-width: 15px;
   overflow: visible;
   transition: box-shadow 0.15s ease;
 }
 
 .overlay-bar:hover {
-  box-shadow: 0 0 0 2px rgba(153, 51, 255, 0.4);
+  box-shadow: 0 0 0 1px rgba(153, 51, 255, 0.4);
 }
 
 .overlay-bar.dragging {
-  box-shadow: 0 0 0 2px rgba(153, 51, 255, 0.8);
+  box-shadow: 0 0 0 1px rgba(153, 51, 255, 0.8);
   z-index: 10;
 }
 
@@ -241,7 +244,7 @@
 .overlay-drag-handle {
   position: absolute;
   top: 0;
-  width: 8px;
+  width: 4px;
   height: 100%;
   cursor: ew-resize;
   z-index: 5;
@@ -254,8 +257,8 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 2px;
-  height: 10px;
+  width: 1px;
+  height: 5px;
   background: rgba(255, 255, 255, 0.3);
   border-radius: 1px;
   transition: background 0.15s ease, height 0.15s ease;
@@ -263,17 +266,17 @@
 
 .overlay-drag-handle:hover::after {
   background: rgba(255, 255, 255, 0.8);
-  height: 14px;
+  height: 7px;
 }
 
 .overlay-drag-left {
   left: 0;
-  border-radius: 2px 0 0 2px;
+  border-radius: 1px 0 0 1px;
 }
 
 .overlay-drag-right {
   right: 0;
-  border-radius: 0 2px 2px 0;
+  border-radius: 0 1px 1px 0;
 }
 
 /* Center draggable area */
@@ -284,7 +287,7 @@
   align-items: center;
   justify-content: center;
   cursor: grab;
-  padding: 0 10px;
+  padding: 0 5px;
   overflow: hidden;
 }
 
@@ -293,7 +296,7 @@
 }
 
 .overlay-label {
-  font-size: 10px;
+  font-size: 7px;
   color: white;
   white-space: nowrap;
   overflow: hidden;
@@ -304,54 +307,54 @@
 /* Mobile responsive */
 @media (max-width: 768px) {
   .video-timeline {
-    padding: 10px 12px;
-    gap: 10px;
+    padding: 5px 6px;
+    gap: 5px;
   }
 
   .timeline-controls {
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 3px;
   }
 
   .timeline-time {
-    margin-left: 8px;
-    font-size: 12px;
+    margin-left: 4px;
+    font-size: 8px;
   }
 
   .playback-rate {
     margin-left: 0;
-    margin-top: 8px;
+    margin-top: 4px;
     width: 100%;
     justify-content: center;
   }
 
   .timeline-track {
-    height: 50px;
+    height: 25px;
   }
 
   .scrubber-head {
-    width: 18px;
-    height: 18px;
+    width: 10px;
+    height: 10px;
   }
 
   .scrubber-line {
-    height: 46px;
+    height: 23px;
   }
 
   .trim-handle {
-    width: 20px;
+    width: 10px;
   }
 
   .trim-handle-bar {
-    width: 6px;
+    width: 3px;
   }
 
   /* Larger touch targets for overlay drag handles on mobile */
   .overlay-drag-handle {
-    width: 14px;
+    width: 7px;
   }
 
   .overlay-bar {
-    min-width: 40px;
+    min-width: 20px;
   }
 }

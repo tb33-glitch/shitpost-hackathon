@@ -266,7 +266,7 @@
   }
 
   .canvas-area-container > .video-timeline {
-    padding: 8px 12px;
+    padding: 5px 6px;
   }
 
   /* Hide zoom controls on mobile - auto-zoom is handled */
