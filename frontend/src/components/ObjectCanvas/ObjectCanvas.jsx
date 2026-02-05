@@ -605,14 +605,14 @@ export default function ObjectCanvas({
       ctx.save()
 
       // Get animated properties if object has keyframes
-      // For overlay objects (non-video), apply keyframe animation during playback
+      // ONLY apply keyframe interpolation during playback - when editing, use actual object values
       let animX = obj.x
       let animY = obj.y
       let animScale = obj.scale ?? 1
       let animRotation = obj.rotation ?? 0
       let animOpacity = obj.opacity ?? 1
 
-      if (obj.type !== OBJECT_TYPES.VIDEO && hasAnimation(obj)) {
+      if (isPlaying && obj.type !== OBJECT_TYPES.VIDEO && hasAnimation(obj)) {
         const interpolated = getInterpolatedProperties(obj, videoCurrentTime)
         animX = interpolated.x
         animY = interpolated.y
@@ -806,7 +806,7 @@ export default function ObjectCanvas({
     if (drawingCanvas) {
       ctx.drawImage(drawingCanvas, 0, 0)
     }
-  }, [objects, backgroundColor, videoRefs, videoLoadedTrigger, imageLoadedTrigger, renderTick, videoCurrentTime])
+  }, [objects, backgroundColor, videoRefs, videoLoadedTrigger, imageLoadedTrigger, renderTick, videoCurrentTime, isPlaying])
 
   // Listen for image load events
   useEffect(() => {

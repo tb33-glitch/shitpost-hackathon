@@ -840,8 +840,9 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
 
   const selectedObject = getSelectedObject()
 
+  // All non-video objects are overlays (shown on timeline)
   const overlayObjects = objects.filter(obj =>
-    obj.type === OBJECT_TYPES.TEXT || obj.type === OBJECT_TYPES.STICKER
+    obj.type !== OBJECT_TYPES.VIDEO
   )
 
   return (
