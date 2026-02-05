@@ -1008,6 +1008,7 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
           selectedObject={selectedObject}
           onUpdateObject={updateObject}
           onDeleteObject={deleteSelected}
+          currentTime={videoPlayback.currentTime}
           onDuplicate={duplicateSelected}
           onBringForward={() => selectedId && bringForward(selectedId)}
           onSendBackward={() => selectedId && sendBackward(selectedId)}
@@ -1069,6 +1070,7 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
         onSendBackward={() => selectedId && sendBackward(selectedId)}
         hasVideo={hasVideo}
         videoDuration={videoObject?.duration}
+        currentTime={videoPlayback.currentTime}
         onRemoveBackground={handleRemoveBackground}
         isRemovingBackground={isRemovingBackground}
         removeBackgroundProgress={removeBackgroundProgress}

@@ -1,4 +1,5 @@
 import { useRef, useCallback, useState, useEffect } from 'react'
+import { hasAnimation } from '../../hooks/useKeyframeAnimation'
 import './VideoTimeline.css'
 
 /**
@@ -318,17 +319,19 @@ export default function VideoTimeline({
             const left = timeToPercent(showFrom)
             const width = timeToPercent(showUntil) - left
             const isBeingDragged = overlayDrag?.id === obj.id
+            const objHasAnimation = hasAnimation(obj)
+            const keyframes = obj.keyframes || []
 
             return (
               <div
                 key={obj.id}
-                className={`overlay-track ${selectedOverlayId === obj.id ? 'selected' : ''}`}
+                className={`overlay-track ${selectedOverlayId === obj.id ? 'selected' : ''} ${objHasAnimation ? 'has-keyframes' : ''}`}
                 onClick={() => onSelectOverlay?.(obj.id)}
               >
                 <div
                   className={`overlay-bar ${isBeingDragged ? 'dragging' : ''}`}
                   style={{ left: `${left}%`, width: `${width}%` }}
-                  title={`${obj.type}: ${formatTime(showFrom)} - ${formatTime(showUntil)}`}
+                  title={`${obj.type}: ${formatTime(showFrom)} - ${formatTime(showUntil)}${objHasAnimation ? ` (${keyframes.length} keyframes)` : ''}`}
                 >
                   {/* Left drag handle (adjust start time) */}
                   <div
@@ -345,6 +348,7 @@ export default function VideoTimeline({
                   >
                     <span className="overlay-label">
                       {obj.type === 'text' ? obj.text?.substring(0, 10) : obj.type}
+                      {objHasAnimation && ' ◆'}
                     </span>
                   </div>
 
@@ -354,6 +358,22 @@ export default function VideoTimeline({
                     onMouseDown={(e) => handleOverlayDragStart(e, obj, 'end')}
                     onTouchStart={(e) => handleOverlayDragStart(e, obj, 'end')}
                   />
+
+                  {/* Keyframe markers */}
+                  {keyframes.map(kf => {
+                    // Calculate keyframe position relative to the bar
+                    const kfPercent = ((kf.time - showFrom) / (showUntil - showFrom)) * 100
+                    // Only show if keyframe is within the visible range
+                    if (kfPercent < 0 || kfPercent > 100) return null
+                    return (
+                      <div
+                        key={kf.id}
+                        className="keyframe-marker"
+                        style={{ left: `${kfPercent}%` }}
+                        title={`Keyframe @ ${formatTime(kf.time)}`}
+                      />
+                    )
+                  })}
                 </div>
               </div>
             )

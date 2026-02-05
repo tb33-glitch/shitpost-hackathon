@@ -304,6 +304,23 @@
   pointer-events: none;
 }
 
+/* Keyframe markers on overlay bars */
+.keyframe-marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 5px;
+  height: 5px;
+  background: #ffcc00;
+  border: 1px solid #cc9900;
+  z-index: 15;
+  pointer-events: none;
+}
+
+.overlay-track.has-keyframes .overlay-bar {
+  background: linear-gradient(to right, #ff6600, #cc4400);
+}
+
 /* Mobile responsive */
 @media (max-width: 768px) {
   .video-timeline {

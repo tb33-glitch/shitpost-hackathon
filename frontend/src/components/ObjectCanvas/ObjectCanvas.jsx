@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
 import { CANVAS_WIDTH, CANVAS_HEIGHT, OBJECT_TYPES } from '../../hooks/useObjectCanvas'
 import { getProxiedMediaUrl } from '../../utils/api'
+import { getInterpolatedProperties, hasAnimation, getMotionPathPoints } from '../../hooks/useKeyframeAnimation'
 import './ObjectCanvas.css'
 
 export default function ObjectCanvas({
@@ -603,20 +604,40 @@ export default function ObjectCanvas({
     objects.forEach(obj => {
       ctx.save()
 
-      // Apply rotation around object center
-      const cx = obj.x + obj.width / 2
-      const cy = obj.y + obj.height / 2
+      // Get animated properties if object has keyframes
+      // For overlay objects (non-video), apply keyframe animation during playback
+      let animX = obj.x
+      let animY = obj.y
+      let animScale = obj.scale ?? 1
+      let animRotation = obj.rotation ?? 0
+      let animOpacity = obj.opacity ?? 1
+
+      if (obj.type !== OBJECT_TYPES.VIDEO && hasAnimation(obj)) {
+        const interpolated = getInterpolatedProperties(obj, videoCurrentTime)
+        animX = interpolated.x
+        animY = interpolated.y
+        animScale = interpolated.scale
+        animRotation = interpolated.rotation
+        animOpacity = interpolated.opacity
+      }
+
+      // Apply scale and rotation transforms around object center
+      const cx = animX + obj.width / 2
+      const cy = animY + obj.height / 2
       ctx.translate(cx, cy)
-      ctx.rotate((obj.rotation || 0) * Math.PI / 180)
+      ctx.rotate(animRotation * Math.PI / 180)
+      ctx.scale(animScale, animScale)
       ctx.translate(-cx, -cy)
 
+      // Apply animated opacity
+      ctx.globalAlpha = animOpacity
+
       if (obj.type === OBJECT_TYPES.VIDEO) {
-        // Draw video frame
+        // Draw video frame (video doesn't use keyframe animation)
+        ctx.globalAlpha = obj.opacity ?? 1
         const videoEl = videoRefs?.current?.[obj.id]
         if (videoEl && videoEl.readyState >= 2) {
-          ctx.globalAlpha = obj.opacity ?? 1
           ctx.drawImage(videoEl, obj.x, obj.y, obj.width, obj.height)
-          ctx.globalAlpha = 1
         } else {
           // Draw loading placeholder while video loads
           ctx.fillStyle = '#1a1a1a'
@@ -628,7 +649,7 @@ export default function ObjectCanvas({
           ctx.fillText('Loading video...', obj.x + obj.width / 2, obj.y + obj.height / 2)
         }
       } else if (obj.type === OBJECT_TYPES.IMAGE) {
-        // Draw image with crop and opacity
+        // Draw image with crop (opacity already applied via animOpacity)
         let img = imagesRef.current[obj.src]
         if (!img) {
           img = new Image()
@@ -647,9 +668,6 @@ export default function ObjectCanvas({
           imagesRef.current[obj.src] = img
         }
         if (img.complete && img.naturalWidth > 0) {
-          // Apply opacity
-          ctx.globalAlpha = obj.opacity ?? 1
-
           // Calculate crop values
           const cropTop = obj.cropTop ?? 0
           const cropBottom = obj.cropBottom ?? 0
@@ -671,32 +689,29 @@ export default function ObjectCanvas({
           // Use clipping to mask the cropped areas
           ctx.save()
           ctx.beginPath()
-          ctx.rect(obj.x + visibleLeft, obj.y + visibleTop, visibleWidth, visibleHeight)
+          ctx.rect(animX + visibleLeft, animY + visibleTop, visibleWidth, visibleHeight)
           ctx.clip()
 
-          // Draw full image at full object size - clipping will mask cropped parts
-          ctx.drawImage(img, sx, sy, sWidth, sHeight, obj.x, obj.y, obj.width, obj.height)
+          // Draw full image at animated position - clipping will mask cropped parts
+          ctx.drawImage(img, sx, sy, sWidth, sHeight, animX, animY, obj.width, obj.height)
 
           ctx.restore()
-
-          // Reset opacity
-          ctx.globalAlpha = 1
         }
       } else if (obj.type === OBJECT_TYPES.TEXT) {
-        // Draw text with multiline support
+        // Draw text with multiline support (opacity already applied via animOpacity)
         ctx.font = `bold ${obj.fontSize}px "${obj.fontFamily}", sans-serif`
         ctx.textAlign = obj.align || 'center'
         ctx.textBaseline = 'middle'
 
-        const textX = obj.align === 'left' ? obj.x :
-                     obj.align === 'right' ? obj.x + obj.width :
-                     obj.x + obj.width / 2
+        const textX = obj.align === 'left' ? animX :
+                     obj.align === 'right' ? animX + obj.width :
+                     animX + obj.width / 2
 
         // Split text by newlines for multiline support
         const lines = obj.text.split('\n')
         const lineHeight = obj.fontSize * 1.2
         const totalHeight = lines.length * lineHeight
-        const startY = obj.y + obj.height / 2 - totalHeight / 2 + lineHeight / 2
+        const startY = animY + obj.height / 2 - totalHeight / 2 + lineHeight / 2
 
         lines.forEach((line, index) => {
           const lineY = startY + index * lineHeight
@@ -714,13 +729,13 @@ export default function ObjectCanvas({
           ctx.fillText(line, textX, lineY)
         })
       } else if (obj.type === OBJECT_TYPES.STICKER) {
-        // Draw sticker (emoji)
+        // Draw sticker (emoji) - opacity already applied via animOpacity
         if (obj.sticker && obj.sticker.emoji) {
           const fontSize = Math.min(obj.width, obj.height)
           ctx.font = `${fontSize}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
-          ctx.fillText(obj.sticker.emoji, obj.x + obj.width / 2, obj.y + obj.height / 2)
+          ctx.fillText(obj.sticker.emoji, animX + obj.width / 2, animY + obj.height / 2)
         } else if (obj.sticker && obj.sticker.data) {
           // Legacy pixel data support
           const stickerData = obj.sticker.data
@@ -734,8 +749,8 @@ export default function ObjectCanvas({
               if (color) {
                 ctx.fillStyle = color
                 ctx.fillRect(
-                  obj.x + sx * pixelW,
-                  obj.y + sy * pixelH,
+                  animX + sx * pixelW,
+                  animY + sy * pixelH,
                   Math.ceil(pixelW),
                   Math.ceil(pixelH)
                 )
@@ -744,27 +759,25 @@ export default function ObjectCanvas({
           }
         }
       } else if (obj.type === OBJECT_TYPES.SHAPE) {
-        // Draw shape (rectangle or circle)
-        ctx.globalAlpha = obj.opacity ?? 1
-
+        // Draw shape (rectangle or circle) - opacity already applied via animOpacity
         if (obj.shapeType === 'rectangle') {
           // Fill rectangle
           if (obj.fillColor && obj.fillColor !== 'transparent') {
             ctx.fillStyle = obj.fillColor
-            ctx.fillRect(obj.x, obj.y, obj.width, obj.height)
+            ctx.fillRect(animX, animY, obj.width, obj.height)
           }
           // Stroke rectangle
           if (obj.strokeWidth > 0 && obj.strokeColor) {
             ctx.strokeStyle = obj.strokeColor
             ctx.lineWidth = obj.strokeWidth
-            ctx.strokeRect(obj.x, obj.y, obj.width, obj.height)
+            ctx.strokeRect(animX, animY, obj.width, obj.height)
           }
         } else if (obj.shapeType === 'circle') {
           // Draw ellipse (circle that can be stretched)
           ctx.beginPath()
           ctx.ellipse(
-            obj.x + obj.width / 2,   // centerX
-            obj.y + obj.height / 2,  // centerY
+            animX + obj.width / 2,   // centerX
+            animY + obj.height / 2,  // centerY
             obj.width / 2,           // radiusX
             obj.height / 2,          // radiusY
             0, 0, Math.PI * 2
@@ -781,10 +794,10 @@ export default function ObjectCanvas({
             ctx.stroke()
           }
         }
-
-        ctx.globalAlpha = 1
       }
 
+      // Reset globalAlpha before restore
+      ctx.globalAlpha = 1
       ctx.restore()
     })
 
@@ -793,7 +806,7 @@ export default function ObjectCanvas({
     if (drawingCanvas) {
       ctx.drawImage(drawingCanvas, 0, 0)
     }
-  }, [objects, backgroundColor, videoRefs, videoLoadedTrigger, imageLoadedTrigger, renderTick])
+  }, [objects, backgroundColor, videoRefs, videoLoadedTrigger, imageLoadedTrigger, renderTick, videoCurrentTime])
 
   // Listen for image load events
   useEffect(() => {

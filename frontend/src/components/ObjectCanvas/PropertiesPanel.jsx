@@ -1,6 +1,15 @@
 import { useRef, useEffect, useState } from 'react'
 import './PropertiesPanel.css'
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../../hooks/useObjectCanvas'
+import {
+  createKeyframe,
+  addKeyframe,
+  removeKeyframe,
+  updateKeyframe,
+  getKeyframeAtTime,
+  hasAnimation,
+  EASING_FUNCTIONS,
+} from '../../hooks/useKeyframeAnimation'
 
 const TEXT_COLORS = [
   { color: '#FFFFFF', label: 'White' },
@@ -54,6 +63,7 @@ export default function PropertiesPanel({
   onToggleCropMode,
   hasVideo,
   videoDuration,
+  currentTime = 0, // Current video playback time for keyframe creation
   onRemoveBackground,
   isRemovingBackground,
   removeBackgroundProgress,
@@ -142,6 +152,92 @@ export default function PropertiesPanel({
       <div className="eyedropper-banner">
         <span>◉ Click canvas to pick {targetLabels[eyedropperTarget] || 'color'}</span>
         <button onClick={onCancelEyedropper}>✕</button>
+      </div>
+    )
+  }
+
+  // Keyframe section component (for animation controls)
+  const KeyframeSection = () => {
+    if (!hasVideo || videoDuration <= 0 || selectedObject?.type === 'video') return null
+
+    const keyframes = selectedObject?.keyframes || []
+    const existingAtTime = getKeyframeAtTime(keyframes, currentTime, 0.05)
+
+    const handleAddKeyframe = () => {
+      const newKeyframe = createKeyframe(selectedObject, currentTime, 'linear')
+      const updatedKeyframes = addKeyframe(keyframes, newKeyframe)
+      onUpdateObject(selectedObject.id, { keyframes: updatedKeyframes })
+    }
+
+    const handleRemoveKeyframe = (kfId) => {
+      const updatedKeyframes = removeKeyframe(keyframes, kfId)
+      onUpdateObject(selectedObject.id, { keyframes: updatedKeyframes })
+    }
+
+    const handleEasingChange = (kfId, newEasing) => {
+      const updatedKeyframes = updateKeyframe(keyframes, kfId, { easing: newEasing })
+      onUpdateObject(selectedObject.id, { keyframes: updatedKeyframes })
+    }
+
+    const handleClearAllKeyframes = () => {
+      onUpdateObject(selectedObject.id, { keyframes: [] })
+    }
+
+    return (
+      <div className="panel-section">
+        <div className="section-label">Animation</div>
+        <div className="keyframe-controls">
+          <button
+            className={`action-btn full-width ${existingAtTime ? 'warning' : ''}`}
+            onClick={handleAddKeyframe}
+            title={existingAtTime ? 'Update keyframe at current time' : 'Add keyframe at current time'}
+          >
+            {existingAtTime ? '◆ Update Keyframe' : '◇ Add Keyframe'} @ {formatTime(currentTime)}
+          </button>
+
+          {keyframes.length > 0 && (
+            <div className="keyframe-list">
+              <div className="keyframe-list-header">
+                <span>Keyframes ({keyframes.length})</span>
+                <button
+                  className="action-btn tiny danger"
+                  onClick={handleClearAllKeyframes}
+                  title="Remove all keyframes"
+                >
+                  Clear
+                </button>
+              </div>
+              {keyframes.sort((a, b) => a.time - b.time).map((kf) => (
+                <div key={kf.id} className="keyframe-item">
+                  <span className="keyframe-time">◆ {formatTime(kf.time)}</span>
+                  <select
+                    className="keyframe-easing"
+                    value={kf.easing || 'linear'}
+                    onChange={(e) => handleEasingChange(kf.id, e.target.value)}
+                    title="Easing to this keyframe"
+                  >
+                    {Object.keys(EASING_FUNCTIONS).map((ease) => (
+                      <option key={ease} value={ease}>{ease}</option>
+                    ))}
+                  </select>
+                  <button
+                    className="keyframe-delete"
+                    onClick={() => handleRemoveKeyframe(kf.id)}
+                    title="Delete keyframe"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {keyframes.length === 0 && (
+            <div className="keyframe-hint">
+              Position object, add keyframe at different times to animate
+            </div>
+          )}
+        </div>
       </div>
     )
   }
@@ -328,6 +424,9 @@ export default function PropertiesPanel({
               </div>
             </div>
           )}
+
+          {/* Keyframe Animation */}
+          <KeyframeSection />
 
           {/* Z-Order */}
           <div className="panel-section">
@@ -532,6 +631,9 @@ export default function PropertiesPanel({
               </button>
             </div>
           </div>
+
+          {/* Keyframe Animation */}
+          <KeyframeSection />
 
           {/* Z-Order */}
           <div className="panel-section">
@@ -763,6 +865,9 @@ export default function PropertiesPanel({
             </div>
           </div>
         )}
+
+        {/* Keyframe Animation */}
+        <KeyframeSection />
 
         {/* Z-Order */}
         <div className="panel-section">
