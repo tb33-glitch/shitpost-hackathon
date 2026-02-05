@@ -158,7 +158,7 @@ export default function PropertiesPanel({
 
   // Keyframe section component (for animation controls)
   const KeyframeSection = () => {
-    if (!hasVideo || videoDuration <= 0 || selectedObject?.type === 'video') return null
+    if (!hasVideo || videoDuration <= 0) return null
 
     const keyframes = selectedObject?.keyframes || []
     const existingAtTime = getKeyframeAtTime(keyframes, currentTime, 0.05)
@@ -655,6 +655,53 @@ export default function PropertiesPanel({
             </button>
             <button className="action-btn danger full-width" onClick={onDeleteObject} style={{ marginTop: '4px' }}>
               🗑️ Delete Shape
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Video selected
+  if (selectedObject.type === 'video') {
+    return (
+      <div className="properties-panel">
+        <div className="panel-header">Video Properties</div>
+        <EyedropperBanner />
+        <div className="panel-content">
+          {/* Size info */}
+          <div className="panel-section">
+            <div className="section-label">Size</div>
+            <div className="info-row">
+              <span>W: {Math.round(selectedObject.width)}</span>
+              <span>H: {Math.round(selectedObject.height)}</span>
+            </div>
+          </div>
+
+          {/* Rotation */}
+          <div className="panel-section">
+            <div className="section-label">Rotation</div>
+            <div className="info-row">
+              <span>{Math.round(selectedObject.rotation || 0)}°</span>
+              <button
+                className="action-btn small"
+                onClick={() => onUpdateObject(selectedObject.id, { rotation: 0 })}
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+
+          {/* Keyframe Animation */}
+          <KeyframeSection />
+
+          {/* Actions */}
+          <div className="panel-section">
+            <button className="action-btn full-width" onClick={onDuplicate} title="Ctrl+D">
+              📋 Duplicate
+            </button>
+            <button className="action-btn danger full-width" onClick={onDeleteObject} style={{ marginTop: '4px' }}>
+              🗑️ Delete Video
             </button>
           </div>
         </div>

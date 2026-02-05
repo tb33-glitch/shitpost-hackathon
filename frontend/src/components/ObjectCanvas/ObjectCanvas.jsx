@@ -612,7 +612,7 @@ export default function ObjectCanvas({
       let animRotation = obj.rotation ?? 0
       let animOpacity = obj.opacity ?? 1
 
-      if (isPlaying && obj.type !== OBJECT_TYPES.VIDEO && hasAnimation(obj)) {
+      if (isPlaying && hasAnimation(obj)) {
         const interpolated = getInterpolatedProperties(obj, videoCurrentTime)
         animX = interpolated.x
         animY = interpolated.y
@@ -633,20 +633,19 @@ export default function ObjectCanvas({
       ctx.globalAlpha = animOpacity
 
       if (obj.type === OBJECT_TYPES.VIDEO) {
-        // Draw video frame (video doesn't use keyframe animation)
-        ctx.globalAlpha = obj.opacity ?? 1
+        // Draw video frame (now supports keyframe animation for Ken Burns effects)
         const videoEl = videoRefs?.current?.[obj.id]
         if (videoEl && videoEl.readyState >= 2) {
-          ctx.drawImage(videoEl, obj.x, obj.y, obj.width, obj.height)
+          ctx.drawImage(videoEl, animX, animY, obj.width, obj.height)
         } else {
           // Draw loading placeholder while video loads
           ctx.fillStyle = '#1a1a1a'
-          ctx.fillRect(obj.x, obj.y, obj.width, obj.height)
+          ctx.fillRect(animX, animY, obj.width, obj.height)
           ctx.fillStyle = '#666'
           ctx.font = 'bold 32px Arial'
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
-          ctx.fillText('Loading video...', obj.x + obj.width / 2, obj.y + obj.height / 2)
+          ctx.fillText('Loading video...', animX + obj.width / 2, animY + obj.height / 2)
         }
       } else if (obj.type === OBJECT_TYPES.IMAGE) {
         // Draw image with crop (opacity already applied via animOpacity)
