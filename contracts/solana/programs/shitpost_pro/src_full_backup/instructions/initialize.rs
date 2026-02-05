@@ -48,6 +48,7 @@ pub fn handler(
     config.premium_fee = premium_fee;
     config.total_minted = 0;
     config.total_burned = 0;
+    config.sacred_waste_pit = None;
     config.bump = ctx.bumps.collection_config;
 
     msg!("Collection initialized: {}", config.name);

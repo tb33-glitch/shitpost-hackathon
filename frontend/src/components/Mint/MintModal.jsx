@@ -13,7 +13,7 @@ export default function MintModal({ isOpen, onClose, onSuccess, imageDataURL, on
 
   // Solana minting - uses network from config (VITE_SOLANA_NETWORK env var)
   const {
-    mint,
+    mintWithPremium,
     signature,
     isPending,
     isConfirming,
@@ -73,9 +73,9 @@ export default function MintModal({ isOpen, onClose, onSuccess, imageDataURL, on
 
       setStep('minting')
 
-      // Call Solana mint
+      // Call Solana mint with premium fee
       console.log('Minting on Solana...')
-      await mint(metadataUrl, solanaIdl)
+      await mintWithPremium(metadataUrl, solanaIdl)
     } catch (err) {
       console.error('Mint error:', err)
       const errorMessage = err?.shortMessage || err?.message || 'Unknown error'
@@ -107,8 +107,11 @@ export default function MintModal({ isOpen, onClose, onSuccess, imageDataURL, on
 
   // Solana explorer URL - uses configured network
   const explorerUrl = txHash
-    ? `https://explorer.solana.com/tx/${txHash}${getExplorerCluster()}`
+    ? `https://solscan.io/tx/${txHash}?cluster=devnet`
     : null
+
+  // Debug
+  if (txHash) console.log('[MintModal] Explorer URL:', explorerUrl)
 
   return (
     <div className="modal-overlay">
@@ -127,7 +130,7 @@ export default function MintModal({ isOpen, onClose, onSuccess, imageDataURL, on
               <div className="fee-notice">
                 Minting on: <strong>Solana {DEFAULT_SOLANA_NETWORK === 'mainnet' ? 'Mainnet' : 'Devnet'}</strong>
                 <br />
-                Mint fee: <strong>~0.01 SOL</strong>
+                Premium mint fee: <strong>0.015 SOL</strong>
               </div>
 
               <div className="modal-buttons">

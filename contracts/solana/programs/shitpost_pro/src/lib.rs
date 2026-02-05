@@ -5,7 +5,7 @@ pub mod state;
 
 use instructions::*;
 
-declare_id!("62gJC6oneEykVGdAq7Lr2x5bw33B3CnmHVHeeCxkZ7yJ");
+declare_id!("7F6SJmYgF8iEF9DQmpDUuboTRs4qYt5hr27TcXCuykDo");
 
 #[program]
 pub mod shitpost_pro {
@@ -23,39 +23,9 @@ pub mod shitpost_pro {
         instructions::initialize::handler(ctx, name, symbol, uri, treasury, premium_fee)
     }
 
-    /// Mint a new NFT
-    pub fn mint(ctx: Context<MintNft>, uri: String) -> Result<()> {
-        instructions::mint::handler(ctx, uri)
-    }
-
-    /// Mint with premium fee
+    /// Mint a new NFT with premium fee
     pub fn mint_with_premium(ctx: Context<MintNftWithPremium>, uri: String) -> Result<()> {
         instructions::mint::handler_with_premium(ctx, uri)
-    }
-
-    /// Burn an NFT and record in gallery
-    pub fn burn(ctx: Context<BurnNft>) -> Result<()> {
-        instructions::burn::handler(ctx)
-    }
-
-    /// Burn an NFT to Sacred Waste Pit
-    pub fn burn_to_waste(ctx: Context<BurnToWaste>) -> Result<()> {
-        instructions::burn::handler_to_waste(ctx)
-    }
-
-    /// Initialize the Sacred Waste Pit
-    pub fn initialize_pit(ctx: Context<InitializePit>) -> Result<()> {
-        instructions::pit::handler_init(ctx)
-    }
-
-    /// Deposit a burn record to the pit (called by authorized programs)
-    pub fn deposit_burn(ctx: Context<DepositBurn>, burner: Pubkey, metadata: String) -> Result<()> {
-        instructions::pit::handler_deposit(ctx, burner, metadata)
-    }
-
-    /// Set the Sacred Waste Pit address
-    pub fn set_sacred_waste_pit(ctx: Context<SetSacredWastePit>, pit: Pubkey) -> Result<()> {
-        instructions::admin::handler_set_pit(ctx, pit)
     }
 
     /// Update treasury address

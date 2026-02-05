@@ -11,6 +11,53 @@ use mpl_token_metadata::types::DataV2;
 use crate::state::CollectionConfig;
 
 #[derive(Accounts)]
+pub struct MintNft<'info> {
+    #[account(mut)]
+    pub minter: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [b"collection_config"],
+        bump = collection_config.bump
+    )]
+    pub collection_config: Account<'info, CollectionConfig>,
+
+    #[account(
+        init,
+        payer = minter,
+        mint::decimals = 0,
+        mint::authority = collection_config,
+        mint::freeze_authority = collection_config,
+    )]
+    pub mint: Account<'info, Mint>,
+
+    #[account(
+        init,
+        payer = minter,
+        associated_token::mint = mint,
+        associated_token::authority = minter,
+    )]
+    pub token_account: Account<'info, TokenAccount>,
+
+    /// CHECK: Metadata account created via CPI
+    #[account(mut)]
+    pub metadata: UncheckedAccount<'info>,
+
+    /// CHECK: Master edition account created via CPI
+    #[account(mut)]
+    pub master_edition: UncheckedAccount<'info>,
+
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub system_program: Program<'info, System>,
+    pub rent: Sysvar<'info, Rent>,
+
+    /// CHECK: Metaplex Token Metadata program
+    #[account(address = mpl_token_metadata::ID)]
+    pub token_metadata_program: UncheckedAccount<'info>,
+}
+
+#[derive(Accounts)]
 pub struct MintNftWithPremium<'info> {
     #[account(mut)]
     pub minter: Signer<'info>,
@@ -59,6 +106,69 @@ pub struct MintNftWithPremium<'info> {
     /// CHECK: Metaplex Token Metadata program
     #[account(address = mpl_token_metadata::ID)]
     pub token_metadata_program: UncheckedAccount<'info>,
+}
+
+pub fn handler(ctx: Context<MintNft>, uri: String) -> Result<()> {
+    let config = &mut ctx.accounts.collection_config;
+    let token_id = config.total_minted;
+    config.total_minted += 1;
+
+    // Mint the token
+    let seeds = &[b"collection_config".as_ref(), &[config.bump]];
+    let signer_seeds = &[&seeds[..]];
+
+    token::mint_to(
+        CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            MintTo {
+                mint: ctx.accounts.mint.to_account_info(),
+                to: ctx.accounts.token_account.to_account_info(),
+                authority: config.to_account_info(),
+            },
+            signer_seeds,
+        ),
+        1,
+    )?;
+
+    // Create metadata account
+    let name = format!("{} #{}", config.name, token_id);
+    create_metadata_account(
+        &ctx.accounts.metadata,
+        &ctx.accounts.mint.to_account_info(),
+        &config.to_account_info(),
+        &ctx.accounts.minter.to_account_info(),
+        &ctx.accounts.system_program.to_account_info(),
+        &ctx.accounts.rent.to_account_info(),
+        &ctx.accounts.token_metadata_program,
+        name,
+        config.symbol.clone(),
+        uri.clone(),
+        signer_seeds,
+    )?;
+
+    // Create master edition
+    create_master_edition(
+        &ctx.accounts.master_edition,
+        &ctx.accounts.mint.to_account_info(),
+        &config.to_account_info(),
+        &ctx.accounts.metadata,
+        &ctx.accounts.minter.to_account_info(),
+        &ctx.accounts.system_program.to_account_info(),
+        &ctx.accounts.rent.to_account_info(),
+        &ctx.accounts.token_metadata_program,
+        &ctx.accounts.token_program.to_account_info(),
+        signer_seeds,
+    )?;
+
+    msg!("NFT minted: {} (token #{})", ctx.accounts.mint.key(), token_id);
+    emit!(ArtMinted {
+        token_id,
+        artist: ctx.accounts.minter.key(),
+        token_uri: uri,
+        premium: false,
+    });
+
+    Ok(())
 }
 
 pub fn handler_with_premium(ctx: Context<MintNftWithPremium>, uri: String) -> Result<()> {
@@ -126,11 +236,12 @@ pub fn handler_with_premium(ctx: Context<MintNftWithPremium>, uri: String) -> Re
         signer_seeds,
     )?;
 
-    msg!("NFT minted: {} (token #{})", ctx.accounts.mint.key(), token_id);
+    msg!("Premium NFT minted: {} (token #{})", ctx.accounts.mint.key(), token_id);
     emit!(ArtMinted {
         token_id,
         artist: ctx.accounts.minter.key(),
         token_uri: uri,
+        premium: true,
     });
 
     Ok(())
@@ -246,4 +357,5 @@ pub struct ArtMinted {
     pub token_id: u64,
     pub artist: Pubkey,
     pub token_uri: String,
+    pub premium: bool,
 }

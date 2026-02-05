@@ -3,13 +3,13 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-shitpost_pro = "62gJC6oneEykVGdAq7Lr2x5bw33B3CnmHVHeeCxkZ7yJ"
+shitpost_pro = "7F6SJmYgF8iEF9DQmpDUuboTRs4qYt5hr27TcXCuykDo"
 
 [programs.devnet]
-shitpost_pro = "62gJC6oneEykVGdAq7Lr2x5bw33B3CnmHVHeeCxkZ7yJ"
+shitpost_pro = "7F6SJmYgF8iEF9DQmpDUuboTRs4qYt5hr27TcXCuykDo"
 
 [programs.mainnet]
-shitpost_pro = "62gJC6oneEykVGdAq7Lr2x5bw33B3CnmHVHeeCxkZ7yJ"
+shitpost_pro = "7F6SJmYgF8iEF9DQmpDUuboTRs4qYt5hr27TcXCuykDo"
 
 [registry]
 url = "https://api.apr.dev"

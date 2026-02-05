@@ -1,12 +1,20 @@
 import { useState, useCallback } from 'react'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
-import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Keypair, Transaction } from '@solana/web3.js'
+import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Keypair } from '@solana/web3.js'
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from '@solana/spl-token'
 import { Program, AnchorProvider } from '@coral-xyz/anchor'
-import { getSolanaNetwork, deriveCollectionConfigPda, getTreasuryAddress } from '../config/solana'
+import { getSolanaNetwork } from '../config/solana'
 
 // Metaplex Token Metadata Program ID
 const TOKEN_METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s')
+
+// Derive collection config PDA
+const deriveCollectionConfigPda = (programId) => {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('collection_config')],
+    programId
+  )
+}
 
 // Derive metadata PDA
 const deriveMetadataPda = (mint) => {
@@ -52,13 +60,20 @@ export default function useSolanaMint(network = 'devnet') {
     setSignature(null)
   }, [])
 
-  const mint = useCallback(async (uri, idl) => {
+  /**
+   * Mint NFT with premium fee using our stripped-down contract
+   *
+   * Contract: 7F6SJmYgF8iEF9DQmpDUuboTRs4qYt5hr27TcXCuykDo
+   * Instruction: mintWithPremium(uri: string)
+   * Fee: 0.015 SOL (set on-chain)
+   */
+  const mintWithPremium = useCallback(async (uri, idl) => {
     if (!wallet.publicKey || !wallet.signTransaction) {
       throw new Error('Wallet not connected')
     }
 
     if (!idl) {
-      throw new Error('IDL not provided - Anchor IDL required for program interaction')
+      throw new Error('IDL not provided')
     }
 
     setIsPending(true)
@@ -66,68 +81,59 @@ export default function useSolanaMint(network = 'devnet') {
     setIsSuccess(false)
 
     try {
-      // Only log non-sensitive info in development
-      const isDev = import.meta.env.DEV
-      if (isDev) {
-        console.log('[Solana Mint] Starting mint on', network)
-        console.log('[Solana Mint] RPC endpoint:', connection.rpcEndpoint)
-      }
+      console.log('[Mint] Starting premium mint...')
+      console.log('[Mint] Network:', network)
+      console.log('[Mint] Program ID:', networkConfig.programId.toString())
+      console.log('[Mint] URI:', uri)
 
-      // Verify network by checking genesis hash
-      const genesisHash = await connection.getGenesisHash()
-      console.log('[Solana Mint] Genesis hash:', genesisHash)
-      // Devnet genesis: EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG
-      // Mainnet genesis: 5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d
-      const isDevnet = genesisHash === 'EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG'
-
-      // Create Anchor provider and program
+      // Create Anchor provider
       const provider = new AnchorProvider(connection, wallet, {
         commitment: 'confirmed',
+        preflightCommitment: 'confirmed',
       })
-      if (isDev) console.log('[Solana Mint] Step 2: Provider created')
 
-      if (isDev) console.log('[Solana Mint] Step 3: Creating program...')
-      console.log('[Solana Mint] Program ID:', networkConfig.programId?.toString())
-      console.log('[Solana Mint] IDL name:', idl?.name)
+      // Create program instance
+      const program = new Program(idl, networkConfig.programId, provider)
+      console.log('[Mint] Program created')
 
-      // Ensure programId is a proper PublicKey instance
-      const programId = networkConfig.programId instanceof PublicKey
-        ? networkConfig.programId
-        : new PublicKey(networkConfig.programId.toString())
-      if (isDev) console.log('[Solana Mint] Step 3b: Program ID converted:', programId.toString())
+      // Derive collection config PDA
+      const [collectionConfigPda] = deriveCollectionConfigPda(networkConfig.programId)
+      console.log('[Mint] Collection Config PDA:', collectionConfigPda.toString())
 
-      // Anchor 0.29 API - pass IDL, program ID, and provider
-      const program = new Program(idl, programId, provider)
-      if (isDev) console.log('[Solana Mint] Step 4: Program created')
+      // Fetch on-chain config to get treasury address
+      const config = await program.account.collectionConfig.fetch(collectionConfigPda)
+      console.log('[Mint] On-chain treasury:', config.treasury.toString())
+      console.log('[Mint] On-chain premium fee:', config.premiumFee.toString(), 'lamports')
 
       // Generate new mint keypair
       const mintKeypair = Keypair.generate()
-      if (isDev) console.log('[Solana Mint] Step 5: Mint keypair:', mintKeypair.publicKey.toString())
+      console.log('[Mint] New mint address:', mintKeypair.publicKey.toString())
 
       // Derive PDAs
-      const [collectionConfigPda] = deriveCollectionConfigPda(programId)
-      if (isDev) console.log('[Solana Mint] Step 6: Collection config PDA:', collectionConfigPda.toString())
-
       const [metadataPda] = deriveMetadataPda(mintKeypair.publicKey)
       const [masterEditionPda] = deriveMasterEditionPda(mintKeypair.publicKey)
-      if (isDev) console.log('[Solana Mint] Step 7: PDAs derived')
+      console.log('[Mint] Metadata PDA:', metadataPda.toString())
+      console.log('[Mint] Master Edition PDA:', masterEditionPda.toString())
 
-      // Get associated token account
+      // Get associated token account for minter
       const tokenAccount = getAssociatedTokenAddressSync(
         mintKeypair.publicKey,
         wallet.publicKey
       )
+      console.log('[Mint] Token Account:', tokenAccount.toString())
 
       setIsConfirming(true)
 
-      // Call the mint instruction
+      // Call mintWithPremium instruction via Anchor
+      console.log('[Mint] Sending transaction...')
       const tx = await program.methods
-        .mint(uri)
+        .mintWithPremium(uri)
         .accounts({
           minter: wallet.publicKey,
           collectionConfig: collectionConfigPda,
+          treasury: config.treasury, // Use on-chain treasury
           mint: mintKeypair.publicKey,
-          tokenAccount,
+          tokenAccount: tokenAccount,
           metadata: metadataPda,
           masterEdition: masterEditionPda,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -137,175 +143,34 @@ export default function useSolanaMint(network = 'devnet') {
           tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
         })
         .signers([mintKeypair])
-        .rpc({ skipPreflight: true })
+        .rpc()
 
+      console.log('[Mint] Transaction successful:', tx)
       setSignature(tx)
       setIsSuccess(true)
-      setIsConfirming(false)
 
       return {
         signature: tx,
         mint: mintKeypair.publicKey.toString(),
       }
     } catch (err) {
-      console.error('[useSolanaMint] Mint failed:', err)
-      console.error('[useSolanaMint] Error name:', err.name)
-      console.error('[useSolanaMint] Error message:', err.message)
+      console.error('[Mint] Failed:', err)
+
+      // Extract useful error message
+      let errorMessage = err.message || 'Mint failed'
+
+      // Check for common errors
       if (err.logs) {
-        console.error('[useSolanaMint] Transaction logs:', err.logs)
-      }
-      if (err.error) {
-        console.error('[useSolanaMint] Inner error:', err.error)
-      }
-      // Try to get logs from SendTransactionError
-      if (err.getLogs) {
-        try {
-          const logs = await err.getLogs(connection)
-          console.error('[useSolanaMint] Detailed logs:', logs)
-        } catch (logErr) {
-          console.error('[useSolanaMint] Could not get logs:', logErr)
+        console.error('[Mint] Transaction logs:', err.logs)
+        const logStr = err.logs.join('\n')
+        if (logStr.includes('insufficient lamports')) {
+          errorMessage = 'Insufficient SOL balance'
+        } else if (logStr.includes('ConstraintSeeds')) {
+          errorMessage = 'Account mismatch - wrong network?'
         }
       }
-      setError(err)
-      throw err
-    } finally {
-      setIsPending(false)
-      setIsConfirming(false)
-    }
-  }, [connection, wallet, networkConfig])
 
-  const mintWithPremium = useCallback(async (uri, idl, feeInLamports = null) => {
-    if (!wallet.publicKey || !wallet.signTransaction) {
-      throw new Error('Wallet not connected')
-    }
-
-    if (!idl) {
-      throw new Error('IDL not provided - Anchor IDL required for program interaction')
-    }
-
-    setIsPending(true)
-    setError(null)
-    setIsSuccess(false)
-
-    try {
-      // Create Anchor provider and program
-      const provider = new AnchorProvider(connection, wallet, {
-        commitment: 'confirmed',
-      })
-
-      // Anchor 0.29 API - pass IDL, program ID, and provider
-      const program = new Program(idl, networkConfig.programId, provider)
-
-      // Get collection config to find treasury
-      const [collectionConfigPda] = deriveCollectionConfigPda(networkConfig.programId)
-      const config = await program.account.collectionConfig.fetch(collectionConfigPda)
-
-      // Get treasury - prefer config from .env, fall back to on-chain config
-      const treasuryAddress = getTreasuryAddress(network) || config.treasury
-      if (!treasuryAddress) {
-        throw new Error('Treasury address not configured')
-      }
-
-      // Generate new mint keypair
-      const mintKeypair = Keypair.generate()
-
-      // Derive PDAs
-      const [metadataPda] = deriveMetadataPda(mintKeypair.publicKey)
-      const [masterEditionPda] = deriveMasterEditionPda(mintKeypair.publicKey)
-
-      // Get associated token account
-      const tokenAccount = getAssociatedTokenAddressSync(
-        mintKeypair.publicKey,
-        wallet.publicKey
-      )
-
-      setIsConfirming(true)
-
-      // Build the mint instruction
-      const mintIx = await program.methods
-        .mintWithPremium(uri)
-        .accounts({
-          minter: wallet.publicKey,
-          collectionConfig: collectionConfigPda,
-          treasury: treasuryAddress,
-          mint: mintKeypair.publicKey,
-          tokenAccount,
-          metadata: metadataPda,
-          masterEdition: masterEditionPda,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: SystemProgram.programId,
-          rent: SYSVAR_RENT_PUBKEY,
-          tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
-        })
-        .instruction()
-
-      // Build transaction with fee transfer (if dynamic fee provided) + mint
-      const transaction = new Transaction()
-
-      // Add dynamic fee transfer if provided (overrides on-chain fee)
-      if (feeInLamports && feeInLamports > 0) {
-        console.log(`[Solana Mint] Adding fee transfer: ${feeInLamports} lamports to ${treasuryAddress.toString()}`)
-        const feeIx = SystemProgram.transfer({
-          fromPubkey: wallet.publicKey,
-          toPubkey: treasuryAddress,
-          lamports: feeInLamports,
-        })
-        transaction.add(feeIx)
-      }
-
-      // Add mint instruction
-      transaction.add(mintIx)
-
-      // Get recent blockhash
-      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed')
-      transaction.recentBlockhash = blockhash
-      transaction.feePayer = wallet.publicKey
-
-      // Sign with mint keypair
-      transaction.partialSign(mintKeypair)
-
-      // SECURITY: Simulate transaction before signing to catch errors early
-      console.log('[Solana Mint] Simulating transaction...')
-      const simulation = await connection.simulateTransaction(transaction, {
-        sigVerify: false,
-        commitment: 'confirmed',
-      })
-
-      if (simulation.value.err) {
-        console.error('[Solana Mint] Simulation failed:', simulation.value.err)
-        console.error('[Solana Mint] Simulation logs:', simulation.value.logs)
-        throw new Error(`Transaction simulation failed: ${JSON.stringify(simulation.value.err)}`)
-      }
-      console.log('[Solana Mint] Simulation successful')
-
-      // Sign with wallet
-      const signedTx = await wallet.signTransaction(transaction)
-
-      // Send transaction
-      const txSig = await connection.sendRawTransaction(signedTx.serialize(), {
-        skipPreflight: false, // Keep preflight as additional check
-        preflightCommitment: 'confirmed',
-      })
-
-      // Wait for confirmation
-      await connection.confirmTransaction({
-        signature: txSig,
-        blockhash,
-        lastValidBlockHeight,
-      }, 'confirmed')
-
-      setSignature(txSig)
-      setIsSuccess(true)
-      setIsConfirming(false)
-
-      return {
-        signature: txSig,
-        mint: mintKeypair.publicKey.toString(),
-      }
-    } catch (err) {
-      console.error('[useSolanaMint] Premium mint failed:', err)
-      setError(err)
+      setError(new Error(errorMessage))
       throw err
     } finally {
       setIsPending(false)
@@ -314,7 +179,6 @@ export default function useSolanaMint(network = 'devnet') {
   }, [connection, wallet, networkConfig, network])
 
   return {
-    mint,
     mintWithPremium,
     signature,
     isPending,
@@ -325,4 +189,17 @@ export default function useSolanaMint(network = 'devnet') {
     isConnected: wallet.connected,
     publicKey: wallet.publicKey,
   }
+}
+
+/**
+ * Format token amount from smallest units
+ */
+export function formatTokenAmount(amount, decimals) {
+  if (!amount) return '0'
+  const value = Number(amount) / Math.pow(10, decimals)
+  if (value < 0.000001) return value.toExponential(2)
+  if (value < 0.01) return value.toFixed(6)
+  if (value < 1) return value.toFixed(4)
+  if (value < 1000) return value.toFixed(2)
+  return value.toLocaleString(undefined, { maximumFractionDigits: 2 })
 }
