@@ -189,16 +189,6 @@ export default function PropertiesPanel({
       <div className="panel-section">
         <div className="section-label">Animation</div>
         <div className="keyframe-controls">
-          {/* Motion path toggle */}
-          <label className="toggle-row">
-            <input
-              type="checkbox"
-              checked={showMotionPaths}
-              onChange={onToggleMotionPaths}
-            />
-            <span>Show Motion Paths</span>
-          </label>
-
           <button
             className={`action-btn full-width ${existingAtTime ? 'warning' : ''}`}
             onClick={handleAddKeyframe}
@@ -254,12 +244,34 @@ export default function PropertiesPanel({
     )
   }
 
+  // View options section (motion paths toggle) - shows when video is loaded
+  const ViewOptionsSection = () => {
+    if (!hasVideo || videoDuration <= 0) return null
+
+    return (
+      <div className="panel-section">
+        <div className="section-label">View Options</div>
+        <label className="toggle-row">
+          <input
+            type="checkbox"
+            checked={showMotionPaths}
+            onChange={onToggleMotionPaths}
+          />
+          <span>Show Motion Paths</span>
+        </label>
+      </div>
+    )
+  }
+
   // No selection - show hint
   if (!selectedObject && !isDrawingMode) {
     return (
       <div className="properties-panel">
         <div className="panel-header">Properties</div>
         <EyedropperBanner />
+        <div className="panel-content">
+          <ViewOptionsSection />
+        </div>
         <div className="panel-empty">
           <div className="empty-icon">👆</div>
           <div className="empty-text">Select an object to edit its properties</div>
@@ -439,6 +451,7 @@ export default function PropertiesPanel({
 
           {/* Keyframe Animation */}
           <KeyframeSection />
+          <ViewOptionsSection />
 
           {/* Z-Order */}
           <div className="panel-section">
@@ -646,6 +659,7 @@ export default function PropertiesPanel({
 
           {/* Keyframe Animation */}
           <KeyframeSection />
+          <ViewOptionsSection />
 
           {/* Z-Order */}
           <div className="panel-section">
@@ -706,6 +720,7 @@ export default function PropertiesPanel({
 
           {/* Keyframe Animation */}
           <KeyframeSection />
+          <ViewOptionsSection />
 
           {/* Actions */}
           <div className="panel-section">
@@ -927,6 +942,7 @@ export default function PropertiesPanel({
 
         {/* Keyframe Animation */}
         <KeyframeSection />
+          <ViewOptionsSection />
 
         {/* Z-Order */}
         <div className="panel-section">
