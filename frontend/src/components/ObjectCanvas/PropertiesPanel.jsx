@@ -72,6 +72,8 @@ export default function PropertiesPanel({
   eyedropperTarget,
   onStartEyedropper,
   onCancelEyedropper,
+  showMotionPaths = true,
+  onToggleMotionPaths,
 }) {
   const textInputRef = useRef(null)
   const [fillHexInput, setFillHexInput] = useState('')
@@ -187,6 +189,16 @@ export default function PropertiesPanel({
       <div className="panel-section">
         <div className="section-label">Animation</div>
         <div className="keyframe-controls">
+          {/* Motion path toggle */}
+          <label className="toggle-row">
+            <input
+              type="checkbox"
+              checked={showMotionPaths}
+              onChange={onToggleMotionPaths}
+            />
+            <span>Show Motion Paths</span>
+          </label>
+
           <button
             className={`action-btn full-width ${existingAtTime ? 'warning' : ''}`}
             onClick={handleAddKeyframe}

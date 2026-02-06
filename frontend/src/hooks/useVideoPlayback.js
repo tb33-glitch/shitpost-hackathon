@@ -3,30 +3,42 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 /**
  * Hook for managing video playback state
  * Handles play/pause, seeking, current time tracking, and playback rate
+ * Supports multiple video objects on the canvas
  */
-export default function useVideoPlayback(videoObject) {
+export default function useVideoPlayback(videoObject, allVideoObjects = []) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [isMuted, setIsMuted] = useState(true) // Start muted for autoplay policy
-  const videoRef = useRef(null)
+  const videoRef = useRef(null) // Primary video reference
+  const videoRefsMap = useRef({}) // All video references keyed by object ID
   const animationFrameRef = useRef(null)
 
-  // Get effective start and end times (accounting for trim)
+  // Get effective start and end times (accounting for trim) - from primary video
   const trimStart = videoObject?.trimStart ?? 0
   const trimEnd = videoObject?.trimEnd ?? videoObject?.duration ?? 0
   const playbackRate = videoObject?.playbackRate ?? 1
   const duration = videoObject?.duration ?? 0
 
-  // Register a video element
-  const registerVideo = useCallback((videoElement) => {
-    videoRef.current = videoElement
-    if (videoElement) {
+  // Register a video element (called for each video on canvas)
+  const registerVideo = useCallback((videoElement, objectId) => {
+    if (!videoElement) return
+
+    // Store in refs map
+    if (objectId) {
+      videoRefsMap.current[objectId] = videoElement
+    }
+
+    // Set as primary if it's the primary video object
+    if (videoObject && objectId === videoObject.id) {
+      videoRef.current = videoElement
       videoElement.currentTime = trimStart
-      videoElement.playbackRate = playbackRate
-      videoElement.muted = isMuted
       setCurrentTime(trimStart)
     }
-  }, [trimStart, playbackRate, isMuted])
+
+    // All videos start muted and at their respective positions
+    videoElement.muted = isMuted
+    videoElement.playbackRate = playbackRate
+  }, [videoObject, trimStart, playbackRate, isMuted])
 
   // Update time display during playback
   const updateTimeDisplay = useCallback(() => {
@@ -58,23 +70,39 @@ export default function useVideoPlayback(videoObject) {
     }
   }, [isPlaying, updateTimeDisplay])
 
-  // Play video
+  // Play all videos
   const play = useCallback(() => {
     if (!videoRef.current) return
 
     // If at or past trim end, start from trim start
     if (videoRef.current.currentTime >= trimEnd) {
       videoRef.current.currentTime = trimStart
+      // Sync all other videos to current time
+      Object.values(videoRefsMap.current).forEach(videoEl => {
+        if (videoEl && videoEl !== videoRef.current) {
+          videoEl.currentTime = trimStart
+        }
+      })
     }
 
-    videoRef.current.play()
+    // Play all videos
+    Object.values(videoRefsMap.current).forEach(videoEl => {
+      if (videoEl) {
+        videoEl.play().catch(() => {
+          // Ignore autoplay errors
+        })
+      }
+    })
     setIsPlaying(true)
   }, [trimStart, trimEnd])
 
-  // Pause video
+  // Pause all videos
   const pause = useCallback(() => {
-    if (!videoRef.current) return
-    videoRef.current.pause()
+    Object.values(videoRefsMap.current).forEach(videoEl => {
+      if (videoEl) {
+        videoEl.pause()
+      }
+    })
     setIsPlaying(false)
   }, [])
 
@@ -87,13 +115,17 @@ export default function useVideoPlayback(videoObject) {
     }
   }, [isPlaying, play, pause])
 
-  // Seek to specific time
+  // Seek all videos to specific time
   const seek = useCallback((time) => {
-    if (!videoRef.current) return
-
-    // Clamp time to trim bounds
+    // Clamp time to trim bounds of primary video
     const clampedTime = Math.max(trimStart, Math.min(trimEnd, time))
-    videoRef.current.currentTime = clampedTime
+
+    // Seek all videos
+    Object.values(videoRefsMap.current).forEach(videoEl => {
+      if (videoEl) {
+        videoEl.currentTime = clampedTime
+      }
+    })
     setCurrentTime(clampedTime)
   }, [trimStart, trimEnd])
 
@@ -110,13 +142,15 @@ export default function useVideoPlayback(videoObject) {
     videoRef.current.playbackRate = rate
   }, [])
 
-  // Toggle mute/unmute
+  // Toggle mute/unmute for all videos
   const toggleMute = useCallback(() => {
     setIsMuted(prev => {
       const newMuted = !prev
-      if (videoRef.current) {
-        videoRef.current.muted = newMuted
-      }
+      Object.values(videoRefsMap.current).forEach(videoEl => {
+        if (videoEl) {
+          videoEl.muted = newMuted
+        }
+      })
       return newMuted
     })
   }, [])
@@ -127,15 +161,22 @@ export default function useVideoPlayback(videoObject) {
     seek(trimStart)
   }, [pause, seek, trimStart])
 
-  // Update video when trim bounds or playback rate change
+  // Update all videos when trim bounds or playback rate change
   useEffect(() => {
-    if (!videoRef.current) return
-
-    videoRef.current.playbackRate = playbackRate
+    // Update playback rate for all videos
+    Object.values(videoRefsMap.current).forEach(videoEl => {
+      if (videoEl) {
+        videoEl.playbackRate = playbackRate
+      }
+    })
 
     // If current time is outside trim bounds, clamp it
     if (currentTime < trimStart || currentTime > trimEnd) {
-      videoRef.current.currentTime = trimStart
+      Object.values(videoRefsMap.current).forEach(videoEl => {
+        if (videoEl) {
+          videoEl.currentTime = trimStart
+        }
+      })
       setCurrentTime(trimStart)
     }
   }, [playbackRate, trimStart, trimEnd, currentTime])

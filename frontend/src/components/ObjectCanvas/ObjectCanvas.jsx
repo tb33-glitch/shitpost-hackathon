@@ -34,6 +34,8 @@ export default function ObjectCanvas({
   // Eyedropper mode
   isEyedropperMode = false,
   onColorPicked,
+  // Motion path visualization
+  showMotionPaths = true,
 }) {
   // Scale factor for display
   const DISPLAY_SCALE = zoom
@@ -934,7 +936,7 @@ export default function ObjectCanvas({
           onLoadedData={(e) => {
             setVideoLoadedTrigger(prev => prev + 1)
             if (onVideoElementReady) {
-              onVideoElementReady(e.target)
+              onVideoElementReady(e.target, obj.id)
             }
           }}
           onCanPlay={() => {
@@ -978,6 +980,18 @@ export default function ObjectCanvas({
           pointerEvents: 'none',
         }}
       />
+
+      {/* Motion path overlay for animated objects */}
+      {showMotionPaths && !isDrawingMode && objects.filter(obj => hasAnimation(obj)).map(obj => (
+        <MotionPathOverlay
+          key={`motion-${obj.id}`}
+          object={obj}
+          scale={DISPLAY_SCALE}
+          offsetX={handlePadding}
+          offsetY={handlePadding}
+          isSelected={obj.id === selectedId}
+        />
+      ))}
 
       {/* Selection UI overlay */}
       {selectedObj && !isDrawingMode && (
@@ -1045,5 +1059,91 @@ function SelectionOverlay({ object, scale, offsetX = 0, offsetY = 0, isCropMode 
         </>
       )}
     </div>
+  )
+}
+
+// Motion path overlay component - shows keyframe positions and path
+function MotionPathOverlay({ object, scale, offsetX = 0, offsetY = 0, isSelected }) {
+  const pathPoints = getMotionPathPoints(object)
+
+  if (pathPoints.length === 0) return null
+
+  // Calculate center offset (keyframes store position as top-left corner)
+  const centerOffsetX = (object.width / 2) * scale
+  const centerOffsetY = (object.height / 2) * scale
+
+  // Convert points to screen coordinates (center of object)
+  const screenPoints = pathPoints.map(pt => ({
+    x: pt.x * scale + offsetX + centerOffsetX,
+    y: pt.y * scale + offsetY + centerOffsetY,
+    time: pt.time,
+    id: pt.id,
+  }))
+
+  // Create SVG path string
+  const pathD = screenPoints.length > 0
+    ? `M ${screenPoints.map(pt => `${pt.x},${pt.y}`).join(' L ')}`
+    : ''
+
+  return (
+    <svg
+      className={`motion-path-overlay ${isSelected ? 'selected' : ''}`}
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        overflow: 'visible',
+      }}
+    >
+      {/* Path line - dashed when not selected */}
+      <path
+        d={pathD}
+        fill="none"
+        stroke={isSelected ? '#ff6600' : '#ff660066'}
+        strokeWidth={isSelected ? 2 : 1.5}
+        strokeDasharray={isSelected ? 'none' : '6,4'}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      {/* Keyframe dots */}
+      {screenPoints.map((pt, index) => (
+        <g key={pt.id}>
+          {/* Outer glow/halo */}
+          <circle
+            cx={pt.x}
+            cy={pt.y}
+            r={isSelected ? 10 : 6}
+            fill={isSelected ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255, 102, 0, 0.1)'}
+          />
+          {/* Main dot */}
+          <circle
+            cx={pt.x}
+            cy={pt.y}
+            r={isSelected ? 6 : 4}
+            fill={index === 0 ? '#00cc66' : index === screenPoints.length - 1 ? '#cc0033' : '#ff6600'}
+            stroke="white"
+            strokeWidth={1.5}
+          />
+          {/* Keyframe number label when selected */}
+          {isSelected && (
+            <text
+              x={pt.x}
+              y={pt.y - 14}
+              textAnchor="middle"
+              fontSize="10"
+              fontWeight="bold"
+              fill="white"
+              style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}
+            >
+              {index + 1}
+            </text>
+          )}
+        </g>
+      ))}
+    </svg>
   )
 }

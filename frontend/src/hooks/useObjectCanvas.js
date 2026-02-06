@@ -374,8 +374,7 @@ export default function useObjectCanvas() {
       videoSrc = `https://corsproxy.io/?${encodeURIComponent(src)}`
     }
 
-    // Remove any existing video
-    setObjects(prev => prev.filter(obj => obj.type !== OBJECT_TYPES.VIDEO))
+    // Allow multiple videos on canvas (no longer removing existing ones)
     const obj = createVideoObject(videoSrc, duration, aspectRatio)
     // Store original src for reference
     obj.originalSrc = src
@@ -401,9 +400,19 @@ export default function useObjectCanvas() {
   // Check if canvas has a video
   const hasVideo = objects.some(obj => obj.type === OBJECT_TYPES.VIDEO)
 
-  // Get the video object
+  // Get all video objects
+  const getVideoObjects = useCallback(() => {
+    return objects.filter(obj => obj.type === OBJECT_TYPES.VIDEO)
+  }, [objects])
+
+  // Get the primary video object (longest duration, used for timeline)
   const getVideoObject = useCallback(() => {
-    return objects.find(obj => obj.type === OBJECT_TYPES.VIDEO) || null
+    const videos = objects.filter(obj => obj.type === OBJECT_TYPES.VIDEO)
+    if (videos.length === 0) return null
+    // Return the video with longest duration
+    return videos.reduce((longest, video) =>
+      (video.duration || 0) > (longest.duration || 0) ? video : longest
+    , videos[0])
   }, [objects])
 
   // Update an object's properties
@@ -604,6 +613,7 @@ export default function useObjectCanvas() {
     addVideo,
     addShape,
     getVideoObject,
+    getVideoObjects,
     updateObject,
     updateObjectWithHistory,
     deleteObject,

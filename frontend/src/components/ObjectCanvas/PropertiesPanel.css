@@ -606,6 +606,26 @@
   gap: 8px;
 }
 
+/* Toggle row (checkbox + label) */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #333;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.toggle-row input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.toggle-row span {
+  user-select: none;
+}
+
 .keyframe-controls .action-btn.warning {
   background: linear-gradient(180deg, #ffcc00 0%, #ff9900 100%);
   border-color: #cc7700;

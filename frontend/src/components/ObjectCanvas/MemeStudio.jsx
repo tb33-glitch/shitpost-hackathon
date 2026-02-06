@@ -44,6 +44,7 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
     drawingLayerRef,
     undo,
     redo,
+    getVideoObjects,
   } = useObjectCanvas()
 
   const [isDrawingMode, setIsDrawingMode] = useState(false)
@@ -56,6 +57,7 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
   const [showSubmitModal, setShowSubmitModal] = useState(false)
   const [showMobileSheet, setShowMobileSheet] = useState(false)
   const [autoFocusTextInput, setAutoFocusTextInput] = useState(0) // Increment to trigger focus
+  const [showMotionPaths, setShowMotionPaths] = useState(true) // Toggle motion path visualization
 
   // Template submission
   const { submitTemplate, isSubmitting } = useTemplateSubmission()
@@ -63,9 +65,10 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
   const [capturedCanvasPreview, setCapturedCanvasPreview] = useState(null)
   const [isCapturingCanvas, setIsCapturingCanvas] = useState(false)
 
-  // Video playback
-  const videoObject = getVideoObject()
-  const videoPlayback = useVideoPlayback(videoObject)
+  // Video playback (supports multiple videos)
+  const videoObject = getVideoObject() // Primary video (longest duration)
+  const allVideoObjects = getVideoObjects() // All videos for sync
+  const videoPlayback = useVideoPlayback(videoObject, allVideoObjects)
   const videoRefs = useRef({})
 
   // Ref to hold copy function for keyboard shortcut
@@ -82,8 +85,8 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
   const [showWatermark, setShowWatermark] = useState(true)
 
   // Callback for when video element is ready
-  const handleVideoElementReady = useCallback((videoEl) => {
-    videoPlayback.registerVideo(videoEl)
+  const handleVideoElementReady = useCallback((videoEl, objectId) => {
+    videoPlayback.registerVideo(videoEl, objectId)
   }, [videoPlayback])
 
   // Calculate initial zoom based on screen size
@@ -978,6 +981,7 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
               onEditText={handleEditText}
               isEyedropperMode={isEyedropperMode}
               onColorPicked={handleColorPicked}
+              showMotionPaths={showMotionPaths}
             />
           </div>
 
@@ -1027,6 +1031,8 @@ export default function MemeStudio({ onMint, isDesktopMode, coinContext = null, 
           eyedropperTarget={eyedropperTarget}
           onStartEyedropper={startEyedropper}
           onCancelEyedropper={cancelEyedropper}
+          showMotionPaths={showMotionPaths}
+          onToggleMotionPaths={() => setShowMotionPaths(!showMotionPaths)}
         />
       </div>
 
