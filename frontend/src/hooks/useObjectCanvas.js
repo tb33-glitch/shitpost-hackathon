@@ -139,11 +139,23 @@ const measureText = (text, fontSize, fontFamily) => {
   if (!measureTextCanvas) return { width: 300, height: fontSize * 1.2 }
   const ctx = measureTextCanvas.getContext('2d')
   ctx.font = `bold ${fontSize}px ${fontFamily}`
-  const metrics = ctx.measureText(text)
+
+  // Split by newlines and measure each line
+  const lines = text.split('\n')
+  let maxWidth = 0
+  lines.forEach(line => {
+    const metrics = ctx.measureText(line)
+    maxWidth = Math.max(maxWidth, metrics.width)
+  })
+
+  // Calculate height based on number of lines
+  const lineHeight = fontSize * 1.2
+  const totalHeight = lines.length * lineHeight
+
   // Add some padding for stroke
   return {
-    width: Math.max(100, metrics.width + 20),
-    height: fontSize * 1.3,
+    width: Math.max(100, maxWidth + 20),
+    height: Math.max(fontSize * 1.3, totalHeight + 10),
   }
 }
 
