@@ -246,7 +246,7 @@ export default function PropertiesPanel({
 
   // View options section (motion paths toggle) - shows when video is loaded
   const ViewOptionsSection = () => {
-    if (!hasVideo || videoDuration <= 0) return null
+    if (!hasVideo) return null
 
     return (
       <div className="panel-section">
