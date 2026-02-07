@@ -155,7 +155,22 @@ export default function LeftToolbar({
       }
       video.src = template.image
     } else {
-      onAddImage(template)
+      // Load image to get actual dimensions for correct aspect ratio
+      // This fixes templates that have hardcoded aspectRatio: 1
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.onload = () => {
+        const aspectRatio = img.width / img.height
+        onAddImage({
+          ...template,
+          aspectRatio,
+        })
+      }
+      img.onerror = () => {
+        // Fallback to template's aspect ratio if image fails to load
+        onAddImage(template)
+      }
+      img.src = template.image
     }
     setShowTemplates(false)
   }
@@ -180,25 +195,6 @@ export default function LeftToolbar({
 
       <div className="toolbar-section section-add" data-onboarding="template-picker">
         <div className="section-label">Add</div>
-
-        {/* Upload Image */}
-        <button
-          className="tool-btn"
-          onClick={() => {
-            closeAllPickers()
-            fileInputRef.current?.click()
-          }}
-          data-tooltip="Upload"
-        >
-          <span className="tool-icon">📤</span>
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleFileUpload}
-          style={{ display: 'none' }}
-        />
 
         {/* Add Template */}
         <button
@@ -250,7 +246,26 @@ export default function LeftToolbar({
           </button>
         )}
 
-        {/* Upload Video - hidden on mobile */}
+        {/* Upload Image */}
+        <button
+          className="tool-btn"
+          onClick={() => {
+            closeAllPickers()
+            fileInputRef.current?.click()
+          }}
+          data-tooltip="Upload Photo"
+        >
+          <span className="tool-icon">📤</span>
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileUpload}
+          style={{ display: 'none' }}
+        />
+
+        {/* Upload Video */}
         {onAddVideo && (
           <>
             <button

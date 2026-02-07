@@ -122,6 +122,7 @@ const createImageObject = (template, x = 0, y = 0) => {
     rotation: 0,
     src: template.image,
     template: template,
+    originalAspectRatio: template.aspectRatio || (width / height),
     locked: false,
     opacity: 1,
     // Crop bounds (relative to image: 0-1 range)

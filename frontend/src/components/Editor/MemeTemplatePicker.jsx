@@ -186,19 +186,27 @@ export default function MemeTemplatePicker({ onSelectTemplate, onClose }) {
 
     const reader = new FileReader()
     reader.onload = (event) => {
-      const customTemplate = {
-        id: 'custom-' + Date.now(),
-        name: file.name.replace(/\.[^/.]+$/, ''),
-        image: event.target.result,
-        aspectRatio: 1,
-        textZones: [
-          { id: 'top', x: 50, y: 10, width: 90, height: 20, defaultText: '', fontSize: 24, align: 'center' },
-          { id: 'bottom', x: 50, y: 90, width: 90, height: 20, defaultText: '', fontSize: 24, align: 'center' },
-        ],
-        isCustom: true,
+      const dataUrl = event.target.result
+
+      // Load image to get actual dimensions for correct aspect ratio
+      const img = new Image()
+      img.onload = () => {
+        const aspectRatio = img.width / img.height
+        const customTemplate = {
+          id: 'custom-' + Date.now(),
+          name: file.name.replace(/\.[^/.]+$/, ''),
+          image: dataUrl,
+          aspectRatio,
+          textZones: [
+            { id: 'top', x: 50, y: 10, width: 90, height: 20, defaultText: '', fontSize: 24, align: 'center' },
+            { id: 'bottom', x: 50, y: 90, width: 90, height: 20, defaultText: '', fontSize: 24, align: 'center' },
+          ],
+          isCustom: true,
+        }
+        onSelectTemplate(customTemplate)
+        onClose()
       }
-      onSelectTemplate(customTemplate)
-      onClose()
+      img.src = dataUrl
     }
     reader.readAsDataURL(file)
     e.target.value = ''

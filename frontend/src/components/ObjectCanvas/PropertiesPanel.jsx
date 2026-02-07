@@ -765,16 +765,23 @@ export default function PropertiesPanel({
             <button
               className="action-btn"
               onClick={() => {
+                // Use original aspect ratio from template, or calculate from current dimensions as fallback
+                const aspectRatio = selectedObject.template?.aspectRatio ||
+                  selectedObject.originalAspectRatio ||
+                  (selectedObject.width / selectedObject.height)
+
                 // Fit to canvas maintaining aspect ratio
-                const aspectRatio = selectedObject.width / selectedObject.height
                 let newWidth, newHeight
-                if (aspectRatio > 1) {
+                if (aspectRatio > CANVAS_WIDTH / CANVAS_HEIGHT) {
+                  // Image is wider than canvas - fit to width
                   newWidth = CANVAS_WIDTH
                   newHeight = CANVAS_WIDTH / aspectRatio
                 } else {
+                  // Image is taller than canvas - fit to height
                   newHeight = CANVAS_HEIGHT
                   newWidth = CANVAS_HEIGHT * aspectRatio
                 }
+
                 onUpdateObject(selectedObject.id, {
                   x: (CANVAS_WIDTH - newWidth) / 2,
                   y: (CANVAS_HEIGHT - newHeight) / 2,
@@ -788,12 +795,14 @@ export default function PropertiesPanel({
             </button>
             <button
               className="action-btn"
-              onClick={() => onUpdateObject(selectedObject.id, {
-                x: 0,
-                y: 0,
-                width: CANVAS_WIDTH,
-                height: CANVAS_HEIGHT,
-              })}
+              onClick={() => {
+                onUpdateObject(selectedObject.id, {
+                  x: 0,
+                  y: 0,
+                  width: CANVAS_WIDTH,
+                  height: CANVAS_HEIGHT,
+                })
+              }}
               title="Stretch to fill entire canvas"
             >
               📐 Fill
